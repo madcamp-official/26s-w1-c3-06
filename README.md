@@ -12,8 +12,8 @@
 
 | 이름 | GitHub | 역할 |
 | --- | --- | --- |
-|서영빈|[@izayoieosd]|  |
-|김혜리|[@ireyhye]|  |
+|서영빈| https://github.com/izayoieosd |  |
+|김혜리| https://github.com/ireyhye|  |
 
 ---
 
@@ -55,7 +55,7 @@
 
 ### 선택 기능
 
-**- 소셜**
+- **소셜**
   - 친구 추가/삭제
   - 친구 목록 열람
   - 일간/주간/월간 고수익 계좌 랭킹 집계 및 표시
@@ -84,8 +84,24 @@
 
 | Method | Endpoint | 설명 | 요청 | 응답 |
 |---|---|---|---|---|
-| account_create | | 계좌 생성; 기본금 1,000,000원 지급 | | |
-| account_dailyBailout |  | 구제금을 요청한 계좌에서 매일 하루에 한하여 10,000원의 수익 지급 |  | |
+| account_create | | 계좌 및 계정 생성; 기본금 1,000,000원 지급 | | |
+| account_authenticate | | 계좌 아이디 및 비밀번호 정보 일치 확인 | | |
+| account_view | | 계좌명, 보유 주식, 최근 거래 내역, 수익 금액 및 수익률, 계좌 잔고 불러오기 | | |
+| account_edit | | 계좌 정보를 변경 | | |
+| account_dailyBailout | | 구제금을 요청한 계좌에서 매일 하루에 한하여 10,000원의 수익 지급. 중복 지급 요청시 거부 | | |
+| account_delete | | 계정 삭제 | | | 
+| stock_priceUpToDate | | 가상주식 가격을 연동 (50ms 단위) | | | 
+| stock_list | | 가상주식 목록 - 기업명, 기업 로고, 티커, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
+| stock_search | | 주식을 기업명, 티커 일치에 의해 검색 | | |
+| stock_entry_view | | 단일 주식의 그래프, 현재 주가, 거래대금, 거래량 표시 | | | 
+| stock_entry_news | | 단일 주식의 관련 뉴스 확인 | | |
+| stock_order_create | | 가상주식 주문 (거래유형, 거래 방식, 주문량 설정) | | |
+| stock_order_edit | | 가상주식 주문 수정 (주문량 변경) | | |
+| stock_order_delete | | 가상주식 주문 취소| | |
+| stock_order_sign | | 가상주식 주문을 가격, 시간, 수량 순서로 체결 | | |
+| notify_stock | | 마지막 공지 시점으로부터 단일 주식의 주가 변화를 알림으로 공지함 | | |
+| notify_order | | 주문의 체결 성공 / 실패 / 취소를 알림으로 공지함 | | |
+| tutorial_terms | | 생소한 주식 관련 용어 설명 | | |
 
 ---
 
