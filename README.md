@@ -75,8 +75,7 @@ https://www.figma.com/design/UA0CwwncocjZ67imzxZzoA/%EC%A0%9C%EB%AA%A9-%EC%97%86
 <center>
   <img
     src="./public/image/proj_erd.png"
-    width="100"
-    height="200"
+    width="90%"
   />
 </center>
 
