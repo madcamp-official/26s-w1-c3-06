@@ -13,7 +13,7 @@
 | 이름 | GitHub | 역할 |
 | --- | --- | --- |
 |서영빈| https://github.com/izayoieosd |  |
-|김혜리| https://github.com/ireyhye|  |
+|김혜리| https://github.com/ireyhye| |
 
 ---
 
@@ -47,18 +47,17 @@
   - 기업명, 기업 로고, 티커, 현재 주가, 주가 변동분 목록화 및 표시
   - 기업 관련 뉴스 제공
   - 현재 주가, 거래대금, 거래량 표시
- 3. **가상주식 매매**
+3. **가상주식 매매**
   - 호가창 (호가 목록, 대기중인 주문량) 표시
   - 가상주식 주문 (거래유형 (매수 / 매도), 거래 방식 (시장가 / 지정가 매매), 주문량 설정)
   - 주문 수정 (주문량 변경)
   - 주문 체결, 취소, 실패 알림 메시지 전송
-
-### 선택 기능
-
-- **소셜**
+4. **소셜**
   - 친구 추가/삭제
   - 친구 목록 열람
   - 일간/주간/월간 고수익 계좌 랭킹 집계 및 표시
+  - 친구 요청 / 추가 / 삭제 메시지 전송
+### 선택 기능
 
 ---
 
@@ -66,15 +65,20 @@
 
 > 서비스의 전체 페이지 구조와 페이지 간 이동 흐름; 각 페이지의 주요 UI 구성, 입력 요소, 버튼, 사용자 행동 흐름 등을 간단한 와이어프레임 형태로 정리
 
-<!-- Figma 링크 또는 이미지 첨부 -->
-
+https://www.figma.com/design/UA0CwwncocjZ67imzxZzoA/%EC%A0%9C%EB%AA%A9-%EC%97%86%EC%9D%8C?node-id=0-1&p=f&t=eJf0nP6BjuCCft16-0
 ---
 
 ## DB 스키마
 
 > 필요한 테이블, 주요 필드, 데이터 타입, 테이블 간 관계를 정리
 
-<!-- ERD 이미지 또는 테이블 정의 -->
+<center>
+  <img
+    src="./public/image/proj_erd.png"
+    width="100"
+    height="200"
+  />
+</center>
 
 ---
 
@@ -90,18 +94,24 @@
 | account_edit | | 계좌 정보를 변경 | | |
 | account_dailyBailout | | 구제금을 요청한 계좌에서 매일 하루에 한하여 10,000원의 수익 지급. 중복 지급 요청시 거부 | | |
 | account_delete | | 계정 삭제 | | | 
+| friends_request | | 친구 요청 발신 | | |
+| friends_view | | 친구 목록 확인 | | |
+| friends_delete | | 친구 삭제 | | |
 | stock_priceUpToDate | | 가상주식 가격을 연동 (50ms 단위) | | | 
-| stock_list | | 가상주식 목록 - 기업명, 기업 로고, 티커, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
-| stock_search | | 주식을 기업명, 티커 일치에 의해 검색 | | |
-| stock_entry_view | | 단일 주식의 그래프, 현재 주가, 거래대금, 거래량 표시 | | | 
+| stock_list | | 가상주식 목록 - 기업명, 기업 로고, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
+| stock_search | | 주식을 기업명 일치에 의해 검색 | | |
+| stock_entry_view | | 단일 주식의 그래프, 현재 주가 표시 | | | 
 | stock_entry_news | | 단일 주식의 관련 뉴스 확인 | | |
-| stock_order_create | | 가상주식 주문 (거래유형, 거래 방식, 주문량 설정) | | |
+| stock_order_create | | 가상주식 주문 (매수 / 매도, 주문량 설정) | | |
 | stock_order_edit | | 가상주식 주문 수정 (주문량 변경) | | |
 | stock_order_delete | | 가상주식 주문 취소| | |
-| stock_order_sign | | 가상주식 주문을 가격, 시간, 수량 순서로 체결 | | |
+| stock_order_sign | | 주문 가격 도달시 가상주식 주문 체결 | | |
+| ranking_view | | 일간 주식 수익 랭킹 표시 | | |
 | notify_stock | | 마지막 공지 시점으로부터 단일 주식의 주가 변화를 알림으로 공지함 | | |
 | notify_order | | 주문의 체결 성공 / 실패 / 취소를 알림으로 공지함 | | |
+| notify_friends | | 친구 요청 발신 / 수신, 친구 삭제를 알림으로 공지함 | | |
 | tutorial_terms | | 생소한 주식 관련 용어 설명 | | |
+| tutorial_dict | | 주식 용어 사전 열람 | | |
 
 ---
 
