@@ -65,6 +65,32 @@
 
 > 서비스의 전체 페이지 구조와 페이지 간 이동 흐름; 각 페이지의 주요 UI 구성, 입력 요소, 버튼, 사용자 행동 흐름 등을 간단한 와이어프레임 형태로 정리
 
+## IA (정보 구조도)
+
+```mermaid
+flowchart TD
+    L[로그인] --> H[홈 - 계좌 현황]
+    R[회원가입] --> ON[온보딩]
+    ON --> H
+    L -.계정 없음.-> R
+
+    H --> ST[주식 거래]
+    H --> SC[소셜]
+    H --> SET[설정]
+
+    ST --> TR[거래 화면: 목록・상세・주문]
+    TR --> OK[체결 완료]
+    TR --> FAIL[주문 실패・취소]
+    OK --> H
+    FAIL --> H
+
+    SC --> FR[친구 목록]
+    SC --> RK[일간 랭킹]
+
+    SET --> SET1[이름・비밀번호 수정]
+    SET --> SET2[계좌 삭제]
+```
+
 https://www.figma.com/design/UA0CwwncocjZ67imzxZzoA/%EC%A0%9C%EB%AA%A9-%EC%97%86%EC%9D%8C?node-id=0-1&p=f&t=eJf0nP6BjuCCft16-0
 ---
 
