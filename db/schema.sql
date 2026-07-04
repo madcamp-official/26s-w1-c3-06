@@ -12,8 +12,8 @@ CREATE TABLE "User_Info" (
 	"LastConnect"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
-	"Total_BasicIncome"	INT		NULL,
-	"Nickname"	TEXT		NULL,
+	"LastBailout"	INT		NULL,
+	"Nickname"	VARCHAR(12)		NULL,
 	"Profile"	BYTEA		NULL,
 	CONSTRAINT "PK_User_Info" PRIMARY KEY ("ID")
 );
@@ -24,10 +24,10 @@ CREATE TABLE "Stock_List" (
 	CONSTRAINT "PK_Stock_List" PRIMARY KEY ("Stock_Name")
 );
 
-CREATE TABLE "Dictionary" (
-	"Dict_Term"	VARCHAR(20)		NOT NULL,
-	"Dict_Body"	TEXT		NULL,
-	CONSTRAINT "PK_Dictionary" PRIMARY KEY ("Dict_Term")
+CREATE TABLE "Quiz" (
+	"Quiz_Num"	INT		NOT NULL,
+	"Quiz_Body"	JSONB		NULL,
+	CONSTRAINT "PK_Quiz" PRIMARY KEY ("Quiz_Num")
 );
 
 CREATE TABLE "News_List" (
