@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>모의투자 - 소셜</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <main class="page-container">
+
+    <div class="social-grid">
+
+      <!-- 왼쪽: 친구 추가 / 요청 / 목록 -->
+      <div class="social-left">
+
+        <div class="social-card outline-card">
+          <p class="social-card-title">친구 추가</p>
+          <div class="friend-add-row">
+            <input type="text" id="friendIdInput" placeholder="ID 입력" />
+            <button class="btn-primary" id="addFriendBtn">친구추가</button>
+          </div>
+        </div>
+
+        <div class="social-card grey-card request-card" id="friendRequestCard" hidden>
+          <p class="request-text" id="requestText">00님이 친구 요청을 보냈어요</p>
+          <div class="request-actions">
+            <button class="btn-accept" id="acceptBtn">수락</button>
+            <button class="btn-reject" id="rejectBtn">거절</button>
+          </div>
+        </div>
+
+        <div class="social-card grey-card friend-list-card">
+          <p class="social-card-title">친구 목록</p>
+          <div id="friendList">
+            <!-- 친구 목록: JS에서 API 응답으로 이 안을 채움 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 가운데: 친구 랭킹 -->
+      <div class="social-card shadow-card">
+        <p class="social-card-title">친구 랭킹</p>
+        <div id="friendRanking">
+          <!-- 친구 랭킹: JS에서 채움 -->
+        </div>
+      </div>
+
+      <!-- 오른쪽: 전체 랭킹 -->
+      <div class="social-card shadow-card">
+        <p class="social-card-title">전체 랭킹</p>
+        <div id="globalRanking">
+          <!-- 전체 랭킹: JS에서 채움 -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/navbar.js"></script>
+  <script src="js/social.js"></script>
+</body>
+</html>

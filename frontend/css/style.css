@@ -1,0 +1,1034 @@
+:root {
+  --color-accent: #5B5FEF;
+  --color-up: #E23744;
+  --color-down: #1E6FEE;
+  --color-danger: #FF6B57;
+  --color-text-primary: #1A1A1E;
+  --color-text-secondary: #6B6B75;
+  --color-bg: #F7F7FA;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E5EA;
+  --radius-button: 8px;
+  --radius-card: 12px;
+  --radius-login-card: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+/* ── 로그인 / 회원가입 공통 카드 레이아웃 ── */
+.login-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface);
+  border-radius: var(--radius-login-card);
+  padding: 40px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.login-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.form-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.form-field input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.login-footer a {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.field-error {
+  font-size: 11px;
+  color: var(--color-danger);
+  margin-top: 5px;
+}
+
+/* ── home.html 및 공통 레이아웃 추가분 ── */
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 3%;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.page-subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.btn-income {
+  width: auto;
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+.btn-income:disabled {
+  background: #F0F0F3;
+  color: #9B9BA3;
+  cursor: not-allowed;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 62% 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 22px 26px;
+  margin-bottom: 16px;
+}
+
+.card-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.card-value-large {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.profit-loss {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.text-up {
+  color: var(--color-up);
+  font-weight: 600;
+}
+
+.text-down {
+  color: var(--color-down);
+  font-weight: 600;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 14px 0;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-link {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.align-right {
+  text-align: right;
+}
+
+.holding-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.holding-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.holding-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.holding-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.holding-desc {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+.holding-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.holding-return {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.news-item {
+  padding: 11px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.news-item:first-child {
+  border-top: none;
+}
+
+.news-title {
+  font-size: 12px;
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+.news-meta a {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── history.html 추가분 ── */
+
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.back-link {
+  font-size: 13px;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.history-table-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-date {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.history-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trade-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.trade-tag.buy {
+  background: #FFE9EA;
+  color: var(--color-up);
+}
+
+.trade-tag.sell {
+  background: #EEF0FF;
+  color: var(--color-down);
+}
+
+.history-stock-name {
+  font-size: 13px;
+}
+
+.history-quantity,
+.history-amount {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── stock-list.html 추가분 (원본 디자인 색상값 유지) ── */
+
+.page-title-lg {
+  font-size: 28px;
+  font-weight: 700;
+  color: #000;
+}
+
+.stock-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 320px;
+  height: 52px;
+  padding: 0 20px;
+  background: #3C3C3C;
+  border-radius: 8px;
+}
+
+.search-icon {
+  color: #D9D9D9;
+  font-size: 20px;
+}
+
+.search-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #D9D9D9;
+  font-size: 15px;
+}
+
+.search-box input::placeholder {
+  color: #D9D9D9;
+}
+
+.search-box input:focus {
+  outline: none;
+}
+
+.stock-list-card {
+  background: #fff;
+  border: 2px solid #D9D9D9;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.stock-list-column-header {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr 1fr;
+  padding: 16px 32px;
+  font-size: 16px;
+  color: #000;
+}
+
+.stock-row {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr 1fr;
+  align-items: center;
+  padding: 20px 32px;
+  border-top: 2px solid #D9D9D9;
+}
+
+.stock-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stock-logo {
+  width: 66px;
+  height: 62px;
+  background: #D9D9D9;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #000;
+}
+
+.stock-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+}
+
+.stock-desc {
+  font-size: 16px;
+  font-weight: 400;
+  color: #000;
+}
+
+.stock-price {
+  font-size: 26px;
+  color: #000;
+  text-align: right;
+}
+
+.stock-change {
+  font-size: 26px;
+  text-align: right;
+}
+
+.stock-change.up {
+  color: #FF0000;
+}
+
+.stock-change.down {
+  color: #004DFF;
+}
+
+/* ── stock-detail.html 추가분 (원본 디자인 색상값 유지) ── */
+
+.back-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 56% 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.detail-card {
+  background: #fff;
+  border: 2px solid #D9D9D9;
+  border-radius: 15px;
+  padding: 20px 24px;
+  margin-bottom: 18px;
+}
+
+/* ── 종목 헤더 카드 ── */
+.stock-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stock-logo-lg {
+  width: 70px;
+  height: 66px;
+  background: #D9D9D9;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.stock-header-info {
+  flex: 1;
+}
+
+.stock-name-lg {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.desc-badge {
+  display: inline-block;
+  background: #E8E9FF;
+  color: var(--color-accent);
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 15px;
+}
+
+.stock-price-info {
+  text-align: right;
+}
+
+.price-label {
+  font-size: 13px;
+  color: #000;
+  margin-bottom: 4px;
+}
+
+.price-value {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.price-change {
+  font-size: 15px;
+}
+
+.price-change.up { color: #FF0000; }
+.price-change.down { color: #004DFF; }
+
+/* ── 차트 카드 ── */
+.chart-placeholder {
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9B9BA3;
+  font-size: 14px;
+}
+
+/* ── 뉴스 카드 ── */
+.card-caption {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.news-item-link {
+  display: block;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.news-item-link:first-child {
+  border-top: none;
+}
+
+.news-item-link:hover {
+  color: var(--color-accent);
+}
+
+.news-item-day {
+  font-size: 11px;
+  color: #9B9BA3;
+  margin-left: 6px;
+}
+
+/* ── 내 보유 정보 카드 ── */
+.holding-card {
+  border-color: var(--color-accent);
+}
+
+.holding-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #000;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ── 매매 카드 ── */
+.trade-toggle {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.trade-toggle-btn {
+  flex: 1;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 20px;
+  border: 1px solid #E5E5EA;
+  background: #E5E5EA;
+  color: #000;
+  cursor: pointer;
+}
+
+.trade-toggle-btn.active {
+  background: #EAE1FF;
+  border: 1px solid var(--color-accent);
+}
+
+.quantity-shortcuts {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.qty-shortcut-btn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 15px;
+  border: none;
+  border-radius: 20px;
+  background: #E5E5EA;
+  cursor: pointer;
+}
+
+.quantity-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stepper-btn {
+  width: 60px;
+  height: 50px;
+  border: none;
+  border-radius: 20px;
+  background: #D9D9D9;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.stepper-value {
+  flex: 1;
+  text-align: center;
+  height: 50px;
+  line-height: 50px;
+  border-radius: 20px;
+  background: #D9D9D9;
+  font-size: 18px;
+}
+
+.trade-amount-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+}
+
+/* ── social.html 추가분 (원본 디자인 색상값 유지) ── */
+
+.social-grid {
+  display: grid;
+  grid-template-columns: 30% 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.social-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.social-card {
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 0;
+}
+
+.outline-card {
+  border: 2px solid #D9D9D9;
+  background: #fff;
+}
+
+.grey-card {
+  background: #D9D9D9;
+}
+
+.shadow-card {
+  background: #fff;
+  box-shadow: 1px 1px 15px 3px rgba(0, 0, 0, 0.25);
+}
+
+.social-card-title {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+.friend-add-row {
+  display: flex;
+  gap: 10px;
+}
+
+.friend-add-row input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 1px solid #D9D9D9;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.friend-add-row .btn-primary {
+  width: auto;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.request-text {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.request-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-accept, .btn-reject {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn-accept {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.btn-reject {
+  background: #fff;
+  color: #000;
+}
+
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 9px 8px;
+  margin-bottom: 8px;
+}
+
+.friend-row:last-child {
+  margin-bottom: 0;
+}
+
+.avatar-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #EEF0FF;
+  flex-shrink: 0;
+}
+
+.friend-name {
+  font-size: 16px;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 8px;
+  border-radius: 8px;
+}
+
+.ranking-row.me {
+  background: #EEF0FF;
+  border: 2px solid var(--color-accent);
+}
+
+.rank-number {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.ranking-row .avatar-circle {
+  width: 48px;
+  height: 48px;
+}
+
+.ranking-row.me .avatar-circle {
+  background: var(--color-accent);
+}
+
+.ranking-name {
+  flex: 1;
+  font-size: 16px;
+}
+
+.ranking-name.me {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.ranking-pct {
+  font-size: 16px;
+}
+
+.ranking-pct.up { color: #FF0000; }
+.ranking-pct.down { color: #004DFF; }
+
+/* ── settings.html 추가분 (원본 디자인 색상값 유지) ── */
+
+.settings-container {
+  max-width: 880px;
+}
+
+.settings-title {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.settings-subtitle {
+  font-size: 16px;
+  color: #000;
+  margin-bottom: 20px;
+}
+
+.settings-card {
+  border-radius: 25px;
+  padding: 30px 40px;
+  margin-bottom: 20px;
+}
+
+.outline-card {
+  background: #fff;
+  border: 2px solid #D9D9D9;
+}
+
+/* 프로필 카드 */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.profile-avatar {
+  width: 115px;
+  height: 115px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-name {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.profile-handle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+
+/* 개인정보 수정 카드 */
+.settings-card-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.settings-field {
+  margin-bottom: 20px;
+}
+
+.settings-field label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.settings-field input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background: #D9D9D9;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+.settings-field input:focus {
+  outline: 2px solid var(--color-accent);
+}
+
+.settings-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-save-btn {
+  width: 159px;
+  height: 55px;
+  border-radius: 20px;
+  font-size: 20px;
+}
+
+/* 계좌 삭제 (Danger Zone) */
+.danger-card {
+  background: #FFEAEA;
+  border: 2px solid #FFC2C2;
+}
+
+.danger-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.danger-desc {
+  font-size: 16px;
+  color: #E54B4B;
+  margin-bottom: 20px;
+}
+
+.btn-danger {
+  width: 159px;
+  height: 55px;
+  background: #FF7474;
+  border: 1px solid #CF6D6D;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #FF5C5C;
+}
