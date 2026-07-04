@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>모의투자 - 홈</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" id="userTitle">OO님의 계좌</h1>
+        <p class="page-subtitle" id="virtualDay">가상거래 2일차</p>
+      </div>
+      <button class="btn-primary btn-income" id="incomeBtn">오늘의 기본 소득 10,000원 받기</button>
+    </div>
+
+    <div class="home-grid">
+
+      <!-- 왼쪽: 계좌 정보 -->
+      <div class="home-main">
+
+        <div class="card">
+          <p class="card-label">총자산</p>
+          <p class="card-value-large" id="totalAsset">1,043,200원</p>
+          <p class="profit-loss">
+            평가손익 : <span class="text-up" id="profitLoss">+43,200원</span>
+          </p>
+
+          <hr class="divider" />
+
+          <div class="stat-row">
+            <div>
+              <p class="card-label">현금 보유량</p>
+              <p class="card-value" id="cashBalance">312,000원</p>
+            </div>
+            <div>
+              <p class="card-label">보유 종목 수</p>
+              <p class="card-value" id="stockCount">3개</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-link" id="goToHistoryBtn">최근 거래 내역 보러 가기</button>
+
+        <div class="card">
+          <p class="card-title">내가 가진 주식</p>
+
+          <div class="table-header">
+            <span>종목명</span>
+            <span class="align-right">평가금액</span>
+            <span class="align-right">수익률</span>
+          </div>
+
+          <div class="table-row" id="holdingsList">
+            <!-- 홀딩 목록: JS에서 API 응답으로 이 안을 채움 -->
+            <div class="holding-row">
+              <div class="holding-info">
+                <div class="holding-logo"></div>
+                <div>
+                  <p class="holding-name">기업명</p>
+                  <p class="holding-desc">기업 설명</p>
+                </div>
+              </div>
+              <span class="align-right holding-value">-</span>
+              <span class="align-right holding-return">-</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 오른쪽: 뉴스 -->
+      <div class="home-side">
+        <div class="card">
+          <p class="card-title">오늘의 뉴스</p>
+          <div id="newsList">
+            <!-- 뉴스 목록: JS에서 API 응답으로 이 안을 채움 -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/navbar.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>

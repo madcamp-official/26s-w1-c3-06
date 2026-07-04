@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>모의투자 - 주식 거래</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <main class="page-container">
+
+    <div class="stock-list-header">
+      <h1 class="page-title-lg">종목 둘러보기</h1>
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="검색하기" />
+      </div>
+    </div>
+
+    <div class="stock-list-card">
+      <div class="stock-list-column-header">
+        <span>종목명</span>
+        <span class="align-right">현재가</span>
+        <span class="align-right">등락률</span>
+      </div>
+
+      <div id="stockList">
+        <!-- 종목 목록: JS에서 API 응답으로 이 안을 채움 -->
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/navbar.js"></script>
+  <script src="js/trading.js"></script>
+</body>
+</html>

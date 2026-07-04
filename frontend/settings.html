@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>모의투자 - 설정</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <main class="page-container settings-container">
+
+    <p class="settings-title">설정</p>
+    <p class="settings-subtitle">내 계정 정보를 확인하고 관리해요</p>
+
+    <!-- 프로필 카드 -->
+    <div class="settings-card outline-card profile-card">
+      <img class="profile-avatar" id="profileAvatar" src="https://placehold.co/115x115" alt="프로필 사진" />
+      <div class="profile-info">
+        <p class="profile-name" id="profileName">김혜리</p>
+        <p class="profile-handle" id="profileHandle">@ireyhye</p>
+      </div>
+    </div>
+
+    <!-- 개인정보 수정 카드 -->
+    <div class="settings-card outline-card">
+      <p class="settings-card-title">개인정보 수정</p>
+
+      <div class="settings-field">
+        <label for="nicknameInput">닉네임 수정</label>
+        <input type="text" id="nicknameInput" value="김혜리" />
+      </div>
+
+      <div class="settings-field">
+        <label for="passwordInput">비밀번호 수정</label>
+        <input type="password" id="passwordInput" placeholder="새 비밀번호를 입력하세요" />
+      </div>
+
+      <div class="settings-card-footer">
+        <button class="btn-primary settings-save-btn" id="saveBtn">저장하기</button>
+      </div>
+    </div>
+
+    <!-- 계좌 삭제 (Danger Zone) -->
+    <div class="settings-card danger-card">
+      <p class="danger-title">계좌 삭제</p>
+      <p class="danger-desc">계좌를 삭제하면 보유주식, 거래내역, 친구 목록이 모두 사라지며 복구할 수 없습니다.</p>
+      <div class="settings-card-footer">
+        <button class="btn-danger" id="deleteAccountBtn">계좌 삭제</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/navbar.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

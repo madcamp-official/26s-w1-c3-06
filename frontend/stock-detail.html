@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>모의투자 - 종목 상세</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <main class="page-container">
+
+    <a href="trading.html" class="back-link">← 돌아가기</a>
+
+    <div class="detail-grid">
+
+      <!-- 왼쪽: 종목 정보 -->
+      <div class="detail-left">
+
+        <div class="detail-card">
+          <div class="stock-header">
+            <div class="stock-logo-lg">로고</div>
+            <div class="stock-header-info">
+              <p class="stock-name-lg" id="stockName">기업명</p>
+              <span class="desc-badge" id="stockDesc">기업설명</span>
+            </div>
+            <div class="stock-price-info">
+              <p class="price-label">현재 주가</p>
+              <p class="price-value" id="currentPrice">-----원</p>
+              <p class="price-change" id="priceChange">▼xx.x%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <p class="card-title">주가 그래프</p>
+          <div class="chart-placeholder">
+            <canvas id="priceChart"></canvas>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <p class="card-title">관련 뉴스</p>
+          <p class="card-caption">기간동안의 기업별 누적 뉴스 데이터 · 뉴스 제목만 표시돼요</p>
+          <div id="newsList">
+            <!-- 뉴스 목록: JS에서 API 응답으로 이 안을 채움 (제목 + 링크만) -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 오른쪽: 내 보유 정보 + 매매 -->
+      <div class="detail-right">
+
+        <div class="detail-card holding-card">
+          <p class="card-title" id="holdingTitle">내가 가진 (기업명)</p>
+          <div class="holding-stats">
+            <div>
+              <p class="stat-label">보유수량</p>
+              <p class="stat-value" id="holdingQty">-</p>
+            </div>
+            <div>
+              <p class="stat-label">평균 매수가</p>
+              <p class="stat-value" id="holdingAvgPrice">-</p>
+            </div>
+            <div>
+              <p class="stat-label">평가금액</p>
+              <p class="stat-value" id="holdingValue">-</p>
+            </div>
+            <div>
+              <p class="stat-label">손익</p>
+              <p class="stat-value" id="holdingProfit">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card trading-card">
+
+          <div class="trade-toggle">
+            <button class="trade-toggle-btn active" id="buyBtn" data-type="buy">사기</button>
+            <button class="trade-toggle-btn" id="sellBtn" data-type="sell">팔기</button>
+          </div>
+
+          <div class="quantity-shortcuts">
+            <button class="qty-shortcut-btn" data-pct="10">10%</button>
+            <button class="qty-shortcut-btn" data-pct="25">25%</button>
+            <button class="qty-shortcut-btn" data-pct="50">50%</button>
+            <button class="qty-shortcut-btn" data-pct="100">최대</button>
+          </div>
+
+          <div class="quantity-stepper">
+            <button class="stepper-btn" id="decreaseBtn">-</button>
+            <span class="stepper-value" id="quantityValue">1주</span>
+            <button class="stepper-btn" id="increaseBtn">+</button>
+          </div>
+
+          <div class="trade-amount-row">
+            <span>거래액</span>
+            <span id="tradeAmount">xxx,xxx원</span>
+          </div>
+
+          <button class="btn-primary order-btn" id="orderBtn">주문넣기</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="js/navbar.js"></script>
+  <script src="js/stock-detail.js"></script>
+</body>
+</html>

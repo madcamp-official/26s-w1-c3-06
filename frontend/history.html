@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>모의투자 - 최근 거래 내역</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <main class="page-container">
+
+    <div class="history-header">
+      <a href="home.html" class="back-link">← 돌아가기</a>
+      <h1 class="page-title">최근 거래 내역</h1>
+    </div>
+
+    <div class="card">
+      <div class="history-table-header">
+        <span>날짜</span>
+        <span>내용</span>
+        <span class="align-right">수량</span>
+        <span class="align-right">금액</span>
+      </div>
+
+      <div id="historyList">
+        <!-- 거래 내역: JS에서 API 응답으로 이 안을 채움 -->
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/navbar.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>
