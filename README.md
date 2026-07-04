@@ -113,30 +113,31 @@ https://www.figma.com/design/UA0CwwncocjZ67imzxZzoA/%EC%A0%9C%EB%AA%A9-%EC%97%86
 
 | Method | Endpoint | 설명 | 요청 | 응답 |
 |---|---|---|---|---|
-| account_create | | 계좌 및 계정 생성; 기본금 1,000,000원 지급 | | |
-| account_authenticate | | 계좌 아이디 및 비밀번호 정보 일치 확인 | | |
-| account_view | | 계좌명, 보유 주식, 최근 거래 내역, 수익 금액 및 수익률, 계좌 잔고 불러오기 | | |
-| account_edit | | 계좌 정보를 변경 | | |
-| account_dailyBailout | | 구제금을 요청한 계좌에서 매일 하루에 한하여 10,000원의 수익 지급. 중복 지급 요청시 거부 | | |
-| account_delete | | 계정 삭제 | | | 
-| friends_request | | 친구 요청 발신 | | |
-| friends_view | | 친구 목록 확인 | | |
-| friends_delete | | 친구 삭제 | | |
-| stock_priceUpToDate | | 가상주식 가격을 연동 (50ms 단위) | | | 
-| stock_list | | 가상주식 목록 - 기업명, 기업 로고, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
-| stock_search | | 주식을 기업명 일치에 의해 검색 | | |
-| stock_entry_view | | 단일 주식의 그래프, 현재 주가 표시 | | | 
-| stock_entry_news | | 단일 주식의 관련 뉴스 확인 | | |
-| stock_order_create | | 가상주식 주문 (매수 / 매도, 주문량 설정) | | |
-| stock_order_edit | | 가상주식 주문 수정 (주문량 변경) | | |
-| stock_order_delete | | 가상주식 주문 취소| | |
-| stock_order_sign | | 주문 가격 도달시 가상주식 주문 체결 | | |
-| ranking_view | | 일간 주식 수익 랭킹 표시 | | |
-| notify_stock | | 마지막 공지 시점으로부터 단일 주식의 주가 변화를 알림으로 공지함 | | |
-| notify_order | | 주문의 체결 성공 / 실패 / 취소를 알림으로 공지함 | | |
-| notify_friends | | 친구 요청 발신 / 수신, 친구 삭제를 알림으로 공지함 | | |
-| tutorial_terms | | 생소한 주식 관련 용어 설명 | | |
-| tutorial_dict | | 주식 용어 사전 열람 | | |
+| account_Create | | 계좌 및 계정 생성; 기본금 1,000,000원 지급 | | |
+| account_Authenticate | | 계좌 아이디 및 비밀번호 정보 일치 확인 | | |
+| account_Show | | 계좌명, 보유 주식, 최근 거래 내역, 수익 금액 및 수익률, 계좌 잔고 불러오기 | | |
+| account_Edit | | 계좌 정보를 변경 | | |
+| account_DailyBailout | | 구제금을 요청한 계좌에서 매일 하루에 한하여 10,000원의 수익 지급. 중복 지급 요청시 거부 | | |
+| account_Delete | | 계정 삭제 | | | 
+| news_View | | 단일 주식의 관련 뉴스 확인 | | |
+| friends_Request | | 친구 요청 발신 | | |
+| friends_Show | | 친구 목록 확인 | | |
+| friends_Delete | | 친구 삭제 | | |
+| stock_PriceUpToDate | | 가상주식 가격을 연동 (50ms 단위) | | | 
+| stock_ShowList | | 가상주식 목록 - 기업명, 기업 로고, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
+| stock_Search | | 주식을 기업명 일치에 의해 검색 | | |
+| stock_ShowEntry | | 단일 주식의 그래프, 현재 주가 표시 | | | 
+| order_Create | | 가상주식 주문 (매수 / 매도, 주문량 설정) | | |
+| order_Edit | | 가상주식 주문 수정 (주문량 변경) | | |
+| order_Destroy | | 가상주식 주문 취소 | | |
+| order_Sign | | 주문 가격 도달시 가상주식 주문 체결 | | |
+| ranking_Update | | 일간 주식 수익 랭킹 업데이트 | | |
+| ranking_Show | | 일간 주식 수익 랭킹 표시 | | |
+| notify_Stock | | 마지막 공지 시점으로부터 단일 주식의 주가 변화를 알림으로 공지함 | | |
+| notify_Order | | 주문의 체결 성공 / 실패 / 취소를 알림으로 공지함 | | |
+| notify_Friends | | 친구 요청 발신 / 수신, 친구 삭제를 알림으로 공지함 | | |
+| tutorial_Terms | | 생소한 주식 관련 용어 설명 | | |
+| tutorial_Dict | | 주식 용어 사전 열람 | | |
 
 ---
 
