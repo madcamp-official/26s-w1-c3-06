@@ -23,12 +23,12 @@ class UserAccount(Base):
     __tablename__ = "User_Info"
 
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
-    PW = Column(VARCHAR(20))
-    LastConnect = Column(TIMESTAMPTZ)
-    Balance = Column(INTEGER)
-    Return = Column(INTEGER)
+    PW: Mapped[str] = mapped_column(String(20))
+    LastConnect: Mapped[datetime.datetime] = mapped_column(TIMESTAMPTZ)
+    Balance: Mapped[int] = mapped_column(Integer)
+    Return: Mapped[int] = mapped_column(Integer)
     LastBailout = Column(TIMESTAMPTZ)
-    Nickname = Column(TEXT)
+    Nickname: Mapped[str] = mapped_column(String(12),unique=True)
     Profile = Column(BINARY)
 
     # default profile is embedded in website
