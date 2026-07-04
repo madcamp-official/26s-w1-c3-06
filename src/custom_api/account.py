@@ -1,38 +1,107 @@
+from sqlalchemy import *
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import stock
 import order
 import friends
 
-class MTSAccount:
-    def __init__(self, balance):
-        self._balance = balance
+# create engine
+Base = declarative_base()
 
-    @property
-    def balance(self):
-        return self._balance
-    
-    @balance.setter
-    def balance(self, new_balance):
-        if new_balance >= 0:
-            self._balance = new_balance
-        else:
-            raise ValueError("Balance must be non-negative")
+engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
+Base.metadata.create_all(engine)
 
-def Create():
-    '''Create an object and stage onto DB'''
+Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+session = Session()
 
-'''>> helper function that loads a tuple from DB?'''
+# !! WIP !!
+class UserAccount(Base): ''' align with schema.sql'''
+    __tablename__ = "User_Info"
 
-def Authenticate():
+    ID = Column(VARCHAR(16), primary_key=True)
+    PW = Column(VARCHAR(20))
+    LastConnect = Column(TIMESTAMPTZ)
+    Balance = Column(INTEGER)
+    Return = Column(INTEGER)
+    LastBailout = Column(TIMESTAMPTZ)
+    Nickname = Column(TEXT)
+    Profile = Column(BINARY)
+
+    # default profile is embedded in website
+    def __init__(self, ID=None, PW=None):
+        self.ID = ID
+        self.PW = PW
+        self.LastConnect = datetime.now(ZoneInfo("Asia/Tokyo"))
+        self.Balance = 0
+        self.Return = 0
+        self.LastBailout = None
+        self.Nickname = None
+        self.Profile = None
+    def __repr__(self):
+        return f"User({self.ID}, {self.Nickname}, {self.Balance})"
+
+# Create an account and stage onto DB
+# !! WIP !!
+def Create(ID, PW):
+    a1 = UserAccount(ID, PW)
+    try:
+        session.add(a1)
+        session.commit()
+    except:
+        session.rollback()
+
+# !! WIP !!
+def Authenticate(ID, PW):
+    user = session.get(UserAccount, ID)
+
+    if user and user.PW == PW:
+
+    user.LastConnect = datetime.now(ZoneInfo("Asia/Tokyo"))
+
+# !! WIP !!
+def View(user):
     '''TODO'''
 
-def View():
-    '''TODO'''
+# Test required
+def Edit(ID, new_PW, new_Nickname, new_Profile):
+    user = session.get(UserAccount, ID)
 
-def Edit():
-    '''TODO'''
+    if user:
+        try: 
+            user.PW = new_PW
+            user.Nickname = new_Nickname
+            user.Profile = new_Profile
 
-def DailyBailout():
-    '''TODO'''
+            session.commit()
+        except:
+            session.rollback()
 
-def Delete():
-    '''TODO'''
+# !! WIP !!
+def DailyBailout(ID):
+    user = session.get(UserAccount, ID)
+    tokyo_time = datetime.now(ZoneInfo("Asia/Tokyo"))
+
+    if user and (tokyo_time - user.LastBailout).days > 0:
+        try:
+            user.Balance += 10000
+            user.LastBailout = tokyo_time
+
+            session.commit()
+        except:
+            session.rollback()
+
+# Test required
+def Delete(ID):
+    stmt = delete(UserAccount).where(UserAccount.ID == ID)
+
+    try:
+        session.execute(stmt)
+        session.commit()
+    except:
+        session.rollback()
+
+
