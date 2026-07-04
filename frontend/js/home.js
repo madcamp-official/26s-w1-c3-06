@@ -49,10 +49,13 @@ function renderAccount(account) {
     incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
   } else {
     incomeBtn.addEventListener("click", () => {
-      // TODO: 기본소득 수령 API 호출
-      alert("10,000원을 받았어요!");
-      incomeBtn.disabled = true;
-      incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
+      openQuizModal(() => {
+        // 퀴즈 정답을 맞혔을 때만 실행됨
+        // TODO: 백엔드 기본소득 지급 API 호출 (/account/basic-income)
+        alert("10,000원을 받았어요!");
+        incomeBtn.disabled = true;
+        incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
+      });
     });
   }
 }
@@ -82,7 +85,7 @@ function renderNews(newsList) {
     <div class="news-item">
       <p class="news-title">${n.title}</p>
       <div class="news-meta">
-        <span>${n.source}</span>
+        <span>${n.source} · ${n.day}일차</span>
         <a href="${n.link}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>
       </div>
     </div>
