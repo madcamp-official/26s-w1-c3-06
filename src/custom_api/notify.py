@@ -5,6 +5,8 @@ from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapp
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from flask import Flask, request, jsonify
+
 # internal API imports
 import account
 import stock
@@ -50,3 +52,6 @@ def OrderNotice():
 
 def FriendsNotice():
     '''TODO'''
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

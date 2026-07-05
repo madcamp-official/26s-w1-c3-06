@@ -1,10 +1,13 @@
+# external API imports
+
 from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
-# external API imports
 from enum import Enum
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
+from flask import Flask, request, jsonify
 
 # internal API imports
 import account
@@ -59,3 +62,6 @@ def View():
 
 def Delete():
     '''TODO'''
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

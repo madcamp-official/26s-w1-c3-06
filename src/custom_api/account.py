@@ -15,6 +15,7 @@ app = Flask(__name__)
 import stock
 import order
 import friends
+import quiz
 
 # create engine
 class Base(DeclarativeBase):
@@ -31,7 +32,7 @@ class UserAccount(Base):
 
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
     PW: Mapped[str] = mapped_column(String(255))
-    LastConnect: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Reg_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
     LastBailout: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
@@ -42,7 +43,7 @@ class UserAccount(Base):
     def __init__(self, ID="", PW=""):
         self.ID = ID
         self.PW = PW
-        self.LastConnect = datetime.now(ZoneInfo("Asia/Tokyo"))
+        self.Reg_Date = datetime.now(ZoneInfo("Asia/Tokyo"))
         self.Balance = 0
         self.Return = 0
         self.LastBailout = datetime.now(ZoneInfo("Asia/Tokyo"))
@@ -127,9 +128,9 @@ def Authenticate():
         }), 401
 
 # Show main page and feature (almost) everything
-# test required
+# test required WIP!!!
 @app.route('/home', methods=['GET'])
-def View(ID):
+def View():
     if request.is_json:
         data = request.get_json()
     else:
@@ -143,11 +144,17 @@ def View(ID):
 
     if user:
         return jsonify({
-            "status": "success",
-            "message": "메인 화면"
-            "balance": user.Balance
-            ""
-            "stock_owned": user_stocks
+            "mockAccount": {
+                "nickname": user.Nickname
+                "virtualDay": (Midnight(tokyo_time) - Midnight(user.Reg_Date)).days + 1
+                "totalAsset": user.Balance
+                "profitLoss": user.Return
+                "cashBalance": '''calculate'''
+                "stockCount": len(user_stocks)
+                "hasReceivedIncomeToday": 
+            },
+            "mockHoldings": user_stocks,
+            "mockNews": 
         }), 200
     else:
         return jsonify({
@@ -155,27 +162,12 @@ def View(ID):
             "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
-# Test required
-def Update(ID, new_PW=None, new_Nickname=None, new_Profile=None):
-    user = session.get(UserAccount, ID)
-
-    if user:
-        try: 
-            if new_Pw is not None:
-                user.PW = new_PW
-            if new_Nickname is not None:
-                user.Nickname = new_Nickname
-            if new_Profile is not None:
-                user.Profile = new_Profile
-            session.commit()
-        except:
-            session.rollback()
-
 # Helper Function: midnight of certain datetime object
 def Midnight(dt):
     return datetime.combine(dt.date(), time.min)
 
 # html request Required
+@app.route('/home', methods=['POST'])
 def DailyBailout(ID):
     user = session.get(UserAccount, ID)
     tokyo_time = datetime.now(ZoneInfo("Asia/Tokyo"))
@@ -189,8 +181,35 @@ def DailyBailout(ID):
         except:
             session.rollback()
 
-# html request required
-def Delete(ID):
+# !! WIP !!
+@app.route('/settings', methods=['POST'])
+def Update():
+
+    ID = data.get()
+    user = session.get(UserAccount, ID)
+
+    new_PW = 
+    new_Nickname = 
+    new_Profile = 
+
+    if user:
+        try: 
+            if new_Pw is not None:
+                user.PW = new_PW
+            if new_Nickname is not None:
+                user.Nickname = new_Nickname
+            if new_Profile is not None:
+                user.Profile = new_Profile
+            session.commit()
+        except:
+            session.rollback()
+
+# !! WIP !!
+@app.route('/settings', methods=['POST'])
+def Delete():
+    ID = data.get()
+    user = session.get(UserAccount, ID)
+    
     stmt = delete(UserAccount).where(UserAccount.ID == ID)
 
     try:

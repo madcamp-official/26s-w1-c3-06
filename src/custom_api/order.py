@@ -5,6 +5,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from enum import Enum
 
+from flask import Flask, request, jsonify
+
 # internal API imports
 import account
 import stock
@@ -79,3 +81,6 @@ def Destroy(del_order_id):
         session.commit()
     except:
         session.rollback()
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

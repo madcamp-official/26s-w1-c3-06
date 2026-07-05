@@ -1,8 +1,10 @@
+# external API imports
 from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 import json
-import requests
+
+from flask import Flask, request, jsonify
 
 # internal API imports
 import account
@@ -47,3 +49,6 @@ def Submit():
 # !! WIP !!
 def Check():
     '''TODO'''
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
