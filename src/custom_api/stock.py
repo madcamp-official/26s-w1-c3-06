@@ -6,6 +6,8 @@ from zoneinfo import ZoneInfo
 
 # internal API imports
 import account
+import order
+import news
 
 # create engine
 class Base(DeclarativeBase):

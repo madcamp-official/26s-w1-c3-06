@@ -1,11 +1,14 @@
 from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
-import json
+# external API imports
 from enum import Enum
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # internal API imports
 import account
+import notify
 
 # define custom types
 class fnd_sts(Enum):
@@ -23,7 +26,7 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
-# !! WIP !!
+# test required
 class FriendEntry(Base):
     __tablename__ = "User_Friends"
 
@@ -37,7 +40,6 @@ class FriendEntry(Base):
         ForeignKeyConstraint(["ToID"], ["User_Info.ID"]),
     )
 
-    # default profile is embedded in website
     def __init__(self, FromID="", ToID="", status=fnd_sts.Requested):
         self.FromID = FromID
         self.ToID = ToID

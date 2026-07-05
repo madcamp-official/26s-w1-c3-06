@@ -3,7 +3,7 @@ from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapp
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import enum
+from enum import Enum
 
 # internal API imports
 import account

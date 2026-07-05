@@ -1,11 +1,14 @@
 from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
+# external API imports
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # internal API imports
 import account
 import stock
+import order
 import friends
 
 # create engine
@@ -18,7 +21,7 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
-# !! WIP !!
+# test required
 class NoticeEntry(Base): 
     __tablename__ = "Notification"
 
