@@ -1,34 +1,34 @@
 from sqlalchemy import *
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+# internal API imports
 import stock
 import order
 import friends
 
 # create engine
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
-Base.metadata.create_all(engine)
 
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
 # !! WIP !!
-class UserAccount(Base): ''' align with schema.sql'''
+class UserAccount(Base): 
     __tablename__ = "User_Info"
 
-    ID = Column(VARCHAR(16), primary_key=True)
-    PW = Column(VARCHAR(20))
-    LastConnect = Column(TIMESTAMPTZ)
-    Balance = Column(INTEGER)
-    Return = Column(INTEGER)
+    ID: Mapped[str] = mapped_column(String(16), primary_key=True)
+    PW: Mapped[str] = mapped_column(String(20))
+    LastConnect: Mapped[datetime.datetime] = mapped_column(TIMESTAMPTZ)
+    Balance: Mapped[int] = mapped_column(Integer)
+    Return: Mapped[int] = mapped_column(Integer)
     LastBailout = Column(TIMESTAMPTZ)
-    Nickname = Column(TEXT)
+    Nickname: Mapped[str] = mapped_column(String(12),unique=True)
     Profile = Column(BINARY)
 
     # default profile is embedded in website
@@ -43,6 +43,8 @@ class UserAccount(Base): ''' align with schema.sql'''
         self.Profile = None
     def __repr__(self):
         return f"User({self.ID}, {self.Nickname}, {self.Balance})"
+
+Base.metadata.create_all(engine)
 
 # Create an account and stage onto DB
 # !! WIP !!

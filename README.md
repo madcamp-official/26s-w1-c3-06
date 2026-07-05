@@ -75,7 +75,7 @@
 ### IA (정보 구조도)
 
 <p align="center">
-  <img src="images/IA.png" width="900" alt="IA Diagram">
+  <img src="./public/image/IA.png" width="900" alt="IA Diagram">
 </p>
 
 ### 화면 설계 (Figma)
@@ -125,8 +125,9 @@
 | notify_Stock | | 마지막 공지 시점으로부터 단일 주식의 주가 변화를 알림으로 공지함 | | |
 | notify_Order | | 주문의 체결 성공 / 실패 / 취소를 알림으로 공지함 | | |
 | notify_Friends | | 친구 요청 발신 / 수신, 친구 삭제를 알림으로 공지함 | | |
-| tutorial_Terms | | 생소한 주식 관련 용어 설명 | | |
-| tutorial_Dict | | 주식 용어 사전 열람 | | |
+| quiz_Show | | 오늘의 퀴즈 보여주기 | | |
+| quiz_Submit | | 퀴즈 정답 제출 | | |
+| quiz_Check | | 퀴즈 정답 채점 | | |
 
 ---
 
