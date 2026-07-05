@@ -17,7 +17,7 @@ Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
 # !! WIP !!
-class QuizEntry(Base): ''' align with post 2.0 syntax'''
+class QuizEntry(Base):
     __tablename__ = "Quiz"
 
     Quiz_Num: Mapped[int] = mapped_column(primary_key=True)
@@ -29,5 +29,6 @@ class QuizEntry(Base): ''' align with post 2.0 syntax'''
         self.Quiz_Body = Quiz_Body
         
     def __repr__(self):
-        return f"Quiz({Quiz_Num}, {Quiz_Body})"
+        return f"Quiz(Num: {Quiz_Num}, Body: {Quiz_Body})"
     
+Base.metadata.create_all(engine)
