@@ -127,7 +127,7 @@ def Authenticate():
         }), 401
 
 # Show main page and feature (almost) everything
-# !! WIP !!
+# test required
 @app.route('/home', methods=['GET'])
 def View(ID):
     if request.is_json:
@@ -136,14 +136,24 @@ def View(ID):
         data = request.form
     
     ID = data.get()
-    PW = data.get()
-    
     user = session.get(UserAccount, ID)
+    
+    stmt = select(AccountStock).where(AccountStock.ID == ID)
+    user_stocks = session.scalars(stmt).all()
 
     if user:
-        try:
-
-        except:
+        return jsonify({
+            "status": "success",
+            "message": "메인 화면"
+            "balance": user.Balance
+            ""
+            "stock_owned": user_stocks
+        }), 200
+    else:
+        return jsonify({
+            "status": "fail",
+            "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
 
 # Test required
 def Update(ID, new_PW=None, new_Nickname=None, new_Profile=None):
