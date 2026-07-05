@@ -9,7 +9,7 @@ CREATE TYPE ord_res AS ENUM('SUCCESS','FAIL','CANCELLED','PENDING');
 CREATE TABLE "User_Info" (
 	"ID"	VARCHAR(16)		NOT NULL,
 	"PW"	VARCHAR(255)		NULL,
-	"LastConnect"	TIMESTAMPTZ		NULL,
+	"Reg_Date"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
 	"LastBailout"	INT		NULL,
@@ -34,7 +34,6 @@ CREATE TABLE "News_List" (
 	"News_ID"	INT		NOT NULL,
 	"News_Title"	TEXT		NULL,
 	"News_Body"	TEXT		NULL,
-	"Reporter"	VARCHAR(10)		NULL,
 	"Publisher"	VARCHAR(10)		NULL,
 	"News_Date"	TIMESTAMPTZ		NOT NULL,
 	CONSTRAINT "PK_News_List" PRIMARY KEY ("News_ID")

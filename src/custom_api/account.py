@@ -209,7 +209,7 @@ def Update():
 def Delete():
     ID = data.get()
     user = session.get(UserAccount, ID)
-    
+
     stmt = delete(UserAccount).where(UserAccount.ID == ID)
 
     try:
