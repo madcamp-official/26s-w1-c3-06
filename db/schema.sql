@@ -9,7 +9,7 @@ CREATE TYPE ord_res AS ENUM('SUCCESS','FAIL','CANCELLED','PENDING');
 CREATE TABLE "User_Info" (
 	"ID"	VARCHAR(16)		NOT NULL,
 	"PW"	VARCHAR(255)		NULL,
-	"LastConnect"	TIMESTAMPTZ		NULL,
+	"Reg_Date"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
 	"LastBailout"	INT		NULL,
