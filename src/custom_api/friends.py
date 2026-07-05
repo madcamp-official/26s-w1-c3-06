@@ -12,9 +12,9 @@ import notify
 
 # define custom types
 class fnd_sts(Enum):
-    Requested = "Requested"
-    Friends = "Friends"
-    None = "None"
+    REQUESTED = "REQUESTED"
+    FRIENDS = "FRIENDS"
+    UNRELATED = "UNRELATED"
 
 # create engine
 class Base(DeclarativeBase):
@@ -40,7 +40,7 @@ class FriendEntry(Base):
         ForeignKeyConstraint(["ToID"], ["User_Info.ID"]),
     )
 
-    def __init__(self, FromID="", ToID="", status=fnd_sts.Requested):
+    def __init__(self, FromID="", ToID="", status=fnd_sts.REQUESTED):
         self.FromID = FromID
         self.ToID = ToID
         self.Friend_Date = datetime.now(ZoneInfo("Asia/Tokyo"))
