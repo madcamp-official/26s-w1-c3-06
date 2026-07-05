@@ -35,7 +35,7 @@ function renderStockList(stocks) {
     }
 
     return `
-      <div class="stock-row" data-stock-name="${stock.name}" style="cursor:pointer;">
+      <div class="stock-row" data-stock-name="${stock.name}">
         <div class="stock-info">
           <div class="stock-logo">로고</div>
           <div>

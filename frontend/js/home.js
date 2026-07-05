@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // TODO: 백엔드 API 완성되면 아래 더미 데이터 대신 fetch로 교체
   const mockAccount = {
-    nickname: "민지",
+    nickname: "OO",
     virtualDay: 2,
     totalAsset: 1043200,
     profitLoss: 43200,
