@@ -28,12 +28,12 @@ class NewsEntry(Base):
     News_ID: Mapped[int] = mapped_column(Integer, primary_key=True)
     News_Title: Mapped[str] = mapped_column(Text)
     News_Body: Mapped[str] = mapped_column(Text)
-    Reporter: Mapped[str] = mapped_column(String(10))
-    Publisher: Mapped[str] = mapped_column(String(10))
+    Reporter: Mapped[Optional[str]] = mapped_column(String(10))
+    Publisher: Mapped[Optional[str]] = mapped_column(String(10))
     News_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
 
     # default profile is embedded in website
-    def __init__(self, ID=0, title="", body="", reporter="", publisher="", news_date=None):
+    def __init__(self, ID=0, title="", body="", reporter=None, publisher=None, news_date=None):
         self.News_ID = ID
         self.News_Title = title
         self.News_Body = body

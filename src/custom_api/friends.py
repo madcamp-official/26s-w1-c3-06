@@ -33,7 +33,7 @@ class FriendEntry(Base):
     FromID: Mapped[str] = mapped_column(primary_key=True)
     ToID: Mapped[str] = mapped_column(primary_key=True)
     Friend_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
-    Friend_Status: Mapped[fnd_sts] = mapped_column(fnd_sts)
+    Friend_Status: Mapped[fnd_sts] = mapped_column()
     
     __table_args__ = (
         ForeignKeyConstraint(["FromID"], ["User_Info.ID"]),

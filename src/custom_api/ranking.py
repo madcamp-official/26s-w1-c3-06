@@ -39,6 +39,14 @@ class RankingEntry(Base):
 
 Base.metadata.create_all(engine)
 
+def Register(ID):
+    user = session.get(UserAccount, ID)
+
+    try:
+        session.add(a1)
+        session.commit()
+    except:
+        session.rollback()
 
 # !! WIP !!
 def Update():

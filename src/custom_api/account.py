@@ -19,7 +19,7 @@ engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
-# !! WIP !!
+# test required
 class UserAccount(Base): 
     __tablename__ = "User_Info"
 
@@ -29,8 +29,8 @@ class UserAccount(Base):
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
     LastBailout: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
-    Nickname: Mapped[str] = mapped_column(String(12),unique=True)
-    Profile: Mapped[bytes] = mapped_column(LargeBinary)
+    Nickname: Mapped[Optional[str]] = mapped_column(String(12),unique=True)
+    Profile: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
 
     # default profile is embedded in website
     def __init__(self, ID=None, PW=None):
@@ -46,7 +46,7 @@ class UserAccount(Base):
     def __repr__(self):
         return f"User(ID: {self.ID}, PW: {self.PW}, Balance: {self.Balance})"
 
-# !! WIP !!
+# test required
 class AccountStock(Base):
     __tablename__ = "Stock_Owned"
 
@@ -70,7 +70,7 @@ class AccountStock(Base):
         self.Own_Avg = Own_Avg
 
     def __repr__(self):
-        return f"S"
+        return f"StockOwned(Name: {self.Stock_Name}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
 
 Base.metadata.create_all(engine)
 
