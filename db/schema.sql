@@ -34,7 +34,6 @@ CREATE TABLE "News_List" (
 	"News_ID"	INT		NOT NULL,
 	"News_Title"	TEXT		NULL,
 	"News_Body"	TEXT		NULL,
-	"Reporter"	VARCHAR(10)		NULL,
 	"Publisher"	VARCHAR(10)		NULL,
 	"News_Date"	TIMESTAMPTZ		NOT NULL,
 	CONSTRAINT "PK_News_List" PRIMARY KEY ("News_ID")
