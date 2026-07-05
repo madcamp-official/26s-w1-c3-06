@@ -2,9 +2,16 @@ from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 import json
+from enum import Enum
 
 # internal API imports
 import account
+
+# define custom types
+class fnd_sts(Enum):
+    Requested = "Requested"
+    Friends = "Friends"
+    None = "None"
 
 # create engine
 class Base(DeclarativeBase):
@@ -17,19 +24,28 @@ Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
 # !! WIP !!
-class QuizEntry(Base): ''' align with post 2.0 syntax'''
-    __tablename__ = "Quiz"
+class FriendEntry(Base):
+    __tablename__ = "User_Friends"
 
-    Quiz_Num: Mapped[int] = mapped_column(primary_key=True)
-    Quiz_Body: Mapped[dict[str,Any]] = mapped_column(JSON)
+    FromID: Mapped[str] = mapped_column(primary_key=True)
+    ToID: Mapped[str] = mapped_column(primary_key=True)
+    Friend_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Friend_Status: Mapped[fnd_sts] = mapped_column(fnd_sts)
+    
+    __table_args__ = (
+        ForeignKeyConstraint(["FromID"], ["User_Info.ID"]),
+        ForeignKeyConstraint(["ToID"], ["User_Info.ID"]),
+    )
 
     # default profile is embedded in website
-    def __init__(self, Quiz_Num=0, Quiz_Body=""):
-        self.Quiz_Num = Quiz_Num
-        self.Quiz_Body = Quiz_Body
+    def __init__(self, FromID="", ToID="", status=fnd_sts.Requested):
+        self.FromID = FromID
+        self.ToID = ToID
+        self.Friend_Date = datetime.now(ZoneInfo("Asia/Tokyo"))
+        self.Friend_Status = status
         
     def __repr__(self):
-        return f"Quiz(Num: {Quiz_Num}, Body: {Quiz_Body})"
+        return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Freind_Date} Status: {self.Friend_Status})"
 
 Base.metadata.create_all(engine)
 

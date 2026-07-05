@@ -17,7 +17,26 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
+# !! WIP !!
+class RankingEntry(Base): 
+    __tablename__ = "User_Ranking"
 
+    ID: Mapped[str] = mapped_column(primary_key=True)
+    Return_Daily: Mapped[int] = mapped_column(Integer)
+
+    __table_args__ = (
+        ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
+    )
+
+    # default profile is embedded in website
+    def __init__(self, ID="", Return_Daily=0):
+        self.ID = ID
+        self.Return_Daily = Return_Daily
+        
+    def __repr__(self):
+        return f"Ranking(ID: {self.ID}, Daily Return: {self.Return_Daily})"
+
+Base.metadata.create_all(engine)
 
 def Update():
     '''TODO'''

@@ -10,11 +10,11 @@ import account
 import stock
 
 # define custom types
-class ord_pos(enum.Enum):
+class ord_pos(Enum):
     BTO = "BTO"
     STC = "STC"
 
-class ord_res(enum.Enum):
+class ord_res(Enum):
     SUCCESS = "SUCCESS"
     FAIL = "FAIL"
     CANCELLED = "CANCELLED"
@@ -34,12 +34,17 @@ class OrderEntry(Base):
     __tablename__ = "Stock_Order"
 
     Order_ID: Mapped[int] = mapped_column(Integer, primary_key=True)
-    Stock_Name: Mapped[str] = mapped_column(String(20), nullable=False)
-    ID: Mapped[str] = mapped_column(String(16), nullable=False)
+    Stock_Name: Mapped[str]
+    ID: Mapped[str]
     Order_Quantity: Mapped[int] = mapped_column(Integer)
     Order_Position: Mapped[ord_pos] = mapped_column()
     Order_Result: Mapped[ord_res] = mapped_column()
-    Order_Date: Mapped[datetime.datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Order_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
+        ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
+    )
 
     # default profile is embedded in website
     def __init__(self, Order_ID=0, Stock_Name="", Buyer_ID="", Order_Quantity=0, Order_Position=None, Order_Result=None, Order_Date=None):
@@ -53,7 +58,11 @@ class OrderEntry(Base):
 
     def __repr__(self):
         return f"Order(Name: {self.Stock_Name})"
-        
+
+
+
+
+
 Base.metadata.create_all(engine)
 
 def Create():

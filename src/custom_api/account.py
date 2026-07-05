@@ -3,6 +3,7 @@ from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapp
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from decimal import Decimal
 
 # internal API imports
 import stock
@@ -24,10 +25,10 @@ class UserAccount(Base):
 
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
     PW: Mapped[str] = mapped_column(String(20))
-    LastConnect: Mapped[datetime.datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    LastConnect: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
-    LastBailout: Mapped[datetime.datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    LastBailout: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
     Nickname: Mapped[str] = mapped_column(String(12),unique=True)
     Profile: Mapped[bytes] = mapped_column(LargeBinary)
 
@@ -41,8 +42,35 @@ class UserAccount(Base):
         self.LastBailout = datetime.now(ZoneInfo("Asia/Tokyo"))
         self.Nickname = None
         self.Profile = None
+        
     def __repr__(self):
         return f"User(ID: {self.ID}, PW: {self.PW}, Balance: {self.Balance})"
+
+# !! WIP !!
+class AccountStock(Base):
+    __tablename__ = "Stock_Owned"
+
+    Stock_Name: Mapped[str] = mapped_column(primary_key=True)
+    ID: Mapped[str]
+    Own_Quantity: Mapped[int] = mapped_column(Integer)
+    Own_PriceChange: Mapped[int] = mapped_column(Integer)
+    Own_Avg: Mapped[Decimal] = mapped_column(Numeric(12, 4))
+
+    __table_args__ = (
+        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
+        ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
+    )
+
+    # default profile picture is embedded in website
+    def __init__(self, Stock_Name="", ID="", Own_Quantity=0, Own_Avg=Decimal("0")):
+        self.Stock_Name = Stock_Name
+        self.ID = ID
+        self.Own_Quantity = Own_Quantity
+        self.Own_PriceChange = 0
+        self.Own_Avg = Own_Avg
+
+    def __repr__(self):
+        return f"S"
 
 Base.metadata.create_all(engine)
 

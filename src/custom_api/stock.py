@@ -33,16 +33,20 @@ class StockEntry(Base):
         return f"Stock(Name: {self.Stock_Name})"
 
 # !! WIP !!
-class StockPriceEntry(Base): ''' align with post 2.0 syntax'''
+class StockPriceEntry(Base):
     __tablename__ = "Stock_DailyPrice"
 
     Trade_Date: Mapped[datetime.datetime] = mapped_column(Datetime(timezone=True), server_default=func.now(), primary_key=True)
-    Stock_Name: Mapped[str] = mapped_column(String(20), primary_key=True)
+    Stock_Name: Mapped[str] = mapped_column(primary_key=True)
     Open: Mapped[int] = mapped_column(Integer)
     High: Mapped[int] = mapped_column(Integer)
     Low: Mapped[int] = mapped_column(Integer)
     Close: Mapped[int] = mapped_column(Integer)
     Volume: Mapped[int] = mapped_column(Integer)
+
+    __table_args__ = (
+        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
+    )
 
     # default profile is embedded in website
     def __init__(self, Trade_Date=None, Stock_Name="", Open=0, High=0, Low=0, Close=0, Volume=0):
