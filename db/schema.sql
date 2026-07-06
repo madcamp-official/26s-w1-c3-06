@@ -28,6 +28,7 @@ CREATE TABLE "Stock_List" (
 CREATE TABLE "Quiz" (
 	"Quiz_Num"	INT		NOT NULL,
 	"Quiz_Body"	JSONB		NULL,
+	"Quiz_Answer"	INT		NOT NULL,
 	CONSTRAINT "PK_Quiz" PRIMARY KEY ("Quiz_Num")
 );
 
