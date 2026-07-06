@@ -25,6 +25,7 @@ def Midnight(dt):
 class Base(DeclarativeBase):
     pass
 
+'''todo: correct domain'''
 engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
 
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -72,7 +73,6 @@ class AccountStock(Base):
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
-    # default profile picture is embedded in website
     def __init__(self, Stock_Name="", ID="", Own_Quantity=0, Own_Avg=Decimal("0")):
         self.Stock_Name = Stock_Name
         self.ID = ID
@@ -235,7 +235,7 @@ def View():
         }), 400
         
 # !! WIP !!
-@app.route('/home', methods=['POST'])
+@app.route('/home', methods=['GET'])
 def DailyBailout():
     if request.is_json:
         data = request.get_json()
@@ -357,4 +357,4 @@ def Delete():
         }), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, threaded=True, port=5000)

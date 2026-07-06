@@ -9,6 +9,8 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
 # internal API imports
 import account
 import notify
@@ -54,14 +56,82 @@ class FriendEntry(Base):
 
 Base.metadata.create_all(engine)
 
+@app.route('/social', methods=['POST'])
 def Request():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    fromId = data.get()
+    toId = data.get()
+    fromUser = session.get(UserAccount, fromId)
+    toUser = session.get(UserAccount, toId)
+
+    if not fromUser:
+        return jsonify({
+            "status": "fail",
+            "message": "사용자를 찾지 못했습니다. 다시 로그인해 주세요."
+        }), 401
+    
+    if not toUser:
+        return jsonify({
+            "status": "fail",
+            "message": "친구 추가를 요청할 사용자를 찾지 못했습니다."
+        }), 401
+    
+    try:
+        notify.FriendsNotice(fromId, toId)
+        return jsonify({
+            "status": "success",
+            "message": toUser.Nickname + "님에게 친구 요청을 전송했습니다.",
+            "notiTime": datetime.now(ZoneInfo("Asia/Tokyo"))
+            "fromId": fromId,
+            "toId": toId
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "친구 요청에 실패했습니다."
+        }), 400
+
+# !! WIP !!
+@app.route('/social', methods=['POST'])
+def Accept():
     '''TODO'''
 
+# !! WIP !!
+@app.route('/social', methods=['GET'])
 def View():
     '''TODO'''
 
+# !! WIP !!
+@app.route('/social', methods=['POST'])
 def Delete():
-    '''TODO'''
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "사용자를 찾지 못했습니다. 다시 로그인해 주세요."
+        }), 401
+    
+    try:
+        stmt = delete(UserAccount).where(UserAccount.ID == userId)
+
+        session.execute(stmt)
+        session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "계정이 삭제되었습니다."
+        }), 200
+    except:
+        session.rollback()
+
+        return jsonify({
+            "status": "fail",
+            "message": "계정 삭제에 실패했습니다."
+        }), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

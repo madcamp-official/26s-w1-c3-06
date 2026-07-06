@@ -7,6 +7,8 @@ from enum import Enum
 
 from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
 # internal API imports
 import account
 import stock
@@ -72,15 +74,6 @@ def Create():
 
 def Edit():
     '''TODO'''
-
-def Destroy(del_order_id):
-    stmt = delete(OrderEntry).where(OrderEntry.Order_ID == del_order_id)
-
-    try: 
-        session.execute(stmt)
-        session.commit()
-    except:
-        session.rollback()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

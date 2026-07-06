@@ -7,6 +7,8 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
 # internal API imports
 import account
 import friends
@@ -56,8 +58,83 @@ def Update():
     '''TODO'''
 
 # !! WIP !!
+@app.route('/social', methods=['GET'])
 def View():
-    '''TODO'''
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get()
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        stmt = (
+            select(AccountStock, StockEntry.Stock_Desc)
+            .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
+            .where(AccountStock.ID == user.ID)
+        )
+        user_stocks = session.execute(stmt).all()
+
+        '''
+        stmt = (
+            select(AccountStock, StockEntry.Stock_Desc)
+            .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
+            .where(AccountStock.ID == user.ID)
+        )
+        user_stocks = session.execute(stmt).all()
+        '''
+        
+        # friendRankings
+        friendRankingsList = (
+            session
+            .query(RankingEntry)
+            .order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
+        )
+
+        # topRankings 
+        topRankingsList = (
+            session
+            .query(RankingEntry)
+            .order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
+        )
+
+        mockNewsList = []
+
+        for news in recent_news:
+            mockNews = {
+                "title": news.News_Title,
+                "source": news.Publisher,
+                "link": news.News_Body
+            }
+            mockNewsList.append(mockNews)
+        
+        return jsonify({
+            "status": "success",
+            "message": "홈 화면을 성공적으로 불러왔습니다."
+            "mockAccount": {
+                "nickname": user.Nickname
+                "virtualDay": (Midnight(tokyo_time) - Midnight(user.Reg_Date)).days + 1
+                "totalAsset": user.Balance
+                "profitLoss": user.Return
+                "cashBalance": max([0, int(user.Balance - stock_sum)])
+                "stockCount": len(user_stocks)
+                "hasReceivedIncomeToday": user.LastBailout
+            },
+            "mockHoldings": mockHoldingsList,
+            "mockNews": mockNewsList
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "홈 화면을 불러오지 못했습니다."
+        }), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

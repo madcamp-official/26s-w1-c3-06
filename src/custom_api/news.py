@@ -8,6 +8,8 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
 # internal API imports
 import stock
 import order
@@ -34,7 +36,6 @@ class NewsEntry(Base):
     Publisher: Mapped[Optional[str]] = mapped_column(String(10))
     News_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
 
-    # default profile is embedded in website
     def __init__(self, ID=0, title="", body="", reporter=None, publisher=None, news_date=None):
         self.News_ID = ID
         self.News_Title = title
@@ -46,7 +47,7 @@ class NewsEntry(Base):
     def __repr__(self):
         return f"News(ID: {self.News_ID}, Title: {self.News_Title}, Reporter: {self.Reporter})"
 
-# !! WIP !!
+# test required
 class StockNewsEntry(Base):
     __tablename__ = "News_Related"
 
@@ -69,9 +70,6 @@ class StockNewsEntry(Base):
         return f"Stock News(News Order: {self.Related_Ord}, Stock Name: {self.Stock_Name}, News ID: {self.News_ID})"
 
 Base.metadata.create_all(engine)
-
-
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

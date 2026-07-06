@@ -7,6 +7,8 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
 # internal API imports
 import account
 import stock
@@ -44,14 +46,45 @@ class NoticeEntry(Base):
 
 Base.metadata.create_all(engine)
 
+# !! WIP !!
+@app.route('/home')
 def StockNotice():
     '''TODO'''
 
+# !! WIP !!
+@app.route('/home')
 def OrderNotice():
-    '''TODO'''
+    
+    return jsonify({
+        "status": "success",
+        "message": toUser.Nickname + "님에게 친구 요청을 받았습니다.",
+        "notiNum": 1
+        "notiHead": "친구 추가 알림"
+        "notiBody": toUser.Nickname + "님에게 친구 요청을 받았습니다."
+        "notiTime": datetime.now(ZoneInfo("Asia/Tokyo"))
+        "orderId": 
+    }), 200
 
-def FriendsNotice():
-    '''TODO'''
+# !! WIP !!
+@app.route('/home')
+def FriendsNotice(fromId, toId, notiNum, notiTime):
+    fromUser = session.scalars(
+        select(UserAccount).where(UserAccount.ID == fromId)
+    )
+    toUser = session.scalars(
+        select(UserAccount).where(UserAccount.ID == toId)
+    )
+    
+    return jsonify({
+        "status": "success",
+        "message": toUser.Nickname + "님에게 친구 요청을 받았습니다.",
+        "notiNum": 1
+        "notiHead": "친구 추가 알림"
+        "notiBody": toUser.Nickname + "님에게 친구 요청을 받았습니다."
+        "notiTime": datetime.now(ZoneInfo("Asia/Tokyo"))
+        "fromId": fromId,
+        "toId": toId
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

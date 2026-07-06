@@ -7,6 +7,8 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
 # internal API imports
 import account
 import order
@@ -29,7 +31,6 @@ class StockEntry(Base):
     Stock_Name: Mapped[str] = mapped_column(String(20), primary_key=True)
     Stock_Logo: Mapped[bytes] = mapped_column(LargeBinary)
 
-    # default profile is embedded in website
     def __init__(self, Stock_Name="", Stock_Logo=None):
         self.Stock_Name = Stock_Name
         self.Stock_Logo = Stock_Logo
