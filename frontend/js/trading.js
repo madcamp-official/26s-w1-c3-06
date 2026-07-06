@@ -40,8 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderStockList(mockStocks);
 
   document.getElementById("searchInput").addEventListener("input", (e) => {
-    const keyword = e.target.value.trim();
-    const filtered = mockStocks.filter(s => s.name.includes(keyword));
+    const keyword = e.target.value.trim().toLowerCase();
+    const filtered = mockStocks.filter(s => s.name.toLowerCase().includes(keyword));
     renderStockList(filtered);
   });
 });

@@ -1,17 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
+  // profile: DB의 User_Info.Profile(BINARY) 그대로 대응되는 필드명
   const mockProfile = {
     nickname: "김혜리",
     userId: "@ireyhye",
-    avatar: localStorage.getItem("profileAvatar") || "https://placehold.co/96x96",
+    profile: localStorage.getItem("profileImage") || "https://placehold.co/96x96",
   };
 
-  const currentNickname = mockProfile.nickname; // 안 바꿨으면 중복확인 자체가 필요 없음
+  const currentNickname = mockProfile.nickname;
 
-  const profileAvatar = document.getElementById("profileAvatar");
+  const profileImage = document.getElementById("profileAvatar"); // <img> 엘리먼트 id는 그대로 둠 (화면 요소 이름이라 상관없음)
   const profileName = document.getElementById("profileName");
-  const profileHandle = document.getElementById("profileHandle");
+  const profileID = document.getElementById("profileHandle");
 
   const nicknameInput = document.getElementById("nicknameInput");
   const nicknameCheckMessage = document.getElementById("nicknameCheckMessage");
@@ -19,11 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("passwordInput");
   const profileImageInput = document.getElementById("profileImageInput");
 
-  let isNicknameChecked = true; // 처음엔 "안 바꾼 상태"라 확인된 것으로 취급
+  let isNicknameChecked = true;
 
-  profileAvatar.src = mockProfile.avatar;
+  profileImage.src = mockProfile.profile;
   profileName.innerText = mockProfile.nickname;
-  profileHandle.innerText = mockProfile.userId;
+  profileID.innerText = mockProfile.userId;
   nicknameInput.value = mockProfile.nickname;
 
   function showMessage(element, message, isSuccess) {
@@ -34,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   nicknameInput.addEventListener("input", () => {
     const nickname = nicknameInput.value.trim();
-    // 원래 닉네임으로 다시 돌아오면 확인 불필요, 아니면 다시 확인 필요
     isNicknameChecked = (nickname === currentNickname);
     nicknameCheckMessage.hidden = true;
   });
@@ -82,8 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      profileAvatar.src = reader.result;
-      localStorage.setItem("profileAvatar", reader.result);
+      // reader.result는 "data:image/png;base64,...." 형태의 base64 문자열
+      // TODO: 백엔드 연결 시 이 base64 문자열을 Profile(BINARY) 필드로 서버에 전송해야 함
+      profileImage.src = reader.result;
+      localStorage.setItem("profileImage", reader.result);
     };
     reader.readAsDataURL(file);
   });
@@ -105,7 +107,9 @@ document.addEventListener("DOMContentLoaded", () => {
     profileName.innerText = nickname;
     localStorage.setItem("nickname", nickname);
 
-    // TODO: 백엔드 정보수정 API 호출 (닉네임, 비밀번호(입력 시에만))
+    // TODO: 백엔드 정보수정 API 호출
+    // profile 필드는 base64 문자열(reader.result)을 그대로 보내거나,
+    // 백엔드가 원하는 형식(예: multipart/form-data)에 맞춰 다시 변환해서 보내야 함
     alert("저장됐어요");
   });
 
@@ -115,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (!confirmed) return;
 
-    // TODO: 백엔드 계좌 삭제 API 호출
     alert("계좌가 삭제됐어요");
     localStorage.removeItem("token");
     window.location.href = "index.html";

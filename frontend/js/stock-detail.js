@@ -1,29 +1,57 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const requestedStock = params.get("stock") ? decodeURIComponent(params.get("stock")) : "삼성전자";
 
-  // TODO: 백엔드 API 완성되면 URL 파라미터(?stock=삼성전자) 등으로 실제 종목 받아와 교체
-  const mockStock = {
-    name: "삼성전자",
-    desc: "반도체와 스마트폰을 만드는 회사",
-    currentPrice: 72300,
-    changePct: 2.3, // 양수=상승(빨강), 음수=하락(파랑)
-    priceHistory: [68400, 69200, 70100, 71400, 72300], // 종가 순서대로
+  const mockStockCatalog = [
+    { name: "삼성전자", desc: "반도체와 스마트폰을 만드는 회사", currentPrice: 72300, changePct: 2.3, priceHistory: [68400, 69200, 70100, 71400, 72300] },
+    { name: "SK하이닉스", desc: "반도체 메모리를 만드는 회사", currentPrice: 184300, changePct: 0.9, priceHistory: [180000, 182500, 183600, 184100, 184300] },
+    { name: "LG전자", desc: "가전제품과 전자기기를 만드는 회사", currentPrice: 118000, changePct: 6.2, priceHistory: [112000, 113500, 115000, 116500, 118000] },
+    { name: "카카오", desc: "메신저와 콘텐츠 서비스를 하는 회사", currentPrice: 41200, changePct: 0.0, priceHistory: [41000, 41200, 41100, 41200, 41200] },
+  ];
+
+  const mockStock = mockStockCatalog.find(s => s.name === requestedStock) || {
+    name: requestedStock,
+    desc: "선택한 종목의 정보를 불러오는 중입니다.",
+    currentPrice: 0,
+    changePct: 0,
+    priceHistory: [0, 0, 0, 0, 0],
   };
 
-  const mockHolding = {
-    quantity: 2,
-    avgPrice: 69100,
-    value: 144600,
-    profit: 6400,
+  const mockHoldingsMap = {
+    "삼성전자": { quantity: 2, avgPrice: 69100, value: 144600, profit: 6400 },
+    "SK하이닉스": { quantity: 1, avgPrice: 180000, value: 184300, profit: 4300 },
+    "LG전자": { quantity: 3, avgPrice: 110000, value: 354000, profit: 24000 },
+    "카카오": { quantity: 0, avgPrice: 0, value: 0, profit: 0 },
   };
+
+  const mockHolding = mockHoldingsMap[mockStock.name] || { quantity: 0, avgPrice: 0, value: 0, profit: 0 };
 
   // TODO: 백엔드 계좌 API에서 실제 현금 잔고로 교체
   const mockAccount = {
     cashBalance: 312000,
   };
 
-  const mockNews = [
-    { title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결", day: 3, link: "#" },
-    { title: "LG전자 90% 폭등 무서운 질주…지금 살까 AI에 물었더니", day: 1, link: "#" },
+  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
+  const mockNewsMap = {
+    "삼성전자": [
+      { title: "삼성전자 ‘비스포크 AI 스팀’ 로봇청소기, 월 판매 2만 대 돌파", link: "#" },
+      { title: "삼성전자 미국 법인, 9월부터 이전‥인력 감축은 무관", link: "#" },
+    ],
+    "SK하이닉스": [
+      { title: "SK하이닉스 부스 찾은 젠슨 황…HBM웨이퍼에 더 만들어주세요", link: "#" },
+      { title: "삼성전자·SK하이닉스 주식 10년 묻어둔 가수 소유…수익금 보태 집 샀다", link: "#" },
+    ],
+    "LG전자": [
+      { title: "젠슨 황 효과에 LG전자 이틀 연속 상한가…사진보다 주문서가 중요", link: "#" },
+      { title: "LG전자 주가 올 들어 300% 폭등…AI 동맹 기대감", link: "#" },
+    ],
+    "카카오": [
+      { title: "카톡 개편 이끈 홍민택 CPO 퇴사…카카오 조직개편 본격화", link: "#" },
+      { title: "카카오 노조, 파업 돌입한다…4시간 부분파업 예고", link: "#" },
+    ],
+  };
+  const mockNews = mockNewsMap[mockStock.name] || [
+    { title: `${mockStock.name} 관련 최신 뉴스를 불러오는 중입니다.`, link: "#" },
   ];
 
   let state = {
@@ -60,8 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // 퍼센트 단축 버튼
-  // 매수: "지금 가진 현금으로 최대 몇 주 살 수 있는지" 기준
-  // 매도: "지금 보유 중인 수량" 기준 — 둘을 절대 같은 값으로 계산하면 안 됨
   document.querySelectorAll(".qty-shortcut-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const pct = Number(btn.dataset.pct);
@@ -79,10 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getMaxQuantity() {
     if (state.tradeType === "buy") {
-      // 현금 잔고 안에서 지금 가격으로 살 수 있는 최대 수량 (소수 주 불가 -> 내림)
       return Math.floor(mockAccount.cashBalance / mockStock.currentPrice);
     } else {
-      // 매도는 보유 수량을 넘을 수 없음
       return mockHolding.quantity;
     }
   }
@@ -95,7 +119,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 주문 넣기
   document.getElementById("orderBtn").addEventListener("click", () => {
-    // TODO: 백엔드 주문 API 호출 (stock, type, quantity 전달)
+    const totalAmount = mockStock.currentPrice * state.quantity;
+
+    // 매수인데 현금이 부족하면 주문 실패
+    if (state.tradeType === "buy" && totalAmount > mockAccount.cashBalance) {
+      alert("잔고가 부족해요. 주문이 체결되지 않았어요.");
+      return;
+    }
+
+    // 매도인데 보유 수량이 부족하면 주문 실패 (같은 원리로 같이 처리)
+    if (state.tradeType === "sell" && state.quantity > mockHolding.quantity) {
+      alert("보유한 주식보다 많은 수량을 매도할 수 없어요.");
+      return;
+    }
+
+    // TODO: 백엔드 주문 API 호출 (stock_name, order_type, quantity 전달)
+    // 성공 시 응답의 balance로 mockAccount.cashBalance를 갱신해야 함
     alert(`${mockStock.name} ${state.quantity}주 ${state.tradeType === "buy" ? "매수" : "매도"} 완료!`);
   });
 });
@@ -123,12 +162,19 @@ function renderHolding(stockName, holding) {
   profitEl.style.color = holding.profit >= 0 ? "#FF0000" : "#004DFF";
 }
 
+/**
+ * @param {Array} newsList - {title, link} 목록
+ */
 function renderNews(newsList) {
   const listEl = document.getElementById("newsList");
-  // 원본 디자인 의도 그대로: 제목 + 링크만 표시. "N일차" 대신 실제 오늘 날짜로 표시
+  // 원본 디자인 의도 그대로: 제목 + 링크만 표시, 날짜는 표시하지 않음
+  if (!newsList || newsList.length === 0) {
+    listEl.innerHTML = `<p class="card-caption">관련 뉴스를 찾을 수 없습니다.</p>`;
+    return;
+  }
   listEl.innerHTML = newsList.map(n => `
     <a href="${n.link}" target="_blank" rel="noopener noreferrer" class="news-item-link">
-      ${n.title}<span class="news-item-day">${getTodayShortLabel()}</span>
+      ${n.title}
     </a>
   `).join("");
 }

@@ -1,16 +1,16 @@
 const form = document.getElementById("signupForm");
 
 const nicknameInput = document.getElementById("nickname");
+const nicknameCheckMessage = document.getElementById("nicknameCheckMessage");
+const checkNicknameBtn = document.getElementById("checkNicknameBtn");
+
 const userIdInput = document.getElementById("userId");
+const userIdCheckMessage = document.getElementById("userIdCheckMessage");
+const checkUserIdBtn = document.getElementById("checkUserIdBtn");
+
 const passwordInput = document.getElementById("password");
 const passwordConfirmInput = document.getElementById("passwordConfirm");
-
 const passwordError = document.getElementById("passwordError");
-const nicknameCheckMessage = document.getElementById("nicknameCheckMessage");
-const userIdCheckMessage = document.getElementById("userIdCheckMessage");
-
-const checkNicknameBtn = document.getElementById("checkNicknameBtn");
-const checkUserIdBtn = document.getElementById("checkUserIdBtn");
 
 let isNicknameChecked = false;
 let isUserIdChecked = false;
@@ -25,6 +25,11 @@ function showMessage(element, message, isSuccess) {
   element.style.color = isSuccess ? "#2e7d32" : "#d32f2f";
 }
 
+passwordConfirmInput.addEventListener("input", () => {
+  passwordError.hidden = passwordsMatch() || passwordConfirmInput.value === "";
+});
+
+// 닉네임/아이디를 다시 입력하면 이전 중복확인 결과는 무효로 처리
 nicknameInput.addEventListener("input", () => {
   isNicknameChecked = false;
   nicknameCheckMessage.hidden = true;
@@ -33,10 +38,6 @@ nicknameInput.addEventListener("input", () => {
 userIdInput.addEventListener("input", () => {
   isUserIdChecked = false;
   userIdCheckMessage.hidden = true;
-});
-
-passwordConfirmInput.addEventListener("input", () => {
-  passwordError.hidden = passwordsMatch() || passwordConfirmInput.value === "";
 });
 
 checkNicknameBtn.addEventListener("click", async () => {
@@ -48,6 +49,7 @@ checkNicknameBtn.addEventListener("click", async () => {
   }
 
   try {
+    // TODO: 백엔드 완성되면 실제 응답 형식에 맞춰 조정
     const res = await fetch(
       `http://localhost:8000/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
     );
@@ -65,24 +67,26 @@ checkNicknameBtn.addEventListener("click", async () => {
     }
   } catch (err) {
     console.error(err);
+    isNicknameChecked = false;
     showMessage(nicknameCheckMessage, "중복확인에 실패했어요", false);
   }
 });
 
 checkUserIdBtn.addEventListener("click", async () => {
-  const userId = userIdInput.value.trim();
+  const id = userIdInput.value.trim();
 
-  if (!userId) {
+  if (!id) {
     showMessage(userIdCheckMessage, "아이디를 입력해주세요", false);
     return;
   }
 
   try {
+    // TODO: 백엔드 완성되면 실제 응답 형식에 맞춰 조정
     const res = await fetch(
-      `http://localhost:8000/auth/check-userid?userId=${encodeURIComponent(userId)}`
+      `http://localhost:8000/auth/check-id?id=${encodeURIComponent(id)}`
     );
 
-    if (!res.ok) throw new Error("userId check failed");
+    if (!res.ok) throw new Error("id check failed");
 
     const data = await res.json();
 
@@ -95,6 +99,7 @@ checkUserIdBtn.addEventListener("click", async () => {
     }
   } catch (err) {
     console.error(err);
+    isUserIdChecked = false;
     showMessage(userIdCheckMessage, "중복확인에 실패했어요", false);
   }
 });
@@ -103,25 +108,15 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const nickname = nicknameInput.value.trim();
-  const userId = userIdInput.value.trim();
-  const password = passwordInput.value;
+  const id = userIdInput.value.trim();
+  const pw = passwordInput.value;
 
-  if (!nickname || !userId || !password) {
+  if (!nickname || !id || !pw) {
     alert("모든 항목을 입력해주세요");
     return;
   }
 
-  if (!isNicknameChecked) {
-    alert("닉네임 중복확인을 해주세요");
-    return;
-  }
-
-  if (!isUserIdChecked) {
-    alert("아이디 중복확인을 해주세요");
-    return;
-  }
-
-  if (password.length < 8) {
+  if (pw.length < 8) {
     alert("비밀번호는 8자 이상 입력해주세요");
     return;
   }
@@ -131,20 +126,32 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  if (!isNicknameChecked) {
+    showMessage(nicknameCheckMessage, "닉네임 중복확인을 해주세요", false);
+    return;
+  }
+
+  if (!isUserIdChecked) {
+    showMessage(userIdCheckMessage, "아이디 중복확인을 해주세요", false);
+    return;
+  }
+
   try {
+    // TODO: 백엔드 회원가입 API(account_Create) 응답 형식 확정되면 맞춰서 조정
     const res = await fetch("http://localhost:8000/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname, userId, password }),
+      body: JSON.stringify({ nickname, id, pw }),
     });
 
     if (!res.ok) {
-      alert("회원가입에 실패했어요");
+      alert("회원가입에 실패했어요. 이미 사용 중인 아이디일 수 있어요");
       return;
     }
 
-    alert("회원가입이 완료됐어요!");
-    window.location.href = "onboarding.html";
+    alert("회원가입이 완료됐어요! 로그인해주세요");
+    window.location.href = "index.html";
+
   } catch (err) {
     console.error(err);
     alert("서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요");
