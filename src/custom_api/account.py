@@ -84,16 +84,17 @@ Base.metadata.create_all(engine)
 # ----------------------------------------------------------------------
 
 # Helper Function
+@app.route('/auth/check-id', methods=['GET'])
 def id_exists(userId):
     return session.get(UserAccount, userId) is not None
 
-
+@app.route('/auth/check-nickname', methods=['GET'])
 def nickname_exists(nickname):
     return session.query(UserAccount).filter_by(Nickname=nickname).first() is not None
 
 # Create an account and stage onto DB / Redundancy Check (wip)
 # !! test required !!
-@app.route('/signup', methods=['POST'])
+@app.route('/auth/signup', methods=['POST'])
 def Create():
     if request.is_json:
         data = request.get_json()
@@ -148,7 +149,7 @@ def Create():
 
 # Receive login request and authenticate
 # test required
-@app.route('/index', methods=['POST'])
+@app.route('/auth/login', methods=['POST'])
 def Authenticate():
     if request.is_json:
         data = request.get_json()
@@ -180,7 +181,7 @@ def Authenticate():
 
 # Show main page and feature (almost) everything
 # test required
-@app.route('/home', methods=['GET'])
+@app.route('/account', methods=['GET'])
 def View():
     if request.is_json:
         data = request.get_json()
@@ -260,7 +261,7 @@ def View():
         }), 400
         
 # test required
-@app.route('/home/quiz', methods=['GET'])
+@app.route('/quiz', methods=['GET'])
 def DailyBailout():
     if request.is_json:
         data = request.get_json()
@@ -305,7 +306,7 @@ def DailyBailout():
         }), 400
 
 # test required
-@app.route('/home/quiz/submit', methods=['POST'])
+@app.route('/quiz/submit', methods=['POST'])
 def SubmitAndReward():
     if request.is_json:
         data = request.get_json()
