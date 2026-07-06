@@ -63,17 +63,12 @@ class OrderEntry(Base):
     def __repr__(self):
         return f"Order(Name: {self.Stock_Name})"
 
-
-
-
-
 Base.metadata.create_all(engine)
 
+@app.route('/index', methods=['POST'])
 def Create():
-    '''TODO'''
+    
 
-def Edit():
-    '''TODO'''
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

@@ -34,7 +34,6 @@ class RankingEntry(Base):
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
-    # default profile is embedded in website
     def __init__(self, ID="", Return_Daily=0):
         self.ID = ID
         self.Return_Daily = Return_Daily
@@ -75,29 +74,27 @@ def View():
         }), 401
 
     try:
-        '''
+        # friends list (temporary)
         stmt = (
-            select(AccountStock, StockEntry.Stock_Desc)
-            .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
-            .where(AccountStock.ID == user.ID)
+            select(UserAccount, FriendEntry.fromID)
+            .join(FriendEntry, UserAccount.ID == FriendEntry.toID)
+            .where(FriendEntry.fromID == user.ID)
         )
-        user_stocks = session.execute(stmt).all()
-        '''
+        friendList = session.execute(stmt).all()
 
-        # friendRankings
+        # friendRankings (including me) and topRankings 
         stmt = (
-            select(RankingEntry, FriendEntry.ToID, AccountStock.Nickname)
-            .join(FriendEntry, RankingEntry.ID == FriendEntry.ToID)
-            .join(AccountStock, ) #????
-            .where(FriendEntry.FromID == user.ID)
+            select(RankingEntry, UserAccount)
+            .join(UserAccount, RankingEntry.ID == UserAccount.ID)
         )
-        friendRankingsList = session.execute(stmt).order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
-
-        # topRankings 
         topRankingsList = (
-            session
-            .query(RankingEntry)
-            .order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
+            session.execute(stmt).
+            order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
+        )
+        friendRankingsList = (
+            session.execute(stmt).
+            filter(UserAccount.ID == userId or UserAccount.ID in friendlist).
+            order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
         )
 
         mockGlobalRanking, mockFriendRanking = [], []
@@ -107,9 +104,9 @@ def View():
             i += 1
             mockRank = {
                 "rank": i,
-                "name": 
-                "pct": 
-                "isMe": 
+                "name": rank.Nickname,
+                "pct": ''' 계산식 추가 ''',
+                "isMe": rank.ID == userId
             }
             mockGlobalRanking.append(mockRank)
         
@@ -118,9 +115,9 @@ def View():
             i += 1
             mockRank = {
                 "rank": i,
-                "name": 
-                "pct": 
-                "isMe": 
+                "name": rank.Nickname,
+                "pct": ''' 계산식 추가 ''',
+                "isMe": rank.ID == userId
             }
             mockFriendRanking.append(mockRank)
         

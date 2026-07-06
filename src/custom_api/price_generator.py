@@ -1,3 +1,6 @@
+
+
+
 """
 Real-time stock price generator using Geometric Brownian Motion (GBM),
 with live Black-Scholes option pricing and Greeks.

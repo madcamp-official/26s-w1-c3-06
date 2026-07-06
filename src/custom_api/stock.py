@@ -73,12 +73,15 @@ Base.metadata.create_all(engine)
 def PriceUpToDate():
     
 # !! WIP !!
+@app.route('/index', methods=['GET'])
 def View_List():
     '''TODO'''
 
 # !! WIP !!
+@app.route('/index', methods=['GET'])
 def View_Entry():
     '''TODO'''
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+

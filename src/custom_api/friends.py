@@ -31,6 +31,10 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
+# ----------------------------------------------------------------------
+# Core APIs 
+# ----------------------------------------------------------------------
+
 # test required
 class FriendEntry(Base):
     __tablename__ = "User_Friends"
@@ -55,8 +59,6 @@ class FriendEntry(Base):
         return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Freind_Date} Status: {self.Friend_Status})"
 
 Base.metadata.create_all(engine)
-
-# 중요: << 본인은 본인과 친구임 >>
 
 @app.route('/social', methods=['POST'])
 def Request():
