@@ -12,29 +12,39 @@
 
   <main class="page-container">
 
+    <div class="page-header">
+      <div>
+        <p class="page-title">소셜</p>
+        <p class="page-subtitle">친구들과 수익률을 비교해보세요</p>
+      </div>
+    </div>
+
     <div class="social-grid">
 
       <!-- 왼쪽: 친구 추가 / 요청 / 목록 -->
       <div class="social-left">
 
-        <div class="social-card outline-card">
-          <p class="social-card-title">친구 추가</p>
+        <div class="card">
+          <p class="card-title">친구 추가</p>
           <div class="friend-add-row">
-            <input type="text" id="friendIdInput" placeholder="ID 입력" />
-            <button class="btn-primary" id="addFriendBtn">친구추가</button>
+            <input type="text" id="friendIdInput" placeholder="친구의 아이디를 입력하세요" />
+            <button class="btn-primary" id="addFriendBtn">추가하기</button>
           </div>
         </div>
 
-        <div class="social-card grey-card request-card" id="friendRequestCard" hidden>
+        <div class="card highlight-card" id="friendRequestCard" hidden>
           <p class="request-text" id="requestText">00님이 친구 요청을 보냈어요</p>
           <div class="request-actions">
-            <button class="btn-accept" id="acceptBtn">수락</button>
-            <button class="btn-reject" id="rejectBtn">거절</button>
+            <button class="btn-primary btn-sm" id="acceptBtn">수락</button>
+            <button class="btn-secondary btn-sm" id="rejectBtn">거절</button>
           </div>
         </div>
 
-        <div class="social-card grey-card friend-list-card">
-          <p class="social-card-title">친구 목록</p>
+        <div class="card">
+          <div class="card-title-row">
+            <p class="card-title">친구 목록</p>
+            <span class="card-count" id="friendCount">0명</span>
+          </div>
           <div id="friendList">
             <!-- 친구 목록: JS에서 API 응답으로 이 안을 채움 -->
           </div>
@@ -42,16 +52,22 @@
       </div>
 
       <!-- 가운데: 친구 랭킹 -->
-      <div class="social-card shadow-card">
-        <p class="social-card-title">친구 랭킹</p>
+      <div class="card">
+        <div class="card-title-row">
+          <p class="card-title">친구 랭킹</p>
+          <span class="card-caption">오늘 수익률 기준</span>
+        </div>
         <div id="friendRanking">
           <!-- 친구 랭킹: JS에서 채움 -->
         </div>
       </div>
 
-      <!-- 오른쪽: 전체 랭킹 -->
-      <div class="social-card shadow-card">
-        <p class="social-card-title">전체 랭킹</p>
+      <!-- 오른쪽: 전체 유저 랭킹 -->
+      <div class="card">
+        <div class="card-title-row">
+          <p class="card-title">전체 랭킹</p>
+          <span class="card-caption">오늘 수익률 기준</span>
+        </div>
         <div id="globalRanking">
           <!-- 전체 랭킹: JS에서 채움 -->
         </div>

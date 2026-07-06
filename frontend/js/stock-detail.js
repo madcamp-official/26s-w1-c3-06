@@ -17,8 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const mockNews = [
-    { title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결", day: 3, link: "#" },
-    { title: "LG전자 90% 폭등 무서운 질주…지금 살까 AI에 물었더니", day: 1, link: "#" },
+    { title: "(삼성전자 관련 뉴스 제목)", day: 1, link: "#" },,
   ];
 
   let state = {
