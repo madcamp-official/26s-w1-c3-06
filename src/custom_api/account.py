@@ -1,109 +1,89 @@
-from sqlalchemy import *
-from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
+import os
+
+from sqlalchemy import create_engine, String, Integer, Boolean, LargeBinary, TIMESTAMP
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 from datetime import datetime
-from zoneinfo import ZoneInfo
+from typing import Optional
 
-# internal API imports
-import stock
-import order
-import friends
+from werkzeug.security import generate_password_hash, check_password_hash
 
-# create engine
+# 인증 범위만 다룬다 (회원가입/로그인/중복확인). User_Info는 다른 테이블에 대한 FK가 없는
+# 기반 테이블이라 이 모듈만으로 독립적으로 동작한다.
+
+
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
 
+# db/schema.sql을 미리 적용해둔 로컬 PostgreSQL을 사용한다.
+# 필요하면 DATABASE_URL 환경변수로 접속 정보를 덮어쓸 수 있다.
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
+
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
-# !! WIP !!
-class UserAccount(Base): 
+
+class UserAccount(Base):
     __tablename__ = "User_Info"
 
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
-    PW: Mapped[str] = mapped_column(String(20))
-    LastConnect: Mapped[datetime.datetime] = mapped_column(TIMESTAMPTZ)
-    Balance: Mapped[int] = mapped_column(Integer)
-    Return: Mapped[int] = mapped_column(Integer)
-    LastBailout = Column(TIMESTAMPTZ)
-    Nickname: Mapped[str] = mapped_column(String(12),unique=True)
-    Profile = Column(BINARY)
+    PW: Mapped[Optional[str]] = mapped_column(String(255))
+    Reg_Date: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
+    Balance: Mapped[Optional[int]] = mapped_column(Integer)
+    Return: Mapped[Optional[int]] = mapped_column(Integer)
+    LastBailout: Mapped[Optional[bool]] = mapped_column(Boolean)
+    Nickname: Mapped[Optional[str]] = mapped_column(String(12), unique=True)
+    Profile: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
 
-    # default profile is embedded in website
-    def __init__(self, ID=None, PW=None):
-        self.ID = ID
-        self.PW = PW
-        self.LastConnect = datetime.now(ZoneInfo("Asia/Tokyo"))
-        self.Balance = 0
-        self.Return = 0
-        self.LastBailout = None
-        self.Nickname = None
-        self.Profile = None
     def __repr__(self):
-        return f"User({self.ID}, {self.Nickname}, {self.Balance})"
+        return f"User(ID={self.ID}, Nickname={self.Nickname}, Balance={self.Balance})"
 
-Base.metadata.create_all(engine)
 
-# Create an account and stage onto DB
-# !! WIP !!
-def Create(ID, PW):
-    a1 = UserAccount(ID, PW)
-    try:
-        session.add(a1)
-        session.commit()
-    except:
-        session.rollback()
+# README 기획안: 계좌 생성 직후 100만원 시드 자산 지급
+SEED_BALANCE = 1_000_000
 
-# !! WIP !!
-def Authenticate(ID, PW):
-    user = session.get(UserAccount, ID)
 
-    if user and user.PW == PW:
+def id_exists(id_):
+    return session.get(UserAccount, id_) is not None
 
-    user.LastConnect = datetime.now(ZoneInfo("Asia/Tokyo"))
 
-# !! WIP !!
-def View(user):
-    '''TODO'''
+def nickname_exists(nickname):
+    return session.query(UserAccount).filter_by(Nickname=nickname).first() is not None
 
-# Test required
-def Edit(ID, new_PW, new_Nickname, new_Profile):
-    user = session.get(UserAccount, ID)
 
-    if user:
-        try: 
-            user.PW = new_PW
-            user.Nickname = new_Nickname
-            user.Profile = new_Profile
+def create(id_, pw, nickname):
+    """회원가입. 성공하면 UserAccount, 아이디/닉네임이 이미 있으면 None을 반환한다."""
+    if id_exists(id_) or nickname_exists(nickname):
+        return None
 
-            session.commit()
-        except:
-            session.rollback()
-
-# !! WIP !!
-def DailyBailout(ID):
-    user = session.get(UserAccount, ID)
-    tokyo_time = datetime.now(ZoneInfo("Asia/Tokyo"))
-
-    if user and (tokyo_time - user.LastBailout).days > 0:
-        try:
-            user.Balance += 10000
-            user.LastBailout = tokyo_time
-
-            session.commit()
-        except:
-            session.rollback()
-
-# Test required
-def Delete(ID):
-    stmt = delete(UserAccount).where(UserAccount.ID == ID)
+    user = UserAccount(
+        ID=id_,
+        PW=generate_password_hash(pw),
+        Reg_Date=datetime.now().astimezone(),
+        Balance=SEED_BALANCE,
+        Return=0,
+        LastBailout=False,
+        Nickname=nickname,
+        Profile=None,
+    )
 
     try:
-        session.execute(stmt)
+        session.add(user)
         session.commit()
-    except:
+        return user
+    except Exception:
         session.rollback()
+        return None
 
 
+def authenticate(id_, pw):
+    """로그인 검증. 성공하면 UserAccount, 아이디가 없거나 비밀번호가 틀리면 None을 반환한다."""
+    user = session.get(UserAccount, id_)
+
+    if user and user.PW and check_password_hash(user.PW, pw):
+        return user
+    return None
