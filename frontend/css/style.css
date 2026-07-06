@@ -909,3 +909,24 @@ input::placeholder {
 .notification-delete-btn:hover {
   color: var(--color-danger);
 }
+
+
+/* ── settings.html 중복확인 버튼 추가분 ── */
+
+.field-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.field-with-button input {
+  flex: 1;
+}
+
+.field-with-button .btn-auto {
+  white-space: nowrap;
+}
+
+.field-message {
+  font-size: 11px;
+  margin-top: 5px;
+}

@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
   const mockAccount = {
     nickname: "민지",
     virtualDay: 2,
@@ -17,8 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const mockNews = [
-    { title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결", source: "alphabiz", day: 3, link: "#" },
-    { title: "LG전자 90% 폭등 무서운 질주…지금 살까 AI에 물었더니", source: "한국경제", day: 1, link: "#" },
+    { title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결", source: "alphabiz", link: "#" },
+    { title: "LG전자 90% 폭등 무서운 질주…지금 살까 AI에 물었더니", source: "한국경제", link: "#" },
   ];
 
   renderAccount(mockAccount);
@@ -32,7 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function renderAccount(account) {
   document.getElementById("userTitle").innerText = `${account.nickname}님의 계좌`;
-  document.getElementById("virtualDay").innerText = `가상거래 ${account.virtualDay}일차`;
+
+  // 홈 화면에만 실제 날짜 + "N일차"를 같이 표시 (다른 화면엔 N일차 안 보임)
+  document.getElementById("virtualDay").innerText =
+    `${getTodayLabel()} · 투자 시작 ${account.virtualDay}일차`;
+
   document.getElementById("totalAsset").innerText = account.totalAsset.toLocaleString() + "원";
 
   const profitEl = document.getElementById("profitLoss");
@@ -49,9 +52,21 @@ function renderAccount(account) {
     incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
   } else {
     incomeBtn.addEventListener("click", () => {
-      alert("10,000원을 받았어요!");
-      incomeBtn.disabled = true;
-      incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
+      // TODO: userId는 로그인 상태(localStorage 등)에서 가져오기
+      const userId = localStorage.getItem("user_id") || "guest";
+
+      openQuizModal(userId, (result) => {
+        incomeBtn.disabled = true;
+
+        if (result.is_correct) {
+          incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
+          if (typeof result.balance === "number") {
+            document.getElementById("cashBalance").innerText = result.balance.toLocaleString() + "원";
+          }
+        } else {
+          incomeBtn.innerText = "오늘의 퀴즈 도전 완료 (내일 다시)";
+        }
+      });
     });
   }
 }
@@ -75,7 +90,6 @@ function renderHoldings(holdings) {
     </div>
   `).join("");
 
-  // 보유 주식 행 클릭 시 종목 상세 화면으로 이동
   listEl.querySelectorAll(".holding-row").forEach(row => {
     row.addEventListener("click", () => {
       const stockName = row.dataset.stockName;
@@ -86,11 +100,13 @@ function renderHoldings(holdings) {
 
 function renderNews(newsList) {
   const listEl = document.getElementById("newsList");
-  listEl.innerHTML = newsList.map(n => `
+  const limited = newsList.slice(0, 5); // 홈 화면 뉴스는 최대 5개까지만
+
+  listEl.innerHTML = limited.map(n => `
     <div class="news-item">
       <p class="news-title">${n.title}</p>
       <div class="news-meta">
-        <span>${n.source} · ${n.day}일차</span>
+        <span>${n.source} · ${getTodayShortLabel()}</span>
         <a href="${n.link}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>
       </div>
     </div>

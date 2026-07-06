@@ -33,8 +33,17 @@
       <p class="card-title">개인정보 수정</p>
 
       <div class="field-group">
+        <label class="field-label" for="profileImageInput">프로필 사진</label>
+        <input type="file" id="profileImageInput" accept="image/*" />
+      </div>
+
+      <div class="field-group">
         <label class="field-label" for="nicknameInput">닉네임</label>
-        <input type="text" id="nicknameInput" value="김혜리" />
+        <div class="field-with-button">
+          <input type="text" id="nicknameInput" value="김혜리" />
+          <button type="button" class="btn-secondary btn-auto" id="checkNicknameBtn">중복확인</button>
+        </div>
+        <p class="field-message" id="nicknameCheckMessage" hidden></p>
       </div>
 
       <div class="field-group">
@@ -45,6 +54,7 @@
       <div class="card-footer">
         <button class="btn-primary btn-auto" id="saveBtn">저장하기</button>
       </div>
+
     </div>
 
     <!-- 계좌 삭제 (Danger Zone) -->
