@@ -42,6 +42,8 @@ def Show(quiz_number):
     quiz = session.get(QuizEntry, quiz_number)
     raw_body = quiz.Quiz_Body
 
+    
+
     # get request
 
 # !! WIP !!
@@ -50,7 +52,6 @@ def Submit():
 
 # !! WIP !!
 def Check():
-    
     return True
     
     return False

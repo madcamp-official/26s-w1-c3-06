@@ -60,6 +60,7 @@ class FriendEntry(Base):
 
 Base.metadata.create_all(engine)
 
+# test required
 @app.route('/social', methods=['POST'])
 def Request():
     if request.is_json:

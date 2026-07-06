@@ -2,6 +2,7 @@ from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 # external API imports
+from math import floor, random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from decimal import Decimal
@@ -259,10 +260,15 @@ def DailyBailout():
             "message": "이미 오늘의 퀴즈를 풀었습니다."
         }), 200
     
-    '''quiz.Show()'''
-    '''QuizCorrect = quiz.Check()'''
-
     try:
+        # Show a quiz
+        quizLength = session.query(QuizEntry).count()
+        quizRanNum = Math.floor(Math.random() * quizLength)
+        quiz.Show(quizRanNum)
+        
+        # Check if it is correct
+        '''QuizCorrect = quiz.Check()'''
+
         if user and QuizCorrect:
             if user.LastBailout == False:
                 user.Balance += 10000

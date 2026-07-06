@@ -54,9 +54,10 @@ def Register(ID):
 
 # !! WIP !!
 def Update():
+    ''' RankingEntry.Return_Daily 일일수익 계산식'''
     '''TODO'''
 
-# !! WIP !!
+# test required
 @app.route('/social', methods=['GET'])
 def View():
     if request.is_json:
@@ -105,7 +106,7 @@ def View():
             mockRank = {
                 "rank": i,
                 "name": rank.Nickname,
-                "pct": ''' 계산식 추가 ''',
+                "pct": rank.Return_Daily,
                 "isMe": rank.ID == userId
             }
             mockGlobalRanking.append(mockRank)
@@ -116,7 +117,7 @@ def View():
             mockRank = {
                 "rank": i,
                 "name": rank.Nickname,
-                "pct": ''' 계산식 추가 ''',
+                "pct": rank.Return_Daily,
                 "isMe": rank.ID == userId
             }
             mockFriendRanking.append(mockRank)
