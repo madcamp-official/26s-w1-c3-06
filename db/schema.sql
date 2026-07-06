@@ -12,7 +12,7 @@ CREATE TABLE "User_Info" (
 	"Reg_Date"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
-	"LastBailout"	INT		NULL,
+	"LastBailout"	BOOLEAN		NULL,
 	"Nickname"	VARCHAR(12)		NULL,
 	"Profile"	BYTEA		NULL,
 	CONSTRAINT "PK_User_Info" PRIMARY KEY ("ID")
