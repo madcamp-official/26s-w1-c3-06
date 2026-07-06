@@ -71,32 +71,27 @@ def View():
     if not user:
         return jsonify({
             "status": "fail",
-            "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+            "message": "랭킹을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
     try:
+        '''
         stmt = (
             select(AccountStock, StockEntry.Stock_Desc)
             .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
             .where(AccountStock.ID == user.ID)
         )
         user_stocks = session.execute(stmt).all()
+        '''
 
-        '''
-        stmt = (
-            select(AccountStock, StockEntry.Stock_Desc)
-            .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
-            .where(AccountStock.ID == user.ID)
-        )
-        user_stocks = session.execute(stmt).all()
-        '''
-        
         # friendRankings
-        friendRankingsList = (
-            session
-            .query(RankingEntry)
-            .order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
+        stmt = (
+            select(RankingEntry, FriendEntry.ToID, AccountStock.Nickname)
+            .join(FriendEntry, RankingEntry.ID == FriendEntry.ToID)
+            .join(AccountStock, ) #????
+            .where(FriendEntry.FromID == user.ID)
         )
+        friendRankingsList = session.execute(stmt).order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
 
         # topRankings 
         topRankingsList = (
@@ -105,35 +100,40 @@ def View():
             .order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
         )
 
-        mockNewsList = []
-
-        for news in recent_news:
-            mockNews = {
-                "title": news.News_Title,
-                "source": news.Publisher,
-                "link": news.News_Body
+        mockGlobalRanking, mockFriendRanking = [], []
+        
+        i = 0
+        for rank in topRankingsList:
+            i += 1
+            mockRank = {
+                "rank": i,
+                "name": 
+                "pct": 
+                "isMe": 
             }
-            mockNewsList.append(mockNews)
+            mockGlobalRanking.append(mockRank)
+        
+        i = 0
+        for rank in friendRankingsList:
+            i += 1
+            mockRank = {
+                "rank": i,
+                "name": 
+                "pct": 
+                "isMe": 
+            }
+            mockFriendRanking.append(mockRank)
         
         return jsonify({
             "status": "success",
-            "message": "홈 화면을 성공적으로 불러왔습니다."
-            "mockAccount": {
-                "nickname": user.Nickname
-                "virtualDay": (Midnight(tokyo_time) - Midnight(user.Reg_Date)).days + 1
-                "totalAsset": user.Balance
-                "profitLoss": user.Return
-                "cashBalance": max([0, int(user.Balance - stock_sum)])
-                "stockCount": len(user_stocks)
-                "hasReceivedIncomeToday": user.LastBailout
-            },
-            "mockHoldings": mockHoldingsList,
-            "mockNews": mockNewsList
+            "message": "랭킹을 성공적으로 불러왔습니다."
+            "mockFriendRanking": mockFriendRanking
+            "mockGlobalRanking": mockGlobalRanking
         }), 200
     except:
         return jsonify({
             "status": "fail",
-            "message": "홈 화면을 불러오지 못했습니다."
+            "message": "랭킹을 불러오지 못했습니다."
         }), 400
 
 if __name__ == '__main__':

@@ -56,6 +56,8 @@ class FriendEntry(Base):
 
 Base.metadata.create_all(engine)
 
+# 중요: << 본인은 본인과 친구임 >>
+
 @app.route('/social', methods=['POST'])
 def Request():
     if request.is_json:
@@ -105,32 +107,41 @@ def Accept():
 def View():
     '''TODO'''
 
-# !! WIP !!
+# test required /// frontend not implemented yet
 @app.route('/social', methods=['POST'])
 def Delete():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
 
-    if not user:
+    fromId = data.get()
+    toId = data.get()
+    fromUser = session.get(UserAccount, fromId)
+    toUser = session.get(UserAccount, toId)
+
+    if not fromUser:
         return jsonify({
             "status": "fail",
             "message": "사용자를 찾지 못했습니다. 다시 로그인해 주세요."
         }), 401
     
     try:
-        stmt = delete(UserAccount).where(UserAccount.ID == userId)
+        stmt = delete(FriendEntry).where(FriendEntry.ID == toId)
 
         session.execute(stmt)
         session.commit()
 
         return jsonify({
             "status": "success",
-            "message": "계정이 삭제되었습니다."
+            "message": "친구가 삭제되었습니다."
         }), 200
     except:
         session.rollback()
 
         return jsonify({
             "status": "fail",
-            "message": "계정 삭제에 실패했습니다."
+            "message": "친구 삭제에 실패했습니다."
         }), 400
 
 if __name__ == '__main__':
