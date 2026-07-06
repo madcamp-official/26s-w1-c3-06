@@ -21,6 +21,7 @@ CREATE TABLE "User_Info" (
 CREATE TABLE "Stock_List" (
 	"Stock_Name"	VARCHAR(20)		NOT NULL,
 	"Stock_Logo"	BYTEA		NULL,
+	"Stock_Desc"	TEXT		NULL,
 	CONSTRAINT "PK_Stock_List" PRIMARY KEY ("Stock_Name")
 );
 
