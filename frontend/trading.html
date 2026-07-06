@@ -12,28 +12,32 @@
 
   <main class="page-container">
 
-    <div class="stock-list-header">
-      <h1 class="page-title-lg">종목 둘러보기</h1>
+    <div class="page-header">
+      <div>
+        <p class="page-title">종목 둘러보기</p>
+        <p class="page-subtitle">관심 있는 회사를 찾아보세요</p>
+      </div>
       <div class="search-box">
         <span class="search-icon">⌕</span>
-        <input type="text" id="searchInput" placeholder="검색하기" />
+        <input type="text" id="searchInput" placeholder="회사 이름으로 찾아보세요" />
       </div>
     </div>
 
-    <div class="stock-list-card">
-      <div class="stock-list-column-header">
+    <div class="card stock-list-card">
+      <div class="table-header stock-table-header">
         <span>종목명</span>
         <span class="align-right">현재가</span>
         <span class="align-right">등락률</span>
       </div>
 
       <div id="stockList">
-        <!-- 종목 목록: JS에서 API 응답으로 이 안을 채움 -->
+        <!-- 종목 목록: JS에서 채움 -->
       </div>
     </div>
 
   </main>
 
+  <script src="js/stock-descriptions.js"></script>
   <script src="js/navbar.js"></script>
   <script src="js/trading.js"></script>
 </body>

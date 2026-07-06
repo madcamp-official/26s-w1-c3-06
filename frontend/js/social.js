@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   // TODO: 백엔드 API 완성되면 아래 더미 데이터 대신 fetch로 교체
-  const mockFriendRequest = { fromName: "민수" }; // 요청이 없으면 null로 두면 카드 자체가 숨겨짐
+  const mockFriendRequest = { fromName: "OO" }; // 요청이 없으면 null로 두면 카드 자체가 숨겨짐
 
   const mockFriends = [
     { name: "김지우" },
@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
     { rank: 1, name: "서연", pct: 6.2, isMe: false },
     { rank: 2, name: "지우", pct: 3.1, isMe: false },
     { rank: 3, name: "나", pct: 0.8, isMe: true },
-    { rank: 4, name: "현우", pct: -0.2, isMe: false },
   ];
 
   const mockGlobalRanking = [
@@ -62,6 +61,9 @@ function renderFriendRequest(request) {
 
 function renderFriendList(friends) {
   const listEl = document.getElementById("friendList");
+  const countEl = document.getElementById("friendCount");
+  if (countEl) countEl.innerText = `${friends.length}명`;
+
   listEl.innerHTML = friends.map(f => `
     <div class="friend-row">
       <div class="avatar-circle"></div>

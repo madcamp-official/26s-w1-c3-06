@@ -19,7 +19,7 @@
       <!-- 왼쪽: 종목 정보 -->
       <div class="detail-left">
 
-        <div class="detail-card">
+        <div class="card">
           <div class="stock-header">
             <div class="stock-logo-lg">로고</div>
             <div class="stock-header-info">
@@ -27,23 +27,25 @@
               <span class="desc-badge" id="stockDesc">기업설명</span>
             </div>
             <div class="stock-price-info">
-              <p class="price-label">현재 주가</p>
+              <p class="card-caption">현재 주가</p>
               <p class="price-value" id="currentPrice">-----원</p>
-              <p class="price-change" id="priceChange">▼xx.x%</p>
+              <p class="price-change" id="priceChange">▼--.-%</p>
             </div>
           </div>
         </div>
 
-        <div class="detail-card">
+        <div class="card">
           <p class="card-title">주가 그래프</p>
           <div class="chart-placeholder">
             <canvas id="priceChart"></canvas>
           </div>
         </div>
 
-        <div class="detail-card">
-          <p class="card-title">관련 뉴스</p>
-          <p class="card-caption">기간동안의 기업별 누적 뉴스 데이터 · 뉴스 제목만 표시돼요</p>
+        <div class="card">
+          <div class="card-title-row">
+            <p class="card-title">관련 뉴스</p>
+            <span class="card-caption">지금까지 있었던 소식만 보여요</span>
+          </div>
           <div id="newsList">
             <!-- 뉴스 목록: JS에서 API 응답으로 이 안을 채움 (제목 + 링크만) -->
           </div>
@@ -54,29 +56,29 @@
       <!-- 오른쪽: 내 보유 정보 + 매매 -->
       <div class="detail-right">
 
-        <div class="detail-card holding-card">
+        <div class="card holding-card">
           <p class="card-title" id="holdingTitle">내가 가진 (기업명)</p>
           <div class="holding-stats">
             <div>
-              <p class="stat-label">보유수량</p>
+              <p class="card-caption">보유수량</p>
               <p class="stat-value" id="holdingQty">-</p>
             </div>
             <div>
-              <p class="stat-label">평균 매수가</p>
+              <p class="card-caption">평균 매수가</p>
               <p class="stat-value" id="holdingAvgPrice">-</p>
             </div>
             <div>
-              <p class="stat-label">평가금액</p>
+              <p class="card-caption">평가금액</p>
               <p class="stat-value" id="holdingValue">-</p>
             </div>
             <div>
-              <p class="stat-label">손익</p>
+              <p class="card-caption">손익</p>
               <p class="stat-value" id="holdingProfit">-</p>
             </div>
           </div>
         </div>
 
-        <div class="detail-card trading-card">
+        <div class="card">
 
           <div class="trade-toggle">
             <button class="trade-toggle-btn active" id="buyBtn" data-type="buy">사기</button>
@@ -97,11 +99,11 @@
           </div>
 
           <div class="trade-amount-row">
-            <span>거래액</span>
-            <span id="tradeAmount">xxx,xxx원</span>
+            <span class="card-caption">거래액</span>
+            <span id="tradeAmount">-----원</span>
           </div>
 
-          <button class="btn-primary order-btn" id="orderBtn">주문넣기</button>
+          <button class="btn-primary" id="orderBtn">주문넣기</button>
         </div>
 
       </div>
