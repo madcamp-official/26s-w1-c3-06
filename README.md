@@ -12,8 +12,8 @@
 
 | 이름 | GitHub | 역할 |
 | --- | --- | --- |
-|서영빈| https://github.com/izayoieosd |  |
-|김혜리| https://github.com/ireyhye| |
+|서영빈| https://github.com/izayoieosd | Backend, DB |
+|김혜리| https://github.com/ireyhye| Frontend, 데이터 수집, Wireframe |
 
 ---
 

@@ -12,7 +12,7 @@ CREATE TABLE "User_Info" (
 	"Reg_Date"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
-	"LastBailout"	INT		NULL,
+	"LastBailout"	BOOLEAN		NULL,
 	"Nickname"	VARCHAR(12)		NULL,
 	"Profile"	BYTEA		NULL,
 	CONSTRAINT "PK_User_Info" PRIMARY KEY ("ID")
@@ -21,6 +21,7 @@ CREATE TABLE "User_Info" (
 CREATE TABLE "Stock_List" (
 	"Stock_Name"	VARCHAR(20)		NOT NULL,
 	"Stock_Logo"	BYTEA		NULL,
+	"Stock_Desc"	TEXT		NULL,
 	CONSTRAINT "PK_Stock_List" PRIMARY KEY ("Stock_Name")
 );
 
