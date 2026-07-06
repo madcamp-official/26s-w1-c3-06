@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  // TODO: 백엔드 API 완성되면 아래 더미 데이터 대신 fetch로 교체
+  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
   const mockAccount = {
-    nickname: "OO",
+    nickname: "민지",
     virtualDay: 2,
     totalAsset: 1043200,
     profitLoss: 43200,
@@ -49,21 +49,18 @@ function renderAccount(account) {
     incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
   } else {
     incomeBtn.addEventListener("click", () => {
-      openQuizModal(() => {
-        // 퀴즈 정답을 맞혔을 때만 실행됨
-        // TODO: 백엔드 기본소득 지급 API 호출 (/account/basic-income)
-        alert("10,000원을 받았어요!");
-        incomeBtn.disabled = true;
-        incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
-      });
+      alert("10,000원을 받았어요!");
+      incomeBtn.disabled = true;
+      incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
     });
   }
 }
 
 function renderHoldings(holdings) {
   const listEl = document.getElementById("holdingsList");
+
   listEl.innerHTML = holdings.map(h => `
-    <div class="holding-row">
+    <div class="holding-row" data-stock-name="${h.name}" style="cursor:pointer;">
       <div class="holding-info">
         <div class="holding-logo"></div>
         <div>
@@ -77,6 +74,14 @@ function renderHoldings(holdings) {
       </span>
     </div>
   `).join("");
+
+  // 보유 주식 행 클릭 시 종목 상세 화면으로 이동
+  listEl.querySelectorAll(".holding-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const stockName = row.dataset.stockName;
+      window.location.href = `stock-detail.html?stock=${encodeURIComponent(stockName)}`;
+    });
+  });
 }
 
 function renderNews(newsList) {

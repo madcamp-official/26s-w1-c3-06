@@ -2,12 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
   const mockProfile = {
-    name: "김혜리",
-    handle: "@ireyhye",
+    nickname: "김혜리",
+    userId: "@ireyhye",
   };
 
-  document.getElementById("profileName").innerText = mockProfile.name;
-  document.getElementById("profileHandle").innerText = mockProfile.handle;
+  document.getElementById("profileName").innerText = mockProfile.nickname;
+  document.getElementById("profileId").innerText = mockProfile.userId;
   document.getElementById("nicknameInput").value = mockProfile.name;
 
   document.getElementById("saveBtn").addEventListener("click", async () => {

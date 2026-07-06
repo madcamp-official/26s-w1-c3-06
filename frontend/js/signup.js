@@ -38,7 +38,7 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("http://localhost:8000/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname, id: userId, password }),
+      body: JSON.stringify({ nickname: nickname, userId: userId, password: password }),
     });
 
     if (!res.ok) {
