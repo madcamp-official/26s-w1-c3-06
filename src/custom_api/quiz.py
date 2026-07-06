@@ -26,7 +26,8 @@ class QuizEntry(Base):
     __tablename__ = "Quiz"
 
     Quiz_Num: Mapped[int] = mapped_column(primary_key=True)
-    Quiz_Body: Mapped[dict[str,Any]] = mapped_column(JSON)
+    Quiz_Body: Mapped[dict[str,Any]] = mapped_column(JSON, nullable=True)
+    Quiz_Answer: Mapped[int] = mapped_column(Integer)
 
     def __init__(self, Quiz_Num=0, Quiz_Body=""):
         self.Quiz_Num = Quiz_Num
@@ -37,24 +38,30 @@ class QuizEntry(Base):
     
 Base.metadata.create_all(engine)
 
-# !! WIP !!
-def Show(quiz_number):
-    quiz = session.get(QuizEntry, quiz_number)
-    raw_body = quiz.Quiz_Body
+# test required
+def Show(quiz_num):
+    quiz = session.get(QuizEntry, quiz_num)
+    if not quiz:
+        raise ValueError
 
+    try:    
+        return quiz.Quiz_Body
+    except ValueError as e:
+        return None
+
+# test required
+def Check(quiz_num, user_answer):
+    quiz = session.get(QuizEntry, quiz_num)
+    if not quiz: 
+        raise ValueError
     
-
-    # get request
-
-# !! WIP !!
-def Submit():
-    
-
-# !! WIP !!
-def Check():
-    return True
-    
-    return False
+    try:
+        if user_answer == quiz.Quiz_Answer:
+            return True
+        else:
+            return False
+    except ValueError as e:
+        return None
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

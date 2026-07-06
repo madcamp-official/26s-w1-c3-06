@@ -237,7 +237,7 @@ def View():
             "message": "홈 화면을 불러오지 못했습니다."
         }), 400
         
-# !! WIP !!
+# test required
 @app.route('/home', methods=['GET'])
 def DailyBailout():
     if request.is_json:
@@ -264,11 +264,51 @@ def DailyBailout():
         # Show a quiz
         quizLength = session.query(QuizEntry).count()
         quizRanNum = Math.floor(Math.random() * quizLength)
-        quiz.Show(quizRanNum)
-        
-        # Check if it is correct
-        '''QuizCorrect = quiz.Check()'''
+        quizToday = quiz.Show(quizRanNum)
 
+        if not quiz:
+            raise ValueError("퀴즈를 찾지 못했습니다.")
+
+        return jsonify({
+            "status": "success",
+            "message": "오늘의 퀴즈를 불러왔습니다.",
+            "quiz_num": quizRanNum,
+            "quiz_body": quizToday
+        }), 200
+    except ValueError as e:
+        session.rollback()
+        return jsonify({
+            "status": "fail",
+            "message": "퀴즈 불러오기에 실패했습니다."
+        }), 400
+
+# test required
+@app.route('/home', methods=['POST'])
+def SubmitAndReward():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get()
+    quiz_num = data.get()
+    answerIndex = data.get()
+
+    user = session.get(UserAccount, userId)
+    quizToday = session.get(QuizEntry, quiz_num)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "채점 결과를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+    
+    # answer checking
+    QuizCorrect = quiz.Check(quiz_num, answerIndex)
+    if QuizCorrect is None:
+        raise Exception:
+
+    try:
         if user and QuizCorrect:
             if user.LastBailout == False:
                 user.Balance += 10000
@@ -282,8 +322,8 @@ def DailyBailout():
                 "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
             }), 200
 
-        user.LastBailout = True
-        session.commit()
+            user.LastBailout = True
+            session.commit()
     except:
         session.rollback()
         return jsonify({
