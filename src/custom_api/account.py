@@ -28,13 +28,11 @@ def Midnight(dt):
 class Base(DeclarativeBase):
     pass
 
-'''
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
 )
-'''
 
-engine = create_engine("dbms://user:pwd@host/dbname", echo=True)
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -112,7 +110,7 @@ def Create():
             "message": "유효하지 않은 닉네임, ID 또는 비밀번호. 계정 생성에 실패하였습니다."
         }), 400
 
-    if id_exists(id_) or nickname_exists(nickname):
+    if id_exists(userId) or nickname_exists(nickname):
         return jsonify({
             "status": "fail",
             "message": "아이디 또는 닉네임이 중복됩니다."
@@ -166,7 +164,7 @@ def Authenticate():
             "message": "사용자 아이디와 비밀번호를 모두 입력해 주세요."
         }), 400
 
-    user = session.get(UserAccount, userID)
+    user = session.get(UserAccount, userId)
 
     if user and check_password_hash(user.PW, password):
         return jsonify({
