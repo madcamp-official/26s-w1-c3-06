@@ -41,7 +41,7 @@ class FriendEntry(Base):
 
     FromID: Mapped[str] = mapped_column(primary_key=True)
     ToID: Mapped[str] = mapped_column(primary_key=True)
-    Friend_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Friend_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     Friend_Status: Mapped[fnd_sts] = mapped_column()
     
     __table_args__ = (
@@ -61,15 +61,15 @@ class FriendEntry(Base):
 Base.metadata.create_all(engine)
 
 # test required
-@app.route('/social', methods=['POST'])
+@app.route('/social/request-friends', methods=['POST'])
 def Request():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
 
-    fromId = data.get()
-    toId = data.get()
+    fromId = data.get(fromId)
+    toId = data.get(toId)
     fromUser = session.get(UserAccount, fromId)
     toUser = session.get(UserAccount, toId)
 
@@ -90,7 +90,7 @@ def Request():
         return jsonify({
             "status": "success",
             "message": toUser.Nickname + "님에게 친구 요청을 전송했습니다.",
-            "notiTime": datetime.now().astimezone()
+            "notiTime": datetime.now().astimezone(),
             "fromId": fromId,
             "toId": toId
         }), 200
@@ -101,7 +101,7 @@ def Request():
         }), 400
 
 # !! WIP !!
-@app.route('/social', methods=['POST'])
+@app.route('/social/accept-friends', methods=['POST'])
 def Accept():
     '''TODO'''
 
@@ -111,15 +111,15 @@ def View():
     '''TODO'''
 
 # test required /// frontend not implemented yet
-@app.route('/social', methods=['POST'])
+@app.route('/social/delete-friends', methods=['POST'])
 def Delete():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
 
-    fromId = data.get()
-    toId = data.get()
+    fromId = data.get(fromId)
+    toId = data.get(toId)
     fromUser = session.get(UserAccount, fromId)
     toUser = session.get(UserAccount, toId)
 

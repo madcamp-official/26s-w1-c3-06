@@ -34,7 +34,7 @@ class NewsEntry(Base):
     News_Body: Mapped[str] = mapped_column(Text)
     Reporter: Mapped[Optional[str]] = mapped_column(String(10))
     Publisher: Mapped[Optional[str]] = mapped_column(String(10))
-    News_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    News_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __init__(self, ID=0, title="", body="", reporter=None, publisher=None, news_date=None):
         self.News_ID = ID

@@ -32,7 +32,7 @@ class NoticeEntry(Base):
     Noti_Num: Mapped[int] = mapped_column(Integer, primary_key=True)
     Noti_Head: Mapped[str] = mapped_column(Text)
     Noti_Body: Mapped[str] = mapped_column(Text)
-    Noti_Time: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Noti_Time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # default profile is embedded in website
     def __init__(self, Noti_Num=0, Noti_Head="",Noti_Body="",Noti_Time=None):
@@ -46,42 +46,42 @@ class NoticeEntry(Base):
 
 Base.metadata.create_all(engine)
 
-# !! WIP !!
-@app.route('/home')
+# !! WIP - 루트와 request 종류가 모두 일치할 시 한 함수만 존재할 수 있음 !!
+@app.route('/home/notice')
 def StockNotice():
     '''TODO'''
 
 # !! WIP !!
-@app.route('/home')
+@app.route('/home/notice')
 def OrderNotice():
     
     return jsonify({
         "status": "success",
         "message": toUser.Nickname + "님에게 친구 요청을 받았습니다.",
-        "notiNum": 1
-        "notiHead": "친구 추가 알림"
-        "notiBody": toUser.Nickname + "님에게 친구 요청을 받았습니다."
-        "notiTime": datetime.now(ZoneInfo("Asia/Tokyo"))
-        "orderId": 
+        "notiNum": 1,
+        "notiHead": "친구 추가 알림",
+        "notiBody": toUser.Nickname + "님에게 친구 요청을 받았습니다.",
+        "notiTime": datetime.now().astimezone(),
+        "orderId": 1
     }), 200
 
 # !! WIP !!
-@app.route('/home')
+@app.route('/home/notice')
 def FriendsNotice(fromId, toId, notiNum, notiTime):
     fromUser = session.scalars(
-        select(UserAccount).where(UserAccount.ID == fromId)
+        select(account.UserAccount).where(account.UserAccount.ID == fromId)
     )
     toUser = session.scalars(
-        select(UserAccount).where(UserAccount.ID == toId)
+        select(account.UserAccount).where(account.UserAccount.ID == toId)
     )
     
     return jsonify({
         "status": "success",
         "message": toUser.Nickname + "님에게 친구 요청을 받았습니다.",
-        "notiNum": 1
-        "notiHead": "친구 추가 알림"
-        "notiBody": toUser.Nickname + "님에게 친구 요청을 받았습니다."
-        "notiTime": datetime.now(ZoneInfo("Asia/Tokyo"))
+        "notiNum": 1,
+        "notiHead": "친구 추가 알림",
+        "notiBody": toUser.Nickname + "님에게 친구 요청을 받았습니다.",
+        "notiTime": datetime.now().astimezone(),
         "fromId": fromId,
         "toId": toId
     }), 200

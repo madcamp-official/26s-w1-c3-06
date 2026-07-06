@@ -42,12 +42,12 @@ class UserAccount(Base):
 
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
     PW: Mapped[str] = mapped_column(String(255))
-    Reg_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Reg_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
     LastBailout: Mapped[bool] = mapped_column(Boolean)
-    Nickname: Mapped[str] = mapped_column(String(12),unique=True,nullable=False)
-    Profile: Mapped[bytes] = mapped_column(LargeBinary,nullable=False)
+    Nickname: Mapped[str] = mapped_column(String(12),unique=True,nullable=True)
+    Profile: Mapped[bytes] = mapped_column(LargeBinary,nullable=True)
         
     def __repr__(self):
         return f"User(ID: {self.ID}, PW: {self.PW}, Balance: {self.Balance})"
@@ -100,9 +100,9 @@ def Create():
     else:
         data = request.form
     
-    nickname = data.get()
-    userId = data.get()
-    password = data.get()
+    nickname = data.get(nickname)
+    userId = data.get(userId)
+    password = data.get(password)
 
     if not nickname or not userId or not password:
         return jsonify({
@@ -135,8 +135,8 @@ def Create():
 
         return jsonify({
             "status": "success",
-            "message": "계정이 생성되었습니다."
-            "userId": user.ID
+            "message": "계정이 생성되었습니다.",
+            "userId": user.ID,
             "nickname": user.Nickname
         }), 200
     except:
@@ -155,8 +155,8 @@ def Authenticate():
     else:
         data = request.form
 
-    userId = data.get()
-    password = data.get()
+    userId = data.get(userId)
+    password = data.get(password)
 
     if not userId or not password:
         return jsonify({
@@ -187,7 +187,7 @@ def View():
     else:
         data = request.form
 
-    userId = data.get()
+    userId = data.get(userId)
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -198,8 +198,8 @@ def View():
 
     try:
         stmt = (
-            select(AccountStock, StockEntry.Stock_Desc)
-            .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
+            select(AccountStock, stock.StockEntry.Stock_Desc)
+            .join(stock.StockEntry, AccountStock.Stock_Name == stock.StockEntry.Stock_Name)
             .where(AccountStock.ID == user.ID)
         )
         user_stocks = session.execute(stmt).all()
@@ -240,14 +240,14 @@ def View():
         
         return jsonify({
             "status": "success",
-            "message": "홈 화면을 성공적으로 불러왔습니다."
+            "message": "홈 화면을 성공적으로 불러왔습니다.",
             "mockAccount": {
-                "nickname": user.Nickname
-                "virtualDay": (Midnight(datetime.now().astimezone()) - Midnight(user.Reg_Date)).days + 1
-                "totalAsset": user.Balance
-                "profitLoss": user.Return
-                "cashBalance": max([0, int(user.Balance - stock_sum)])
-                "stockCount": len(user_stocks)
+                "nickname": user.Nickname,
+                "virtualDay": (Midnight(datetime.now().astimezone()) - Midnight(user.Reg_Date)).days + 1,
+                "totalAsset": user.Balance,
+                "profitLoss": user.Return,
+                "cashBalance": max([0, int(user.Balance - stock_sum)]),
+                "stockCount": len(user_stocks),
                 "hasReceivedIncomeToday": user.LastBailout
             },
             "mockHoldings": mockHoldingsList,
@@ -260,14 +260,14 @@ def View():
         }), 400
         
 # test required
-@app.route('/home', methods=['GET'])
+@app.route('/home/quiz', methods=['GET'])
 def DailyBailout():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
 
-    userId = data.get()
+    userId = data.get(userId)
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -276,7 +276,7 @@ def DailyBailout():
             "message": "퀴즈를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
-    if user.LastBailout = True:
+    if user.LastBailout == True:
         return jsonify({
             "status": "success",
             "message": "이미 오늘의 퀴즈를 풀었습니다."
@@ -284,8 +284,8 @@ def DailyBailout():
     
     try:
         # Show a quiz
-        quizLength = session.query(QuizEntry).count()
-        quizRanNum = Math.floor(Math.random() * quizLength)
+        quizLength = session.query(quiz.QuizEntry).count()
+        quizRanNum = floor(random() * quizLength)
         quizToday = quiz.Show(quizRanNum)
 
         if not quiz:
@@ -305,19 +305,19 @@ def DailyBailout():
         }), 400
 
 # test required
-@app.route('/home', methods=['POST'])
+@app.route('/home/quiz/submit', methods=['POST'])
 def SubmitAndReward():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
 
-    userId = data.get()
-    quiz_num = data.get()
-    answerIndex = data.get()
+    userId = data.get(userId)
+    quiz_num = data.get(quiz_num)
+    answerIndex = data.get(answerIndex)
 
     user = session.get(UserAccount, userId)
-    quizToday = session.get(QuizEntry, quiz_num)
+    quizToday = session.get(quiz.QuizEntry, quiz_num)
 
     if not user:
         return jsonify({
@@ -328,25 +328,26 @@ def SubmitAndReward():
     # answer checking
     QuizCorrect = quiz.Check(quiz_num, answerIndex)
     if QuizCorrect is None:
-        raise Exception:
+        raise Exception("퀴즈 채점 불가능")
 
     try:
         if user and QuizCorrect:
             if user.LastBailout == False:
                 user.Balance += 10000
-            return jsonify({
+            result = jsonify({
                 "status": "success",
                 "message": "퀴즈 정답! 오늘의 보상을 받아가세요."
             }), 200
         else: 
-            return jsonify({
+            result = jsonify({
                 "status": "success",
                 "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
             }), 200
 
             user.LastBailout = True
             session.commit()
-    except:
+            return result
+    except Exception:
         session.rollback()
         return jsonify({
             "status": "fail",
@@ -361,12 +362,12 @@ def Update():
     else:
         data = request.form
 
-    userId = data.get()
+    userId = data.get(userId)
     user = session.get(UserAccount, userId)
 
-    password = data.get()
-    nickname = data.get()
-    profile = data.get()
+    password = data.get(password)
+    nickname = data.get(nickname)
+    profile = data.get(profile)
 
     if not password or not nickname:
         return jsonify({
@@ -399,7 +400,7 @@ def Delete():
     else:
         data = request.form
 
-    userId = data.get()
+    userId = data.get(userId)
     user = session.get(UserAccount, userId)
 
     if not user:

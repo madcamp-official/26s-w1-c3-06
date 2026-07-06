@@ -43,7 +43,7 @@ class OrderEntry(Base):
     Order_Quantity: Mapped[int] = mapped_column(Integer)
     Order_Position: Mapped[ord_pos] = mapped_column()
     Order_Result: Mapped[ord_res] = mapped_column()
-    Order_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    Order_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
         ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
@@ -65,7 +65,7 @@ class OrderEntry(Base):
 
 Base.metadata.create_all(engine)
 
-@app.route('/index', methods=['POST'])
+@app.route('/', methods=['POST'])
 def Create():
     
 

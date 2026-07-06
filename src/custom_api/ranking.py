@@ -44,7 +44,7 @@ class RankingEntry(Base):
 Base.metadata.create_all(engine)
 
 def Register(ID):
-    user = session.get(UserAccount, ID)
+    user = session.get(account.UserAccount, ID)
 
     try:
         session.add(a1)
@@ -58,15 +58,15 @@ def Update():
     '''TODO'''
 
 # test required
-@app.route('/social', methods=['GET'])
+@app.route('/social/ranking', methods=['GET'])
 def View():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
 
-    userId = data.get()
-    user = session.get(UserAccount, userId)
+    userId = data.get(userId)
+    user = session.get(account.UserAccount, userId)
 
     if not user:
         return jsonify({
@@ -77,16 +77,16 @@ def View():
     try:
         # friends list (temporary)
         stmt = (
-            select(UserAccount, FriendEntry.fromID)
-            .join(FriendEntry, UserAccount.ID == FriendEntry.toID)
-            .where(FriendEntry.fromID == user.ID)
+            select(account.UserAccount, friends.FriendEntry.fromID)
+            .join(friends.FriendEntry, account.UserAccount.ID == friends.FriendEntry.toID)
+            .where(friends.FriendEntry.fromID == user.ID)
         )
         friendList = session.execute(stmt).all()
 
         # friendRankings (including me) and topRankings 
         stmt = (
-            select(RankingEntry, UserAccount)
-            .join(UserAccount, RankingEntry.ID == UserAccount.ID)
+            select(RankingEntry, account.UserAccount)
+            .join(account.UserAccount, RankingEntry.ID == account.UserAccount.ID)
         )
         topRankingsList = (
             session.execute(stmt).
@@ -94,7 +94,7 @@ def View():
         )
         friendRankingsList = (
             session.execute(stmt).
-            filter(UserAccount.ID == userId or UserAccount.ID in friendlist).
+            filter(account.UserAccount.ID == userId or account.UserAccount.ID in friendlist).
             order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
         )
 
@@ -124,8 +124,8 @@ def View():
         
         return jsonify({
             "status": "success",
-            "message": "랭킹을 성공적으로 불러왔습니다."
-            "mockFriendRanking": mockFriendRanking
+            "message": "랭킹을 성공적으로 불러왔습니다.",
+            "mockFriendRanking": mockFriendRanking,
             "mockGlobalRanking": mockGlobalRanking
         }), 200
     except:
