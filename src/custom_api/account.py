@@ -14,8 +14,12 @@ app = Flask(__name__)
 # internal API imports
 import stock
 import order
-import friends
+import news
 import quiz
+
+# Helper Function: midnight of certain datetime object
+def Midnight(dt):
+    return datetime.combine(dt.date(), time.min)
 
 # create engine
 class Base(DeclarativeBase):
@@ -35,7 +39,7 @@ class UserAccount(Base):
     Reg_Date: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
-    LastBailout: Mapped[datetime] = mapped_column(Datetime(timezone=True), server_default=func.now())
+    LastBailout: Mapped[bool] = mapped_column(Boolean)
     Nickname: Mapped[Optional[str]] = mapped_column(String(12),unique=True)
     Profile: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
 
@@ -46,7 +50,7 @@ class UserAccount(Base):
         self.Reg_Date = datetime.now(ZoneInfo("Asia/Tokyo"))
         self.Balance = 0
         self.Return = 0
-        self.LastBailout = datetime.now(ZoneInfo("Asia/Tokyo"))
+        self.LastBailout = False
         self.Nickname = None
         self.Profile = None
         
@@ -85,14 +89,35 @@ Base.metadata.create_all(engine)
 
 # Create an account and stage onto DB
 # test required
-def Create(ID, PW):
-    a1 = UserAccount(ID, generate_password_hash(PW))
+@app.route('/signup', methods=['POST'])
+def Create():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+    
+    nickname = data.get()
+    userId = data.get()
+    password = data.get()
+
+    if not nickname or not userId or not password:
+        return jsonify({
+            "status": "fail",
+            "message": "유효하지 않은 닉네임, ID 또는 비밀번호. 계정 생성에 실패하였습니다."
+        }), 400
+    a1 = UserAccount(userId, generate_password_hash(password))
+
     try:
         session.add(a1)
         session.commit()
+        return jsonify({
+            "status": "success",
+            "message": "계정이 생성되었습니다."
+            "userId": user.ID
+            "nickname": user.Nickname
+        }), 200
     except:
         session.rollback()
-
 
 # Receive login request and authenticate
 # test required
@@ -103,23 +128,21 @@ def Authenticate():
     else:
         data = request.form
 
-    ID = data.get()
-    PW = data.get()
+    userId = data.get()
+    password = data.get()
 
-    if not ID or not PW:
+    if not userId or not password:
         return jsonify({
                 "status": "fail",
                 "message": "사용자 아이디와 비밀번호를 모두 입력해 주세요."
         }), 400
-    user = session.get(UserAccount, ID)
+    user = session.get(UserAccount, userID)
 
-    if user and check_password_hash(user.PW, PW):
+    if user and check_password_hash(user.PW, password):
         return jsonify({
             "status": "success",
             "message": "로그인이 완료되었습니다."
-            "user_info": {
-                "username": user.ID
-            }
+            "userId": user.ID
         }), 200
     else:
         return jsonify({
@@ -128,33 +151,71 @@ def Authenticate():
         }), 401
 
 # Show main page and feature (almost) everything
-# test required WIP!!!
+# test required
 @app.route('/home', methods=['GET'])
 def View():
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
-    
-    ID = data.get()
-    user = session.get(UserAccount, ID)
-    
-    stmt = select(AccountStock).where(AccountStock.ID == ID)
-    user_stocks = session.scalars(stmt).all()
+
+    userId = data.get()
+    user = session.get(UserAccount, userId)
 
     if user:
+        stmt = (
+            select(AccountStock, StockEntry.Stock_Desc)
+            .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
+            .where(AccountStock.ID == user.ID)
+        )
+        user_stocks = session.execute(stmt).all()
+        
+        stock_sum = 0
+        mockHoldingsList = []
+
+        for stock, desc in user_stocks:
+            value = stock.Own_Quantity * stock.Own_Avg
+            # mockAccount
+            stock_sum += value
+            
+            # mockHoldings
+            mockHolding = {
+                "name": stock.Stock_Name,
+                "desc": desc,
+                "value": int(value),
+                "returnPct": (100 * stock.Own_PriceChange / value).quantize(Decimal('0.1'))
+            }
+            mockHoldingsList.append(mockHolding)   
+
+        # mockNews
+        recent_news = (
+            session
+            .query(StockNewsEntry)
+            .order_by(StockNewsEntry.News_Date.desc()).limit(5).all()
+        )
+
+        mockNewsList = []
+
+        for news in recent_news:
+            mockNews = {
+                "title": news.News_Title,
+                "source": news.Publisher,
+                "link": news.News_Body
+            }
+            mockNewsList.append(mockNews)
+        
         return jsonify({
             "mockAccount": {
                 "nickname": user.Nickname
                 "virtualDay": (Midnight(tokyo_time) - Midnight(user.Reg_Date)).days + 1
                 "totalAsset": user.Balance
                 "profitLoss": user.Return
-                "cashBalance": '''calculate'''
+                "cashBalance": max([0, int(user.Balance - stock_sum)])
                 "stockCount": len(user_stocks)
-                "hasReceivedIncomeToday": 
+                "hasReceivedIncomeToday": user.LastBailout
             },
-            "mockHoldings": user_stocks,
-            "mockNews": 
+            "mockHoldings": mockHoldingsList,
+            "mockNews": mockNewsList
         }), 200
     else:
         return jsonify({
@@ -162,20 +223,16 @@ def View():
             "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
-# Helper Function: midnight of certain datetime object
-def Midnight(dt):
-    return datetime.combine(dt.date(), time.min)
-
-# html request Required
+# test required
 @app.route('/home', methods=['POST'])
 def DailyBailout(ID):
     user = session.get(UserAccount, ID)
     tokyo_time = datetime.now(ZoneInfo("Asia/Tokyo"))
 
-    if user and (Midnight(tokyo_time) - Midnight(user.LastBailout)).days > 0:
+    if user and user.LastBailout == False:
         try:
             user.Balance += 10000
-            user.LastBailout = tokyo_time
+            user.LastBailout = True
 
             session.commit()
         except:
