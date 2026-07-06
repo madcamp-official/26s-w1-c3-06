@@ -105,11 +105,13 @@ def Create():
             "status": "fail",
             "message": "유효하지 않은 닉네임, ID 또는 비밀번호. 계정 생성에 실패하였습니다."
         }), 400
+    
     a1 = UserAccount(userId, generate_password_hash(password))
 
     try:
         session.add(a1)
         session.commit()
+
         return jsonify({
             "status": "success",
             "message": "계정이 생성되었습니다."
@@ -133,9 +135,10 @@ def Authenticate():
 
     if not userId or not password:
         return jsonify({
-                "status": "fail",
-                "message": "사용자 아이디와 비밀번호를 모두 입력해 주세요."
+            "status": "fail",
+            "message": "사용자 아이디와 비밀번호를 모두 입력해 주세요."
         }), 400
+
     user = session.get(UserAccount, userID)
 
     if user and check_password_hash(user.PW, password):
@@ -162,7 +165,13 @@ def View():
     userId = data.get()
     user = session.get(UserAccount, userId)
 
-    if user:
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
         stmt = (
             select(AccountStock, StockEntry.Stock_Desc)
             .join(StockEntry, AccountStock.Stock_Name == StockEntry.Stock_Name)
@@ -205,6 +214,8 @@ def View():
             mockNewsList.append(mockNews)
         
         return jsonify({
+            "status": "success",
+            "message": "홈 화면을 성공적으로 불러왔습니다."
             "mockAccount": {
                 "nickname": user.Nickname
                 "virtualDay": (Midnight(tokyo_time) - Midnight(user.Reg_Date)).days + 1
@@ -217,63 +228,133 @@ def View():
             "mockHoldings": mockHoldingsList,
             "mockNews": mockNewsList
         }), 200
-    else:
+    except:
         return jsonify({
             "status": "fail",
-            "message": "메인 화면을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+            "message": "홈 화면을 불러오지 못했습니다."
+        }), 400
+        
+# !! WIP !!
+@app.route('/home', methods=['POST'])
+def DailyBailout():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get()
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "퀴즈를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
-# test required
-@app.route('/home', methods=['POST'])
-def DailyBailout(ID):
-    user = session.get(UserAccount, ID)
-    tokyo_time = datetime.now(ZoneInfo("Asia/Tokyo"))
-
-    if user and user.LastBailout == False:
-        try:
-            user.Balance += 10000
-            user.LastBailout = True
-
-            session.commit()
-        except:
-            session.rollback()
-
-# !! WIP !!
-@app.route('/settings', methods=['POST'])
-def Update():
-
-    ID = data.get()
-    user = session.get(UserAccount, ID)
-
-    new_PW = 
-    new_Nickname = 
-    new_Profile = 
-
-    if user:
-        try: 
-            if new_Pw is not None:
-                user.PW = new_PW
-            if new_Nickname is not None:
-                user.Nickname = new_Nickname
-            if new_Profile is not None:
-                user.Profile = new_Profile
-            session.commit()
-        except:
-            session.rollback()
-
-# !! WIP !!
-@app.route('/settings', methods=['POST'])
-def Delete():
-    ID = data.get()
-    user = session.get(UserAccount, ID)
-
-    stmt = delete(UserAccount).where(UserAccount.ID == ID)
+    if user.LastBailout = True:
+        return jsonify({
+            "status": "success",
+            "message": "이미 오늘의 퀴즈를 풀었습니다."
+        }), 200
+    
+    '''quiz.Show()'''
+    '''QuizCorrect = quiz.Check()'''
 
     try:
-        session.execute(stmt)
+        if user and QuizCorrect:
+            if user.LastBailout == False:
+                user.Balance += 10000
+            return jsonify({
+                "status": "success",
+                "message": "퀴즈 정답! 오늘의 보상을 받아가세요."
+            }), 200
+        else: 
+            return jsonify({
+                "status": "success",
+                "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
+            }), 200
+
+        user.LastBailout = True
         session.commit()
     except:
         session.rollback()
+        return jsonify({
+            "status": "fail",
+            "message": "퀴즈 채점에 실패했습니다."
+        }), 400
+
+# test required
+@app.route('/settings', methods=['PATCH'])
+def Update():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get()
+    user = session.get(UserAccount, userId)
+
+    password = data.get()
+    nickname = data.get()
+    profile = data.get()
+
+    if not password or not nickname:
+        return jsonify({
+            "status": "fail",
+            "message": "유효하지 않은 닉네임 또는 비밀번호. 계정 정보를 수정하지 못했습니다."
+        }), 400
+
+    try: 
+        user.PW = generate_password_hash(password)
+        user.Nickname = nickname
+        user.Profile = profile
+        session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "계정 정보가 수정되었습니다."
+        }), 200
+    except:
+        session.rollback()
+        return jsonify({
+            "status": "fail",
+            "message": "계정 정보 수정에 실패했습니다."
+        }), 400
+
+# test required
+@app.route('/settings', methods=['POST'])
+def Delete():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get()
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "사용자를 찾지 못했습니다. 다시 로그인해 주세요."
+        }), 401
+    
+    try:
+        stmt = delete(UserAccount).where(UserAccount.ID == userId)
+
+        session.execute(stmt)
+        session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "계정이 삭제되었습니다."
+        }), 200
+    except:
+        session.rollback()
+
+        return jsonify({
+            "status": "fail",
+            "message": "계정 삭제에 실패했습니다."
+        }), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
