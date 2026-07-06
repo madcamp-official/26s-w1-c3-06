@@ -17,8 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const mockNews = [
-    { title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결", source: "alphabiz", day: 3, link: "#" },
-    { title: "LG전자 90% 폭등 무서운 질주…지금 살까 AI에 물었더니", source: "한국경제", day: 1, link: "#" },
+    { title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결", source: "alphabiz", link: "#" },
+    { title: "LG전자 90% 폭등 무서운 질주…지금 살까 AI에 물었더니", source: "한국경제", link: "#" },
   ];
 
   renderAccount(mockAccount);
