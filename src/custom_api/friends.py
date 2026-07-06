@@ -52,7 +52,7 @@ class FriendEntry(Base):
     def __init__(self, FromID="", ToID="", status=fnd_sts.REQUESTED):
         self.FromID = FromID
         self.ToID = ToID
-        self.Friend_Date = datetime.now(ZoneInfo("Asia/Tokyo"))
+        self.Friend_Date = datetime.now().astimezone()
         self.Friend_Status = status
         
     def __repr__(self):
@@ -90,7 +90,7 @@ def Request():
         return jsonify({
             "status": "success",
             "message": toUser.Nickname + "님에게 친구 요청을 전송했습니다.",
-            "notiTime": datetime.now(ZoneInfo("Asia/Tokyo"))
+            "notiTime": datetime.now().astimezone()
             "fromId": fromId,
             "toId": toId
         }), 200

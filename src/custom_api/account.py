@@ -1,7 +1,9 @@
+# external API imports
+import os
+
 from sqlalchemy import *
 from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
-# external API imports
 from math import floor, random
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -26,14 +28,18 @@ def Midnight(dt):
 class Base(DeclarativeBase):
     pass
 
-'''todo: correct domain'''
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
+'''
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
+'''
 
+engine = create_engine("dbms://user:pwd@host/dbname", echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
 # test required
-class UserAccount(Base): 
+class UserAccount(Base):
     __tablename__ = "User_Info"
 
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
@@ -42,19 +48,8 @@ class UserAccount(Base):
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
     LastBailout: Mapped[bool] = mapped_column(Boolean)
-    Nickname: Mapped[Optional[str]] = mapped_column(String(12),unique=True)
-    Profile: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
-
-    # default profile is embedded in website
-    def __init__(self, ID="", PW=""):
-        self.ID = ID
-        self.PW = PW
-        self.Reg_Date = datetime.now(ZoneInfo("Asia/Tokyo"))
-        self.Balance = 0
-        self.Return = 0
-        self.LastBailout = False
-        self.Nickname = None
-        self.Profile = None
+    Nickname: Mapped[str] = mapped_column(String(12),unique=True,nullable=False)
+    Profile: Mapped[bytes] = mapped_column(LargeBinary,nullable=False)
         
     def __repr__(self):
         return f"User(ID: {self.ID}, PW: {self.PW}, Balance: {self.Balance})"
@@ -90,8 +85,16 @@ Base.metadata.create_all(engine)
 # Core APIs 
 # ----------------------------------------------------------------------
 
-# Create an account and stage onto DB
-# test required
+# Helper Function
+def id_exists(userId):
+    return session.get(UserAccount, userId) is not None
+
+
+def nickname_exists(nickname):
+    return session.query(UserAccount).filter_by(Nickname=nickname).first() is not None
+
+# Create an account and stage onto DB / Redundancy Check (wip)
+# !! test required !!
 @app.route('/signup', methods=['POST'])
 def Create():
     if request.is_json:
@@ -108,11 +111,28 @@ def Create():
             "status": "fail",
             "message": "유효하지 않은 닉네임, ID 또는 비밀번호. 계정 생성에 실패하였습니다."
         }), 400
+
+    if id_exists(id_) or nickname_exists(nickname):
+        return jsonify({
+            "status": "fail",
+            "message": "아이디 또는 닉네임이 중복됩니다."
+        }), 400
     
-    a1 = UserAccount(userId, generate_password_hash(password))
+    # default profile is embedded in website
+    
+    user = UserAccount(
+        ID=userId,
+        PW=generate_password_hash(password),
+        Reg_Date=datetime.now().astimezone(),
+        Balance=SEED_BALANCE,
+        Return=0,
+        LastBailout=False,
+        Nickname=nickname,
+        Profile=None,
+    )
 
     try:
-        session.add(a1)
+        session.add(user)
         session.commit()
 
         return jsonify({
@@ -123,6 +143,10 @@ def Create():
         }), 200
     except:
         session.rollback()
+        return jsonify({
+            "status": "fail",
+            "message": "계정 생성에 실패했습니다."
+        }), 400
 
 # Receive login request and authenticate
 # test required
@@ -221,7 +245,7 @@ def View():
             "message": "홈 화면을 성공적으로 불러왔습니다."
             "mockAccount": {
                 "nickname": user.Nickname
-                "virtualDay": (Midnight(tokyo_time) - Midnight(user.Reg_Date)).days + 1
+                "virtualDay": (Midnight(datetime.now().astimezone()) - Midnight(user.Reg_Date)).days + 1
                 "totalAsset": user.Balance
                 "profitLoss": user.Return
                 "cashBalance": max([0, int(user.Balance - stock_sum)])
