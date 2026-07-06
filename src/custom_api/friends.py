@@ -56,7 +56,7 @@ class FriendEntry(Base):
         self.Friend_Status = status
         
     def __repr__(self):
-        return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Freind_Date} Status: {self.Friend_Status})"
+        return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Friend_Date} Status: {self.Friend_Status})"
 
 Base.metadata.create_all(engine)
 
@@ -68,8 +68,8 @@ def Request():
     else:
         data = request.form
 
-    fromId = data.get(fromId)
-    toId = data.get(toId)
+    fromId = data.get('fromId')
+    toId = data.get('toId')
     fromUser = session.get(UserAccount, fromId)
     toUser = session.get(UserAccount, toId)
 
@@ -118,8 +118,8 @@ def Delete():
     else:
         data = request.form
 
-    fromId = data.get(fromId)
-    toId = data.get(toId)
+    fromId = data.get('fromId')
+    toId = data.get('toId')
     fromUser = session.get(UserAccount, fromId)
     toUser = session.get(UserAccount, toId)
 

@@ -65,7 +65,7 @@ def View():
     else:
         data = request.form
 
-    userId = data.get(userId)
+    userId = data.get('userId')
     user = session.get(account.UserAccount, userId)
 
     if not user:
@@ -94,7 +94,7 @@ def View():
         )
         friendRankingsList = (
             session.execute(stmt).
-            filter(account.UserAccount.ID == userId or account.UserAccount.ID in friendlist).
+            filter(account.UserAccount.ID == userId or account.UserAccount.ID in friendList).
             order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
         )
 

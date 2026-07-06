@@ -85,12 +85,56 @@ Base.metadata.create_all(engine)
 
 # Helper Function
 @app.route('/auth/check-id', methods=['GET'])
-def id_exists(userId):
-    return session.get(UserAccount, userId) is not None
+def id_exists():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+        
+    userId = request.args.get('id')
+    
+    try:
+        if session.get(UserAccount, userId) is not None:
+            return jsonify({
+                "status": "success",
+                "message": "사용할 수 있는 아이디입니다."
+            }), 200
+        else:
+            return jsonify({
+                "status": "success",
+                "message": "아이디가 중복됩니다."
+            }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "중복 검사에 실패했습니다."
+        }), 400
 
 @app.route('/auth/check-nickname', methods=['GET'])
-def nickname_exists(nickname):
-    return session.query(UserAccount).filter_by(Nickname=nickname).first() is not None
+def nickname_exists():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    nickname = request.args.get('nickname')
+
+    try:
+        if session.query(UserAccount).filter_by(Nickname=nickname).first() is not None:
+            return jsonify({
+                "status": "success",
+                "message": "사용할 수 있는 닉네임입니다."
+            }), 200
+        else:
+            return jsonify({
+                "status": "success",
+                "message": "닉네임이 중복됩니다."
+            }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "중복 검사에 실패했습니다."
+        }), 400
 
 # Create an account and stage onto DB / Redundancy Check (wip)
 # !! test required !!
@@ -101,9 +145,9 @@ def Create():
     else:
         data = request.form
     
-    nickname = data.get(nickname)
-    userId = data.get(userId)
-    password = data.get(password)
+    nickname = data.get('nickname')
+    userId = data.get('userId')
+    password = data.get('password')
 
     if not nickname or not userId or not password:
         return jsonify({
@@ -111,12 +155,6 @@ def Create():
             "message": "유효하지 않은 닉네임, ID 또는 비밀번호. 계정 생성에 실패하였습니다."
         }), 400
 
-    if id_exists(userId) or nickname_exists(nickname):
-        return jsonify({
-            "status": "fail",
-            "message": "아이디 또는 닉네임이 중복됩니다."
-        }), 400
-    
     # default profile is embedded in website
     
     user = UserAccount(
@@ -156,8 +194,8 @@ def Authenticate():
     else:
         data = request.form
 
-    userId = data.get(userId)
-    password = data.get(password)
+    userId = data.get('userId')
+    password = data.get('password')
 
     if not userId or not password:
         return jsonify({
@@ -170,7 +208,7 @@ def Authenticate():
     if user and check_password_hash(user.PW, password):
         return jsonify({
             "status": "success",
-            "message": "로그인이 완료되었습니다."
+            "message": "로그인이 완료되었습니다.",
             "userId": user.ID
         }), 200
     else:
@@ -188,7 +226,7 @@ def View():
     else:
         data = request.form
 
-    userId = data.get(userId)
+    userId = data.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -268,7 +306,7 @@ def DailyBailout():
     else:
         data = request.form
 
-    userId = data.get(userId)
+    userId = data.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -313,9 +351,9 @@ def SubmitAndReward():
     else:
         data = request.form
 
-    userId = data.get(userId)
-    quiz_num = data.get(quiz_num)
-    answerIndex = data.get(answerIndex)
+    userId = data.get('userId')
+    quiz_num = data.get('quiz_num')
+    answerIndex = data.get('answerIndex')
 
     user = session.get(UserAccount, userId)
     quizToday = session.get(quiz.QuizEntry, quiz_num)
@@ -363,12 +401,12 @@ def Update():
     else:
         data = request.form
 
-    userId = data.get(userId)
+    userId = data.get('userId')
     user = session.get(UserAccount, userId)
 
-    password = data.get(password)
-    nickname = data.get(nickname)
-    profile = data.get(profile)
+    password = data.get('password')
+    nickname = data.get('nickname')
+    profile = data.get('profile')
 
     if not password or not nickname:
         return jsonify({
@@ -401,7 +439,7 @@ def Delete():
     else:
         data = request.form
 
-    userId = data.get(userId)
+    userId = data.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:
