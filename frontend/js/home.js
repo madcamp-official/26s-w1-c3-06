@@ -1,39 +1,12 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // 계좌 정보(LastBailout 포함)는 항상 백엔드 응답 기준으로 판단한다 (localStorage로 하루 1회 제한 X)
-  const account = await fetchAccount();
+  // 계좌 정보(hasReceivedIncomeToday 포함)는 항상 백엔드 응답 기준으로 판단한다 (localStorage로 하루 1회 제한 X)
+  const home = await fetchHome();
+  if (!home) return; // fetchHome 내부에서 이미 에러 처리(alert/리다이렉트)를 마쳤다
 
-  const mockSnapshot = {
-    total_asset: 1043200,
-  };
-
-  const mockHoldings = [
-    {
-      stock_name: "삼성전자",
-      stock_desc: "반도체와 스마트폰을 만드는 회사",
-      own_value: 144600,
-      own_pricechange: 4.6,
-    },
-    {
-      stock_name: "카카오",
-      stock_desc: "메신저와 콘텐츠 서비스 회사",
-      own_value: 41200,
-      own_pricechange: -1.9,
-    },
-  ];
-
-  const mockNews = [
-    {
-      news_title: "두산, 엔비디아와 AI 동맹…에너지·로봇·소재 사업 연결",
-      publisher: "alphabiz",
-      news_body: "https://www.alphabiz.co.kr/news/articleView.html?idxno=152238",
-      news_date: "2026-07-06",
-    },
-  ];
-
-  renderAccount(account, mockSnapshot);
-  renderHoldings(mockHoldings);
-  renderNews(mockNews);
+  renderAccount(home.account);
+  renderHoldings(home.holdings);
+  renderNews(home.news);
 
   document.getElementById("goToHistoryBtn").addEventListener("click", () => {
     window.location.href = "history.html";
@@ -41,48 +14,58 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /**
- * 계좌 정보(User_Info)를 불러온다. LastBailout은 여기서 내려오는 값을 그대로 신뢰한다.
+ * 홈 화면에 필요한 데이터(계좌 요약 + 보유 종목 + 최신 뉴스)를 불러온다.
+ * 백엔드 GET /account 가 이 셋을 한 번에 묶어서 내려준다. endpoint: GET /account
  *
- * 지금은 더미 데이터를 반환하고, 백엔드 계좌 조회 API가 완성되면
- * 이 함수 내부만 아래 fetch 코드로 바꾸면 된다 (호출부는 그대로).
- *
- *   const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
- *   if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
- *   return await res.json();
- *
- * @returns {Promise<{id, nickname, reg_date, balance, return, lastBailout, profile}>}
+ * @returns {Promise<{account, holdings, news}|null>} 실패 시 null (호출부는 렌더링을 건너뛴다)
  */
-async function fetchAccount() {
-  const id = localStorage.getItem("id") || "minji"; // TODO: 로그인 연동되면 세션/토큰에서 가져오기
+async function fetchHome() {
+  const id = localStorage.getItem("id");
 
-  return {
-    id,
-    nickname: "민지",
-    reg_date: "2026-07-03",
-    balance: 312000,
-    return: 43200,
-    lastBailout: false,
-    profile: null,
-  };
+  if (!id) {
+    alert("로그인이 필요합니다.");
+    window.location.href = "login.html";
+    return null;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:5000/account?userId=${encodeURIComponent(id)}`);
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || data.status !== "success") {
+      alert(data.message || "홈 화면을 불러오지 못했습니다.");
+      return null;
+    }
+
+    return {
+      account: { id, ...data.mockAccount },
+      holdings: data.mockHoldings || [],
+      news: data.mockNews || [],
+    };
+  } catch (err) {
+    console.error(err);
+    alert("서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+    return null;
+  }
 }
 
-function renderAccount(account, snapshot) {
+function renderAccount(account) {
   document.getElementById("userTitle").innerText =
     `${account.nickname}님의 계좌`;
 
   document.getElementById("virtualDay").innerText =
-    `${getTodayLabel()} | 모의투자 ${calculateVirtualDay(account.reg_date)}일차`;
+    `${getTodayLabel()} | 모의투자 ${account.virtualDay}일차`;
 
   document.getElementById("totalAsset").innerText =
-    snapshot.total_asset.toLocaleString() + "원";
+    account.totalAsset.toLocaleString() + "원";
 
   const profitEl = document.getElementById("profitLoss");
-  const sign = account.return >= 0 ? "+" : "";
-  profitEl.innerText = `${sign}${account.return.toLocaleString()}원`;
-  profitEl.className = account.return >= 0 ? "text-up" : "text-down";
+  const sign = account.profitLoss >= 0 ? "+" : "";
+  profitEl.innerText = `${sign}${account.profitLoss.toLocaleString()}원`;
+  profitEl.className = account.profitLoss >= 0 ? "text-up" : "text-down";
 
   document.getElementById("cashBalance").innerText =
-    account.balance.toLocaleString() + "원";
+    account.cashBalance.toLocaleString() + "원";
 
   const incomeBtn = document.getElementById("incomeBtn");
 
@@ -96,8 +79,8 @@ function renderAccount(account, snapshot) {
     incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
   }
 
-  // 페이지 진입 시점에는 계좌 조회 응답의 LastBailout만 보고 버튼 상태를 정한다
-  if (account.lastBailout) {
+  // 페이지 진입 시점에는 계좌 조회 응답의 hasReceivedIncomeToday만 보고 버튼 상태를 정한다
+  if (account.hasReceivedIncomeToday) {
     lockIncomeBtn();
   }
 
@@ -113,22 +96,23 @@ function renderAccount(account, snapshot) {
         isQuizOpen = false;
 
         if (result.status === "correct") {
-          account.balance = typeof result.balance === "number"
+          account.cashBalance = typeof result.balance === "number"
             ? result.balance
-            : account.balance + 10000;
+            : account.cashBalance + 10000;
 
           document.getElementById("cashBalance").innerText =
-            account.balance.toLocaleString() + "원";
+            account.cashBalance.toLocaleString() + "원";
 
-          account.lastBailout = true;
+          account.hasReceivedIncomeToday = true;
           lockIncomeBtn();
 
         } else if (result.status === "wrong" || result.status === "already_used") {
-          account.lastBailout = true;
+          account.hasReceivedIncomeToday = true;
           lockIncomeBtn();
 
         } else {
-          // status === "error": 서버에 연결이 안 된 것뿐이라 하루 기회를 소모 처리하지 않고 버튼을 다시 활성화
+          // status === "error" | "cancelled": 실제로 제출(채점)된 게 아니므로
+          // 하루 기회를 소모 처리하지 않고 버튼을 다시 활성화
           incomeBtn.disabled = false;
         }
       },
@@ -142,17 +126,17 @@ function renderHoldings(holdings) {
   document.getElementById("stockCount").innerText = holdings.length + "개";
 
   listEl.innerHTML = holdings.map(h => `
-    <div class="holding-row" data-stock-name="${h.stock_name}" style="cursor:pointer;">
+    <div class="holding-row" data-stock-name="${h.name}" style="cursor:pointer;">
       <div class="holding-info">
         <div class="holding-logo"></div>
         <div>
-          <p class="holding-name">${h.stock_name}</p>
-          <p class="holding-desc">${h.stock_desc}</p>
+          <p class="holding-name">${h.name}</p>
+          <p class="holding-desc">${h.desc}</p>
         </div>
       </div>
-      <span class="align-right holding-value">${h.own_value.toLocaleString()}원</span>
-      <span class="align-right holding-return" style="color:${h.own_pricechange >= 0 ? 'var(--color-up)' : 'var(--color-down)'}">
-        ${h.own_pricechange >= 0 ? '+' : ''}${h.own_pricechange}%
+      <span class="align-right holding-value">${h.value.toLocaleString()}원</span>
+      <span class="align-right holding-return" style="color:${h.returnPct >= 0 ? 'var(--color-up)' : 'var(--color-down)'}">
+        ${h.returnPct >= 0 ? '+' : ''}${h.returnPct}%
       </span>
     </div>
   `).join("");
@@ -171,21 +155,11 @@ function renderNews(newsList) {
 
   listEl.innerHTML = limited.map(n => `
     <div class="news-item">
-      <p class="news-title">${n.news_title}</p>
+      <p class="news-title">${n.title}</p>
       <div class="news-meta">
-        <span>${n.publisher} · ${n.news_date}</span>
-        <a href="${n.news_body}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>
+        <span>${n.source}</span>
+        <a href="${n.link}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>
       </div>
     </div>
   `).join("");
-}
-
-function calculateVirtualDay(regDate) {
-  const startDate = new Date(regDate);
-  const today = new Date();
-
-  startDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  return Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
 }

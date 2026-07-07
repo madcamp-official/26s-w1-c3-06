@@ -99,7 +99,7 @@ async function mockSubmitQuiz({ id, quizNum, answerIndex }) {
  * @param {string} params.id - 현재 로그인한 사용자 ID (User_Info.ID)
  * @param {Function} params.onResult - 제출 결과를 반영할 콜백
  *   onResult({ status, balance }) 형태로 호출된다.
- *   status: "correct" | "wrong" | "already_used" | "error"
+ *   status: "correct" | "wrong" | "already_used" | "error" | "cancelled"
  *   balance: status가 "correct"일 때만 내려오는 갱신된 잔고
  */
 async function openQuizModal({ id, onResult }) {
@@ -154,6 +154,7 @@ async function openQuizModal({ id, onResult }) {
 
   overlay.querySelector("#quizCancelBtn").addEventListener("click", () => {
     overlay.remove();
+    onResult({ status: "cancelled" });
   });
 
   function showFeedbackWithCloseBtn(message, className) {
@@ -171,8 +172,7 @@ async function openQuizModal({ id, onResult }) {
   submitBtn.addEventListener("click", async () => {
     optionButtons.forEach(b => b.disabled = true);
     submitBtn.disabled = true;
-    submitBtn.innerText = "채점 중...";
-
+    
     try {
       // TODO: 백엔드 연결되면 mockSubmitQuiz를 실제 fetch 호출로 교체 (요청/응답 형식은 이미 맞춰둠)
       const data = await mockSubmitQuiz({ id, quizNum: quiz.quizNum, answerIndex: selectedIndex });

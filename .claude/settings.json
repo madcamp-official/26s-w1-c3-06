@@ -13,7 +13,8 @@
       "Bash(timeout 8 python3 main.py)",
       "Bash(python3 -c \"import main; print\\('IMPORT OK'\\)\")",
       "Bash(pkill -f \"python3 main.py\")",
-      "Bash(curl -s \"http://localhost:5000/auth/check-id?id=finaltest\" -w \"\\\\nHTTP %{http_code}\\\\n\")"
+      "Bash(curl -s \"http://localhost:5000/auth/check-id?id=finaltest\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(xargs -I{} echo {})"
     ]
   }
 }
