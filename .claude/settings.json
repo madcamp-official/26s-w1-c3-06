@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -m 3 \"http://localhost:5000/auth/check-nickname?nickname=test\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(python3 -)",
+      "Bash(curl -s -m 3 \"http://localhost:5000/auth/check-id?id=test\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(python3 -c \"import stock\")",
+      "Bash(python3 -c \"import order\")",
+      "Bash(python3 -c \"import news\")",
+      "Bash(python3 -c \"import quiz\")",
+      "Bash(nohup python3 main.py)",
+      "Bash(curl -s \"http://localhost:5000/auth/check-id?id=verifytest\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(timeout 8 python3 main.py)",
+      "Bash(python3 -c \"import main; print\\('IMPORT OK'\\)\")",
+      "Bash(pkill -f \"python3 main.py\")",
+      "Bash(curl -s \"http://localhost:5000/auth/check-id?id=finaltest\" -w \"\\\\nHTTP %{http_code}\\\\n\")"
+    ]
+  }
+}
