@@ -46,7 +46,7 @@ class StockEntry(Base):
 class StockPriceEntry(Base):
     __tablename__ = "Stock_DailyPrice"
 
-    Trade_Date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), primary_key=True)
+    Trade_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), primary_key=True)
     Stock_Name: Mapped[str] = mapped_column(String(50), primary_key=True)
     Open: Mapped[int] = mapped_column(Integer)
     High: Mapped[int] = mapped_column(Integer)
