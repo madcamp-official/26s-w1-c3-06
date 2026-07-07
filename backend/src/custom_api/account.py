@@ -409,9 +409,9 @@ def SubmitAndReward():
                 "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
             }), 200
 
-            user.LastBailout = True
-            session.commit()
-            return result
+        user.LastBailout = True
+        session.commit()
+        return result
     except Exception:
         session.rollback()
         return jsonify({
