@@ -4,7 +4,8 @@ import os
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
-from math import floor, random
+from math import floor
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from decimal import Decimal
@@ -324,7 +325,7 @@ def DailyBailout():
     try:
         # Show a quiz
         quizLength = session.query(quiz.QuizEntry).count()
-        quizRanNum = floor(random() * quizLength)
+        quizRanNum = floor(random.random() * quizLength)
         quizToday = quiz.Show(quizRanNum)
 
         if not quiz:
