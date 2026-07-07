@@ -1,4 +1,6 @@
 # external API imports
+import os
+
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
@@ -17,9 +19,11 @@ import friends
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
-Base.metadata.create_all(engine)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
 
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -41,7 +45,8 @@ class RankingEntry(Base):
     def __repr__(self):
         return f"Ranking(ID: {self.ID}, Daily Return: {self.Return_Daily})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
 
 def Register(ID):
     user = session.get(account.UserAccount, ID)

@@ -2,6 +2,8 @@ from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 # external API imports
+import os
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -19,9 +21,11 @@ import friends
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
-Base.metadata.create_all(engine)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
 
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -44,7 +48,8 @@ class NoticeEntry(Base):
     def __repr__(self):
         return f"Notice(Number: {self.Noti_Num}, Head: {self.Noti_Head}, Body: {self.Noti_Body}, Date: {self.Noti_Time})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
 
 # !! WIP - 루트와 request 종류가 모두 일치할 시 한 함수만 존재할 수 있음 !!
 @app.route('/home/notice')

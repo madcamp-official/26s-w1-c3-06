@@ -1,3 +1,6 @@
+# external API imports
+import os
+
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
@@ -28,8 +31,11 @@ class ord_res(Enum):
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
 
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -63,12 +69,12 @@ class OrderEntry(Base):
     def __repr__(self):
         return f"Order(Name: {self.Stock_Name})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
 
 @app.route('/', methods=['POST'])
 def Create():
-    
-
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

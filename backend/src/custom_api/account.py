@@ -1,5 +1,6 @@
 # external API imports
 import os
+import time
 
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
@@ -28,14 +29,10 @@ def add_cors_headers(response):
 
 
 # internal API imports
-# import stock
-# import order
-# import news
-# import quiz
-
-# Helper Function: midnight of certain datetime object
-def Midnight(dt):
-    return datetime.combine(dt.date(), time.min)
+import stock
+import order
+import news
+import quiz
 
 # create engine
 class Base(DeclarativeBase):
@@ -93,13 +90,19 @@ class AccountStock(Base):
     def __repr__(self):
         return f"StockOwned(Name: {self.Stock_Name}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
+
+# ----------------------------------------------------------------------
+# Helper Functions
+# ----------------------------------------------------------------------
+def Midnight(dt):
+    return datetime.combine(dt.date(), time.min)
 
 # ----------------------------------------------------------------------
 # Core APIs 
 # ----------------------------------------------------------------------
 
-# Helper Function
 @app.route('/auth/check-id', methods=['GET'])
 def id_exists():
     if request.is_json:

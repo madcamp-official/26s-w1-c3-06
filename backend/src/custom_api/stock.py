@@ -1,4 +1,6 @@
 # external API imports
+import os
+
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
@@ -18,9 +20,11 @@ import news
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
-Base.metadata.create_all(engine)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
 
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -43,7 +47,7 @@ class StockPriceEntry(Base):
     __tablename__ = "Stock_DailyPrice"
 
     Trade_Date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), primary_key=True)
-    Stock_Name: Mapped[str] = mapped_column(primary_key=True)
+    Stock_Name: Mapped[str] = mapped_column(String(50), primary_key=True)
     Open: Mapped[int] = mapped_column(Integer)
     High: Mapped[int] = mapped_column(Integer)
     Low: Mapped[int] = mapped_column(Integer)
@@ -67,25 +71,26 @@ class StockPriceEntry(Base):
     def __repr__(self):
         return f"StockPrice(Date: {self.Trade_Date}, Name: {self.Stock_Name}, High: {self.High}, Low: {self.Low}, Open: {self.Open}, Close: {self.Close})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
 
 # ----------------------------------------------------------------------
 # Core APIs 
 # ----------------------------------------------------------------------
 
 # !! WIP !!
-def PriceUpToDate():
-    
-# # !! WIP !!
+# def PriceUpToDate():
+#     pass
+
 @app.route('/stock-list', methods=['GET'])
 def View_List():
     '''TODO'''
+    pass
 
-# !! WIP !!
 @app.route('/stock-detail', methods=['GET'])
 def View_Entry():
     '''TODO'''
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-

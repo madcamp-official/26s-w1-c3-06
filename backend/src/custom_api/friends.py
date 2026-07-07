@@ -1,4 +1,5 @@
 # external API imports
+import os
 
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
@@ -25,9 +26,11 @@ class fnd_sts(Enum):
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
-Base.metadata.create_all(engine)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
 
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -58,7 +61,8 @@ class FriendEntry(Base):
     def __repr__(self):
         return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Friend_Date} Status: {self.Friend_Status})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
 
 # test required
 @app.route('/social/request-friends', methods=['POST'])

@@ -1,4 +1,6 @@
 # external API imports
+import os
+
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
@@ -19,9 +21,11 @@ import friends
 class Base(DeclarativeBase):
     pass
 
-engine = create_engine('''"dbms://user:pwd@host/dbname''', echo=True)
-Base.metadata.create_all(engine)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
+)
 
+engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
@@ -32,8 +36,8 @@ class NewsEntry(Base):
     News_ID: Mapped[int] = mapped_column(Integer, primary_key=True)
     News_Title: Mapped[str] = mapped_column(Text)
     News_Body: Mapped[str] = mapped_column(Text)
-    Reporter: Mapped[Optional[str]] = mapped_column(String(10))
-    Publisher: Mapped[Optional[str]] = mapped_column(String(10))
+    Reporter: Mapped[str] = mapped_column(String(10), nullable=True)
+    Publisher: Mapped[str] = mapped_column(String(10), nullable=True)
     News_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __init__(self, ID=0, title="", body="", reporter=None, publisher=None, news_date=None):
@@ -51,7 +55,7 @@ class NewsEntry(Base):
 class StockNewsEntry(Base):
     __tablename__ = "News_Related"
 
-    Related_Ord: Mapped[int]: mapped_column(Integer, primary_key=True)
+    Related_Ord: Mapped[int] = mapped_column(Integer, primary_key=True)
     Stock_Name: Mapped[str]
     News_ID: Mapped[int]
 
@@ -69,7 +73,8 @@ class StockNewsEntry(Base):
     def __repr__(self):
         return f"Stock News(News Order: {self.Related_Ord}, Stock Name: {self.Stock_Name}, News ID: {self.News_ID})"
 
-Base.metadata.create_all(engine)
+# Database tables will be created when the Flask app starts
+# Base.metadata.create_all(engine)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
