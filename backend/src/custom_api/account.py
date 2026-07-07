@@ -27,15 +27,21 @@ def add_cors_headers(response):
     return response
 
 
+# create engine
+# ranking.py/friends.py가 User_Info를 참조하는 FK가 있는 모델을 이 Base 위에 정의하므로(같은 metadata를
+# 공유해야 FK 문자열 "User_Info.ID"가 풀린다), 내부 모듈을 import하기 전에 Base부터 정의해야 한다.
+# (stock -> news -> friends 처럼 다른 모듈을 거쳐 friends.py가 먼저 로딩될 수 있어서, Base 정의 위치가
+# import 블록보다 뒤에 있으면 순환 import 도중 account.Base가 아직 없어 ImportError가 난다.)
+class Base(DeclarativeBase):
+    pass
+
 # internal API imports
 import stock
 import order
 import news
 import quiz
-
-# create engine
-class Base(DeclarativeBase):
-    pass
+import ranking
+import friends
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
@@ -326,12 +332,7 @@ def View():
 # test required
 @app.route('/quiz', methods=['GET'])
 def DailyBailout():
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = request.form
-
-    userId = data.get('userId')
+    userId = request.args.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -343,16 +344,17 @@ def DailyBailout():
     if user.LastBailout == True:
         return jsonify({
             "status": "success",
+            "already_used": True,
             "message": "이미 오늘의 퀴즈를 풀었습니다."
         }), 200
-    
+
     try:
         # Show a quiz
         quizLength = session.query(quiz.QuizEntry).count()
         quizRanNum = floor(random.random() * quizLength)
         quizToday = quiz.Show(quizRanNum)
 
-        if not quiz:
+        if not quizToday:
             raise ValueError("퀴즈를 찾지 못했습니다.")
 
         return jsonify({
@@ -395,22 +397,30 @@ def SubmitAndReward():
         raise Exception("퀴즈 채점 불가능")
 
     try:
-        if user and QuizCorrect:
-            if user.LastBailout == False:
-                user.Balance += 10000
+        already_used = user.LastBailout == True
+
+        if QuizCorrect and not already_used:
+            user.Balance += 10000
+
+        if QuizCorrect:
             result = jsonify({
                 "status": "success",
+                "correct": True,
+                "already_used": already_used,
+                "balance": user.Balance,
                 "message": "퀴즈 정답! 오늘의 보상을 받아가세요."
             }), 200
-        else: 
+        else:
             result = jsonify({
                 "status": "success",
+                "correct": False,
+                "already_used": already_used,
                 "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
             }), 200
 
-            user.LastBailout = True
-            session.commit()
-            return result
+        user.LastBailout = True
+        session.commit()
+        return result
     except Exception:
         session.rollback()
         return jsonify({
@@ -429,20 +439,29 @@ def Update():
     userId = data.get('userId')
     user = session.get(UserAccount, userId)
 
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "사용자를 찾지 못했습니다. 다시 로그인해 주세요."
+        }), 401
+
     password = data.get('password')
     nickname = data.get('nickname')
     profile = data.get('profile')
 
-    if not password or not nickname:
+    if not nickname:
         return jsonify({
             "status": "fail",
-            "message": "유효하지 않은 닉네임 또는 비밀번호. 계정 정보를 수정하지 못했습니다."
+            "message": "유효하지 않은 닉네임입니다. 계정 정보를 수정하지 못했습니다."
         }), 400
 
-    try: 
-        user.PW = generate_password_hash(password)
+    try:
+        if password:
+            user.PW = generate_password_hash(password)
         user.Nickname = nickname
-        user.Profile = profile
+        if profile is not None:
+            # Profile 컬럼은 bytea라 base64 문자열(data:image/...;base64,...)을 바로 넣을 수 없다.
+            user.Profile = profile.encode("utf-8") if isinstance(profile, str) else profile
         session.commit()
 
         return jsonify({
@@ -474,9 +493,13 @@ def Delete():
         }), 401
     
     try:
-        stmt = delete(UserAccount).where(UserAccount.ID == userId)
-
-        session.execute(stmt)
+        # User_Info를 FK로 참조하는 랭킹/친구 관련 행부터 지워야 FK 제약 위반 없이 계정을 지울 수 있다.
+        session.execute(delete(ranking.DailySnapshot).where(ranking.DailySnapshot.ID == userId))
+        session.execute(delete(ranking.RankingEntry).where(ranking.RankingEntry.ID == userId))
+        session.execute(delete(friends.FriendEntry).where(
+            or_(friends.FriendEntry.FromID == userId, friends.FriendEntry.ToID == userId)
+        ))
+        session.execute(delete(UserAccount).where(UserAccount.ID == userId))
         session.commit()
 
         return jsonify({
@@ -490,6 +513,155 @@ def Delete():
             "status": "fail",
             "message": "계정 삭제에 실패했습니다."
         }), 400
+
+# test required
+@app.route('/social/ranking', methods=['GET'])
+def SocialRanking():
+    userId = request.args.get('userId')
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "랭킹을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        allUsers = session.query(UserAccount).all()
+
+        entries = []
+        for u in allUsers:
+            wonDelta = ranking.EnsureTodaySnapshotAndReturn(u)
+            pct = ranking.ReturnPct(u, wonDelta)
+            entries.append({"user": u, "pct": pct})
+
+        entries.sort(key=lambda e: e["pct"], reverse=True)
+
+        def toRankList(entryList):
+            return [
+                {
+                    "rank": i + 1,
+                    "name": e["user"].Nickname,
+                    "pct": e["pct"],
+                    "isMe": e["user"].ID == userId
+                }
+                for i, e in enumerate(entryList[:10])
+            ]
+
+        globalRanking = toRankList(entries)
+
+        friendIds = set(friends.GetFriendIds(userId))
+        friendIds.add(userId)
+        friendRanking = toRankList([e for e in entries if e["user"].ID in friendIds])
+
+        return jsonify({
+            "status": "success",
+            "message": "랭킹을 성공적으로 불러왔습니다.",
+            "globalRanking": globalRanking,
+            "friendRanking": friendRanking
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "랭킹을 불러오지 못했습니다."
+        }), 400
+
+# test required
+@app.route('/social/request-friends', methods=['POST'])
+def RequestFriends():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    fromId = data.get('fromId')
+    toId = data.get('toId')
+
+    entry, message, _ = friends.RequestFriend(fromId, toId)
+    if not entry:
+        return jsonify({"status": "fail", "message": message}), 400
+
+    return jsonify({
+        "status": "success",
+        "message": message,
+        "fromId": fromId,
+        "toId": toId
+    }), 200
+
+# test required
+@app.route('/social/accept-friends', methods=['POST'])
+def AcceptFriends():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    fromId = data.get('fromId')
+    toId = data.get('toId')
+
+    ok, message = friends.AcceptFriend(fromId, toId)
+    if not ok:
+        return jsonify({"status": "fail", "message": message}), 400
+
+    return jsonify({"status": "success", "message": message}), 200
+
+# test required
+@app.route('/social', methods=['GET'])
+def SocialView():
+    userId = request.args.get('userId')
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "친구 목록을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        friendIds = friends.GetFriendIds(userId)
+        friendUsers = (
+            session.query(UserAccount).filter(UserAccount.ID.in_(friendIds)).all()
+            if friendIds else []
+        )
+        friendList = [{"id": u.ID, "name": u.Nickname} for u in friendUsers]
+
+        pending = friends.GetPendingRequest(userId)
+        friendRequest = None
+        if pending:
+            fromUser = session.get(UserAccount, pending.FromID)
+            friendRequest = {
+                "fromId": pending.FromID,
+                "fromName": fromUser.Nickname if fromUser else pending.FromID
+            }
+
+        return jsonify({
+            "status": "success",
+            "message": "친구 정보를 성공적으로 불러왔습니다.",
+            "friendList": friendList,
+            "friendRequest": friendRequest
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "친구 정보를 불러오지 못했습니다."
+        }), 400
+
+# test required
+@app.route('/social/delete-friends', methods=['POST'])
+def DeleteFriends():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    fromId = data.get('fromId')
+    toId = data.get('toId')
+
+    deleted = friends.DeleteFriend(fromId, toId)
+    if not deleted:
+        return jsonify({"status": "fail", "message": "삭제할 관계를 찾지 못했습니다."}), 400
+
+    return jsonify({"status": "success", "message": "친구 관계가 삭제되었습니다."}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, port=5000)

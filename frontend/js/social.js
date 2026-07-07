@@ -1,47 +1,66 @@
 let currentFriends = [];
 let currentFriendRequest = null;
+let currentUserId = null;
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  currentUserId = localStorage.getItem("id");
+  if (!currentUserId) {
+    window.location.href = "index.html";
+    return;
+  }
 
-  // TODO: 백엔드 API 완성되면 아래 더미 데이터 대신 fetch로 교체
-  currentFriendRequest = { fromName: "OO" }; // 요청이 없으면 null로 두면 카드 자체가 숨겨짐
-
-  currentFriends = [
-    { name: "aaa" },
-    { name: "bbb" },
-  ];
-
-  const mockFriendRanking = [
-    { rank: 1, name: "aaa", pct: 6.2, isMe: false },
-    { rank: 2, name: "bbb", pct: 3.1, isMe: false },
-    { rank: 3, name: "나", pct: 0.8, isMe: true },
-  ];
-
-  const mockGlobalRanking = [
-    { rank: 1, name: "OOO", pct: 6.2, isMe: false },
-    { rank: 2, name: "OOO", pct: 3.1, isMe: false },
-    { rank: 3, name: "나", pct: 0.8, isMe: true },
-    { rank: 4, name: "OOO", pct: -0.2, isMe: false },
-    { rank: 5, name: "OOO", pct: -6.2, isMe: false },
-    { rank: 6, name: "OOO", pct: -16.2, isMe: false },
-  ];
-
-  renderFriendRequest(currentFriendRequest);
-  renderFriendList(currentFriends);
-  renderRanking("friendRanking", mockFriendRanking);
-  renderRanking("globalRanking", mockGlobalRanking);
-
-  document.getElementById("addFriendBtn").addEventListener("click", () => {
+  document.getElementById("addFriendBtn").addEventListener("click", async () => {
     const id = document.getElementById("friendIdInput").value.trim();
     if (!id) {
       alert("친구의 아이디를 입력해주세요");
       return;
     }
-    // TODO: 친구 요청 보내기 API 호출
-    alert(`${id}님에게 친구 요청을 보냈어요`);
-    document.getElementById("friendIdInput").value = "";
+
+    try {
+      const res = await fetch("http://localhost:5000/social/request-friends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromId: currentUserId, toId: id }),
+      });
+      const data = await res.json();
+      if (data.status !== "success") throw new Error(data.message || "친구 요청에 실패했습니다");
+
+      alert(data.message);
+      document.getElementById("friendIdInput").value = "";
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+    }
   });
+
+  await loadSocialData();
 });
+
+async function loadSocialData() {
+  try {
+    const [socialRes, rankingRes] = await Promise.all([
+      fetch(`http://localhost:5000/social?userId=${encodeURIComponent(currentUserId)}`),
+      fetch(`http://localhost:5000/social/ranking?userId=${encodeURIComponent(currentUserId)}`),
+    ]);
+
+    const socialData = await socialRes.json();
+    const rankingData = await rankingRes.json();
+
+    if (socialData.status !== "success") throw new Error(socialData.message || "친구 정보를 불러오지 못했습니다");
+    if (rankingData.status !== "success") throw new Error(rankingData.message || "랭킹을 불러오지 못했습니다");
+
+    currentFriends = socialData.friendList;
+    currentFriendRequest = socialData.friendRequest;
+
+    renderFriendRequest(currentFriendRequest);
+    renderFriendList(currentFriends);
+    renderRanking("friendRanking", rankingData.friendRanking);
+    renderRanking("globalRanking", rankingData.globalRanking);
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "소셜 정보를 불러오지 못했습니다.");
+  }
+}
 
 function deleteFriend(index) {
   const friend = currentFriends[index];
@@ -50,10 +69,25 @@ function deleteFriend(index) {
   const confirmed = confirm(`${friend.name}님을 친구에서 삭제하시겠어요?`);
   if (!confirmed) return;
 
-  currentFriends.splice(index, 1);
-  renderFriendList(currentFriends);
-  alert(`${friend.name}님이 친구 목록에서 삭제되었습니다.`);
-  // TODO: 친구 삭제 API 호출
+  removeFriendship(friend.id, `${friend.name}님이 친구 목록에서 삭제되었습니다.`);
+}
+
+async function removeFriendship(otherId, successMessage) {
+  try {
+    const res = await fetch("http://localhost:5000/social/delete-friends", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fromId: currentUserId, toId: otherId }),
+    });
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "요청에 실패했습니다");
+
+    if (successMessage) alert(successMessage);
+    await loadSocialData();
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+  }
 }
 
 function renderFriendRequest(request) {
@@ -68,23 +102,30 @@ function renderFriendRequest(request) {
   const acceptBtn = document.getElementById("acceptBtn");
   const rejectBtn = document.getElementById("rejectBtn");
 
+  // 이전 렌더에서 붙은 리스너가 중복으로 쌓이지 않도록 버튼을 새로 교체한다
   acceptBtn.replaceWith(acceptBtn.cloneNode(true));
   rejectBtn.replaceWith(rejectBtn.cloneNode(true));
 
-  document.getElementById("acceptBtn").addEventListener("click", () => {
-    currentFriends.push({ name: request.fromName });
-    currentFriendRequest = null;
-    renderFriendRequest(currentFriendRequest);
-    renderFriendList(currentFriends);
-    alert(`${request.fromName}님과 친구가 되었습니다.`);
-    // TODO: 친구 요청 수락 API 호출
+  document.getElementById("acceptBtn").addEventListener("click", async () => {
+    try {
+      const res = await fetch("http://localhost:5000/social/accept-friends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromId: request.fromId, toId: currentUserId }),
+      });
+      const data = await res.json();
+      if (data.status !== "success") throw new Error(data.message || "수락에 실패했습니다");
+
+      alert(`${request.fromName}님과 친구가 되었습니다.`);
+      await loadSocialData();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+    }
   });
 
   document.getElementById("rejectBtn").addEventListener("click", () => {
-    currentFriendRequest = null;
-    renderFriendRequest(currentFriendRequest);
-    alert(`${request.fromName}님의 친구 요청을 거절했습니다.`);
-    // TODO: 친구 요청 거절 API 호출
+    removeFriendship(request.fromId, `${request.fromName}님의 친구 요청을 거절했습니다.`);
   });
 }
 

@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const id = localStorage.getItem("id");
   if (!id) {
-    window.location.href = "login.html";
+    window.location.href = "index.html";
     return;
   }
 
@@ -78,10 +78,11 @@ function renderAccount(account) {
   }
 
   incomeBtn.addEventListener("click", () => {
-    if (isQuizOpen) return; // 이미 퀴즈 요청이 진행 중이면 재요청(모달 중복 오픈) 무시
+    if (isQuizOpen) return; // 이미 퀴즈 모달이 열려 있으면 재요청(중복 오픈) 무시
 
     isQuizOpen = true;
-    incomeBtn.disabled = true;
+    // 버튼은 여기서 비활성화하지 않는다: 채점(제출) 결과가 와야만 하루 기회를 소모한 것으로 본다.
+    // 문제를 안 풀고 취소하면 버튼이 다시 눌릴 수 있어야 한다.
 
     openQuizModal({
       id: account.id,
@@ -89,18 +90,20 @@ function renderAccount(account) {
         isQuizOpen = false;
 
         if (result.status === "correct") {
-          const newCashBalance = typeof result.balance === "number"
+          // result.balance는 서버가 내려주는 갱신된 총자산(User_Info.Balance)이다.
+          // 현금 보유량은 총자산에서 보유 주식 평가금액을 뺀 값이라, 같은 폭(gained)만큼만 더해준다.
+          const newTotalAsset = typeof result.balance === "number"
             ? result.balance
-            : account.cashBalance + 10000;
-          const gained = newCashBalance - account.cashBalance;
+            : account.totalAsset + 10000;
+          const gained = newTotalAsset - account.totalAsset;
 
-          account.cashBalance = newCashBalance;
-          account.totalAsset += gained;
+          account.totalAsset = newTotalAsset;
+          account.cashBalance += gained;
 
-          document.getElementById("cashBalance").innerText =
-            account.cashBalance.toLocaleString() + "원";
           document.getElementById("totalAsset").innerText =
             account.totalAsset.toLocaleString() + "원";
+          document.getElementById("cashBalance").innerText =
+            account.cashBalance.toLocaleString() + "원";
 
           account.hasReceivedIncomeToday = true;
           lockIncomeBtn();
@@ -108,11 +111,9 @@ function renderAccount(account) {
         } else if (result.status === "wrong" || result.status === "already_used") {
           account.hasReceivedIncomeToday = true;
           lockIncomeBtn();
-
-        } else {
-          // status === "error": 서버에 연결이 안 된 것뿐이라 하루 기회를 소모 처리하지 않고 버튼을 다시 활성화
-          incomeBtn.disabled = false;
         }
+        // status === "error" | "cancelled": 제출까지 가지 않았으므로 하루 기회를 소모하지 않고
+        // 버튼은 그대로 눌러볼 수 있는 상태(isQuizOpen = false)로 둔다.
       },
     });
   });

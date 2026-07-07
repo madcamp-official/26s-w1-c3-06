@@ -1,14 +1,10 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
-  // profile: DB의 User_Info.Profile(BINARY) 그대로 대응되는 필드명
-  const mockProfile = {
-    nickname: "김혜리",
-    userId: "@ireyhye",
-    profile: localStorage.getItem("profileImage") || "https://placehold.co/96x96",
-  };
-
-  const currentNickname = mockProfile.nickname;
+  const id = localStorage.getItem("id");
+  if (!id) {
+    window.location.href = "index.html";
+    return;
+  }
 
   const profileImage = document.getElementById("profileAvatar"); // <img> 엘리먼트 id는 그대로 둠 (화면 요소 이름이라 상관없음)
   const profileName = document.getElementById("profileName");
@@ -20,12 +16,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("passwordInput");
   const profileImageInput = document.getElementById("profileImageInput");
 
+  let currentNickname = "";
   let isNicknameChecked = true;
+  // 새로 고른 프로필 사진(base64). 안 바꿨으면 null로 두고 저장 요청에 아예 포함시키지 않는다
+  // (백엔드에 Profile을 읽어오는 API가 아직 없어서, 화면에는 localStorage 캐시로만 미리보기한다).
+  let pendingProfile = null;
 
-  profileImage.src = mockProfile.profile;
-  profileName.innerText = mockProfile.nickname;
-  profileID.innerText = mockProfile.userId;
-  nicknameInput.value = mockProfile.nickname;
+  profileImage.src = localStorage.getItem("profileImage") || "https://placehold.co/96x96";
+  profileID.innerText = `@${id}`;
+
+  try {
+    const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
+    if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
+
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "계좌 정보를 불러오지 못했습니다");
+
+    currentNickname = data.mockAccount.nickname;
+    profileName.innerText = currentNickname;
+    nicknameInput.value = currentNickname;
+  } catch (err) {
+    console.error(err);
+    alert("계정 정보를 불러오지 못했습니다. 다시 로그인해 주세요.");
+    window.location.href = "index.html";
+    return;
+  }
 
   function showMessage(element, message, isSuccess) {
     element.hidden = false;
@@ -82,15 +97,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      // reader.result는 "data:image/png;base64,...." 형태의 base64 문자열
-      // TODO: 백엔드 연결 시 이 base64 문자열을 Profile(BINARY) 필드로 서버에 전송해야 함
+      // reader.result는 "data:image/png;base64,...." 형태의 base64 문자열.
+      // 화면 미리보기만 바로 반영하고, 실제 저장(localStorage 캐시 + PATCH /settings 전송)은
+      // 저장하기 버튼을 눌렀을 때만 이루어진다.
+      pendingProfile = reader.result;
       profileImage.src = reader.result;
-      localStorage.setItem("profileImage", reader.result);
     };
     reader.readAsDataURL(file);
   });
 
-  document.getElementById("saveBtn").addEventListener("click", () => {
+  document.getElementById("saveBtn").addEventListener("click", async () => {
     const nickname = nicknameInput.value.trim();
     const password = passwordInput.value;
 
@@ -104,23 +120,65 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    profileName.innerText = nickname;
-    localStorage.setItem("nickname", nickname);
+    const body = { userId: id, nickname };
+    if (password) body.password = password;
+    if (pendingProfile) body.profile = pendingProfile;
 
-    // TODO: 백엔드 정보수정 API 호출
-    // profile 필드는 base64 문자열(reader.result)을 그대로 보내거나,
-    // 백엔드가 원하는 형식(예: multipart/form-data)에 맞춰 다시 변환해서 보내야 함
-    alert("저장됐어요");
+    try {
+      const res = await fetch("http://localhost:5000/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.status !== "success") {
+        throw new Error(data.message || "저장에 실패했습니다");
+      }
+
+      currentNickname = nickname;
+      isNicknameChecked = true;
+      passwordInput.value = "";
+
+      profileName.innerText = nickname;
+      localStorage.setItem("nickname", nickname);
+
+      if (pendingProfile) {
+        localStorage.setItem("profileImage", pendingProfile);
+        pendingProfile = null;
+      }
+
+      alert("저장됐어요");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+    }
   });
 
-  document.getElementById("deleteAccountBtn").addEventListener("click", () => {
+  document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
     const confirmed = confirm(
       "정말 계좌를 삭제하시겠어요?\n보유주식, 거래내역, 친구 목록이 모두 사라지며 복구할 수 없습니다."
     );
     if (!confirmed) return;
 
-    alert("계좌가 삭제됐어요");
-    localStorage.removeItem("token");
-    window.location.href = "index.html";
+    try {
+      const res = await fetch("http://localhost:5000/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.status !== "success") {
+        throw new Error(data.message || "계좌 삭제에 실패했습니다");
+      }
+
+      alert("계좌가 삭제됐어요");
+      localStorage.clear();
+      window.location.href = "index.html";
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+    }
   });
 });

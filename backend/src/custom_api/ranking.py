@@ -15,9 +15,10 @@ app = Flask(__name__)
 import account
 import friends
 
-# create engine
-class Base(DeclarativeBase):
-    pass
+# User_Info(계좌)를 FK로 참조하는 모델(RankingEntry, DailySnapshot)이 있어서, 같은 metadata를 쓰도록
+# account.py의 Base를 그대로 공유한다 (독자적인 Base를 쓰면 FK 문자열 "User_Info.ID"가 이 모듈의
+# metadata 안에서는 찾아지지 않아 NoReferencedTableError가 난다).
+from account import Base
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
@@ -28,7 +29,7 @@ Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
 # test required
-class RankingEntry(Base): 
+class RankingEntry(Base):
     __tablename__ = "User_Ranking"
 
     ID: Mapped[str] = mapped_column(primary_key=True)
@@ -41,104 +42,67 @@ class RankingEntry(Base):
     def __init__(self, ID="", Return_Daily=0):
         self.ID = ID
         self.Return_Daily = Return_Daily
-        
+
     def __repr__(self):
         return f"Ranking(ID: {self.ID}, Daily Return: {self.Return_Daily})"
 
+class DailySnapshot(Base):
+    __tablename__ = "Daily_Snapshot"
+
+    Snapshot_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
+    ID: Mapped[str] = mapped_column(String(16), primary_key=True)
+    Total_Asset: Mapped[int] = mapped_column(Integer, nullable=True)
+
+    __table_args__ = (
+        ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
+    )
+
+    def __init__(self, Snapshot_Date=None, ID="", Total_Asset=0):
+        self.Snapshot_Date = Snapshot_Date
+        self.ID = ID
+        self.Total_Asset = Total_Asset
+
+    def __repr__(self):
+        return f"Snapshot(Date: {self.Snapshot_Date}, ID: {self.ID}, Total_Asset: {self.Total_Asset})"
+
 # ----------------------------------------------------------------------
-# Core APIs 
+# Core APIs
 # ----------------------------------------------------------------------
 
-def Register(ID):
-    user = session.get(account.UserAccount, ID)
+def EnsureTodaySnapshotAndReturn(user):
+    ''' 오늘자 스냅샷을 없으면 만들고, 직전 스냅샷 대비 원단위 증감을 User_Ranking에 반영한 뒤 그 증감값을 반환한다 '''
+    today = account.Midnight(datetime.now().astimezone())
 
-    try:
-        session.add(a1)
+    todaySnapshot = session.get(DailySnapshot, (today, user.ID))
+    if not todaySnapshot:
+        todaySnapshot = DailySnapshot(Snapshot_Date=today, ID=user.ID, Total_Asset=user.Balance)
+        session.add(todaySnapshot)
         session.commit()
-    except:
-        session.rollback()
 
-# !! WIP !!
-def Update():
-    ''' RankingEntry.Return_Daily 일일수익 계산식'''
-    '''TODO'''
+    prevSnapshot = (
+        session.query(DailySnapshot)
+        .filter(DailySnapshot.ID == user.ID, DailySnapshot.Snapshot_Date < today)
+        .order_by(DailySnapshot.Snapshot_Date.desc())
+        .first()
+    )
+    wonDelta = (todaySnapshot.Total_Asset - prevSnapshot.Total_Asset) if prevSnapshot else 0
 
-# test required
-@app.route('/social/ranking', methods=['GET'])
-def View():
-    if request.is_json:
-        data = request.get_json()
+    rankingEntry = session.get(RankingEntry, user.ID)
+    if rankingEntry:
+        rankingEntry.Return_Daily = wonDelta
     else:
-        data = request.form
+        rankingEntry = RankingEntry(ID=user.ID, Return_Daily=wonDelta)
+        session.add(rankingEntry)
+    session.commit()
 
-    userId = data.get('userId')
-    user = session.get(account.UserAccount, userId)
+    return wonDelta
 
-    if not user:
-        return jsonify({
-            "status": "fail",
-            "message": "랭킹을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
-        }), 401
-
-    try:
-        # friends list (temporary)
-        stmt = (
-            select(account.UserAccount, friends.FriendEntry.fromID)
-            .join(friends.FriendEntry, account.UserAccount.ID == friends.FriendEntry.toID)
-            .where(friends.FriendEntry.fromID == user.ID)
-        )
-        friendList = session.execute(stmt).all()
-
-        # friendRankings (including me) and topRankings 
-        stmt = (
-            select(RankingEntry, account.UserAccount)
-            .join(account.UserAccount, RankingEntry.ID == account.UserAccount.ID)
-        )
-        topRankingsList = (
-            session.execute(stmt).
-            order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
-        )
-        friendRankingsList = (
-            session.execute(stmt).
-            filter(account.UserAccount.ID == userId or account.UserAccount.ID in friendList).
-            order_by(RankingEntry.Return_Daily.desc()).limit(10).all()
-        )
-
-        mockGlobalRanking, mockFriendRanking = [], []
-        
-        i = 0
-        for rank in topRankingsList:
-            i += 1
-            mockRank = {
-                "rank": i,
-                "name": rank.Nickname,
-                "pct": rank.Return_Daily,
-                "isMe": rank.ID == userId
-            }
-            mockGlobalRanking.append(mockRank)
-        
-        i = 0
-        for rank in friendRankingsList:
-            i += 1
-            mockRank = {
-                "rank": i,
-                "name": rank.Nickname,
-                "pct": rank.Return_Daily,
-                "isMe": rank.ID == userId
-            }
-            mockFriendRanking.append(mockRank)
-        
-        return jsonify({
-            "status": "success",
-            "message": "랭킹을 성공적으로 불러왔습니다.",
-            "mockFriendRanking": mockFriendRanking,
-            "mockGlobalRanking": mockGlobalRanking
-        }), 200
-    except:
-        return jsonify({
-            "status": "fail",
-            "message": "랭킹을 불러오지 못했습니다."
-        }), 400
+def ReturnPct(user, wonDelta):
+    ''' 원단위 증감을 직전 총자산 대비 퍼센트(소수점 첫째자리)로 환산한다 '''
+    prevTotal = user.Balance - wonDelta
+    if not prevTotal:
+        return 0.0
+    return round(wonDelta / prevTotal * 100, 1)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
