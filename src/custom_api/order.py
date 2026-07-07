@@ -1,5 +1,5 @@
 from sqlalchemy import *
-from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 from datetime import datetime
 from zoneinfo import ZoneInfo

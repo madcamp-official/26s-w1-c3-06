@@ -2,7 +2,7 @@
 import os
 
 from sqlalchemy import *
-from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 from math import floor, random
 from datetime import datetime
@@ -97,12 +97,12 @@ def id_exists():
         if session.get(UserAccount, userId) is not None:
             return jsonify({
                 "status": "success",
-                "message": "사용할 수 있는 아이디입니다."
+                "message": "아이디가 중복됩니다."
             }), 200
         else:
             return jsonify({
                 "status": "success",
-                "message": "아이디가 중복됩니다."
+                "message": "사용할 수 있는 아이디입니다."
             }), 200
     except:
         return jsonify({
@@ -123,12 +123,12 @@ def nickname_exists():
         if session.query(UserAccount).filter_by(Nickname=nickname).first() is not None:
             return jsonify({
                 "status": "success",
-                "message": "사용할 수 있는 닉네임입니다."
+                "message": "닉네임이 중복됩니다."
             }), 200
         else:
             return jsonify({
                 "status": "success",
-                "message": "닉네임이 중복됩니다."
+                "message": "사용할 수 있는 닉네임입니다."
             }), 200
     except:
         return jsonify({

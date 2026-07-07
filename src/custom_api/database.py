@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy import *
-from sqlalchemy.orm import relation, sessionmaker, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 from flask import Flask, request, jsonify
 
