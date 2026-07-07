@@ -15,6 +15,7 @@ app = Flask(__name__)
 import account
 import order
 import news
+import price_generator
 
 # create engine
 class Base(DeclarativeBase):
@@ -33,11 +34,13 @@ class StockEntry(Base):
     __tablename__ = "Stock_List"
 
     Stock_Name: Mapped[str] = mapped_column(String(20), primary_key=True)
-    Stock_Logo: Mapped[bytes] = mapped_column(LargeBinary)
+    Stock_Logo: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    Stock_Desc: Mapped[str] = mapped_column(Text, nullable=True)
 
-    def __init__(self, Stock_Name="", Stock_Logo=None):
+    def __init__(self, Stock_Name="", Stock_Logo=None, Stock_Desc=None):
         self.Stock_Name = Stock_Name
         self.Stock_Logo = Stock_Logo
+        self.Stock_Desc = Stock_Desc
 
     def __repr__(self):
         return f"Stock(Name: {self.Stock_Name})"

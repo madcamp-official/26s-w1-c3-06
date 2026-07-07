@@ -8,12 +8,12 @@ CREATE TYPE ord_res AS ENUM('SUCCESS','FAIL','CANCELLED','PENDING');
 
 CREATE TABLE "User_Info" (
 	"ID"	VARCHAR(16)		NOT NULL,
-	"PW"	VARCHAR(255)		NULL,
+	"PW"	VARCHAR(255)		NOT NULL,
 	"Reg_Date"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
 	"LastBailout"	BOOLEAN		NULL,
-	"Nickname"	VARCHAR(12)		NULL,
+	"Nickname"	VARCHAR(12)		NOT NULL,
 	"Profile"	BYTEA		NULL,
 	CONSTRAINT "PK_User_Info" PRIMARY KEY ("ID")
 );
