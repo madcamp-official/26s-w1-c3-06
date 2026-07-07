@@ -69,19 +69,19 @@ class StockPriceEntry(Base):
 
 Base.metadata.create_all(engine)
 
-# !! WIP !!
-def PriceUpToDate():
+# # !! WIP !!
+# # def PriceUpToDate():
     
-# !! WIP !!
-@app.route('/stock-list', methods=['GET'])
-def View_List():
-    '''TODO'''
+# # !! WIP !!
+# @app.route('/stock-list', methods=['GET'])
+# def View_List():
+#     '''TODO'''
 
-# !! WIP !!
-@app.route('/stock-detail', methods=['GET'])
-def View_Entry():
-    '''TODO'''
+# # !! WIP !!
+# @app.route('/stock-detail', methods=['GET'])
+# def View_Entry():
+#     '''TODO'''
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+# if __name__ == '__main__':
+#     app.run(debug=True, port=5000)
 

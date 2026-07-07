@@ -1,17 +1,26 @@
 /**
  * quiz.js — 기본소득 수령용 퀴즈 모달
  * 사용법: home.html에서 <script src="js/quiz.js"></script> 추가 후
- *         openQuizModal(onCorrect) 함수를 "기본소득 받기" 버튼 클릭 시 호출
+ *         openQuizModal({ id, onResult }) 형태로 호출
+ *
+ * 하루 1회 제한과 정답 판정은 전부 백엔드 책임이다 (프론트에서만 막으면
+ * localStorage 삭제/시간 조작/API 직접 호출로 우회 가능하기 때문).
+ * 그래서 제출은 항상 mockSubmitQuiz()를 거쳐서 응답(status)만 보고 화면을 갱신한다.
+ *
+ * 지금은 백엔드 퀴즈 제출 API가 없어서 mockSubmitQuiz()가 더미로 채점한다.
+ * answerIndex는 실제 서버가 붙기 전까지만 프론트가 들고 있는 임시 값이고,
+ * 서버 연결 후에는 mockSubmitQuiz() 내부만 fetch로 교체하면 된다 (호출부는 그대로).
  */
 
-// TODO: 백엔드 API 완성되면 이 문제은행 대신 fetch로 서버에서 받아오기 (정답은 서버에서만 검증해야 안전함)
 const QUIZ_BANK = [
   {
+    quizNum: 1,
     question: "'매수'는 무슨 뜻일까요?",
     options: ["주식을 사는 것", "주식을 파는 것", "주식을 보관하는 것", "주식을 등록하는 것"],
     answerIndex: 0,
   },
   {
+    quizNum: 2,
     question: "'평균 매수가'는 무엇을 뜻할까요?",
     options: [
       "오늘 이 주식의 최고가",
@@ -22,6 +31,7 @@ const QUIZ_BANK = [
     answerIndex: 1,
   },
   {
+    quizNum: 3,
     question: "수익률이 '+5%'라는 건 무슨 뜻일까요?",
     options: [
       "산 가격보다 5% 떨어졌다",
@@ -32,6 +42,7 @@ const QUIZ_BANK = [
     answerIndex: 1,
   },
   {
+    quizNum: 4,
     question: "주식을 '매도'하면 어떻게 될까요?",
     options: [
       "주식을 더 사게 된다",
@@ -43,16 +54,66 @@ const QUIZ_BANK = [
   },
 ];
 
-function getRandomQuiz() {
-  return QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
+/**
+ * 더미 출제 함수. 백엔드 퀴즈 조회 API가 완성되면 이 함수 내부만
+ * 아래 fetch 코드로 바꾸면 된다 (호출부는 그대로). endpoint: GET /quiz
+ *
+ *   const res = await fetch("http://localhost:8000/quiz");
+ *   if (!res.ok) throw new Error("quiz fetch failed");
+ *   return await res.json();
+ *
+ * 정답(answerIndex)은 채점에 필요한 값이라 mockSubmitQuiz 내부에서만 쓰고,
+ * 실제 서버라면 이 응답에 담아 클라이언트로 내려주지 않는다 (조작 방지).
+ *
+ * @returns {Promise<{quizNum: number, question: string, options: string[]}>}
+ */
+async function mockFetchQuiz() {
+  const quiz = QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
+  return { quizNum: quiz.quizNum, question: quiz.question, options: quiz.options };
 }
 
 /**
- * 퀴즈 모달을 띄우고, 정답을 맞히면 onCorrect 콜백을 실행한다.
- * @param {Function} onCorrect - 정답을 맞혔을 때 호출할 함수 (기본소득 지급 처리)
+ * 더미 채점 함수. 백엔드 퀴즈 제출 API가 완성되면 이 함수 내부만
+ * 아래 fetch 코드로 바꾸면 된다 (요청/응답 형식은 미리 맞춰둔 상태). endpoint: POST /quiz/submit
+ *
+ *   const res = await fetch("http://localhost:8000/quiz/submit", {
+ *     method: "POST",
+ *     headers: { "Content-Type": "application/json" },
+ *     body: JSON.stringify({ id, quizNum, answerIndex }),
+ *   });
+ *   if (!res.ok) throw new Error("quiz submit failed");
+ *   return await res.json();
+ *
+ * @returns {Promise<{status: "correct"|"wrong"|"already_used", balance?: number}>}
  */
-function openQuizModal(onCorrect) {
-  const quiz = getRandomQuiz();
+async function mockSubmitQuiz({ id, quizNum, answerIndex }) {
+  const quiz = QUIZ_BANK.find(q => q.quizNum === quizNum);
+  const isCorrect = quiz && answerIndex === quiz.answerIndex;
+
+  return { status: isCorrect ? "correct" : "wrong" };
+}
+
+/**
+ * 퀴즈 모달을 띄운다.
+ * @param {Object} params
+ * @param {string} params.id - 현재 로그인한 사용자 ID (User_Info.ID)
+ * @param {Function} params.onResult - 제출 결과를 반영할 콜백
+ *   onResult({ status, balance }) 형태로 호출된다.
+ *   status: "correct" | "wrong" | "already_used" | "error"
+ *   balance: status가 "correct"일 때만 내려오는 갱신된 잔고
+ */
+async function openQuizModal({ id, onResult }) {
+  let quiz;
+
+  try {
+    quiz = await mockFetchQuiz();
+  } catch (err) {
+    console.error(err);
+    alert("퀴즈를 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
+    onResult({ status: "error" });
+    return;
+  }
+
   let selectedIndex = null;
 
   const overlay = document.createElement("div");
@@ -95,36 +156,55 @@ function openQuizModal(onCorrect) {
     overlay.remove();
   });
 
-  submitBtn.addEventListener("click", () => {
-    // TODO: 실제로는 정답 여부를 서버에 물어봐야 함 (클라이언트에 정답이 노출되면 조작 가능)
-    const isCorrect = selectedIndex === quiz.answerIndex;
+  function showFeedbackWithCloseBtn(message, className) {
+    feedbackEl.innerText = message;
+    feedbackEl.className = `quiz-feedback ${className}`;
+    feedbackEl.hidden = false;
 
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "btn-secondary quiz-close-btn";
+    closeBtn.innerText = "닫기";
+    closeBtn.addEventListener("click", () => overlay.remove());
+    overlay.querySelector(".quiz-actions").appendChild(closeBtn);
+  }
+
+  submitBtn.addEventListener("click", async () => {
     optionButtons.forEach(b => b.disabled = true);
     submitBtn.disabled = true;
+    submitBtn.innerText = "채점 중...";
 
-    if (isCorrect) {
-      optionButtons[selectedIndex].classList.add("correct");
-      feedbackEl.innerText = "정답이에요! 기본소득을 받았어요";
-      feedbackEl.className = "quiz-feedback correct";
-      feedbackEl.hidden = false;
+    try {
+      // TODO: 백엔드 연결되면 mockSubmitQuiz를 실제 fetch 호출로 교체 (요청/응답 형식은 이미 맞춰둠)
+      const data = await mockSubmitQuiz({ id, quizNum: quiz.quizNum, answerIndex: selectedIndex });
 
-      setTimeout(() => {
-        overlay.remove();
-        onCorrect();
-      }, 1200);
+      if (data.status === "already_used") {
+        showFeedbackWithCloseBtn("오늘의 퀴즈 기회는 이미 사용했습니다.", "wrong");
+        onResult({ status: "already_used" });
+        return;
+      }
 
-    } else {
+      if (data.status === "correct") {
+        optionButtons[selectedIndex].classList.add("correct");
+        feedbackEl.innerText = "정답입니다! 10,000원이 지급되었습니다.";
+        feedbackEl.className = "quiz-feedback correct";
+        feedbackEl.hidden = false;
+
+        setTimeout(() => {
+          overlay.remove();
+          onResult({ status: "correct", balance: data.balance });
+        }, 1200);
+        return;
+      }
+
+      // status === "wrong"
       optionButtons[selectedIndex].classList.add("wrong");
-      optionButtons[quiz.answerIndex].classList.add("correct");
-      feedbackEl.innerText = "아쉬워요, 정답이 아니에요. 내일 다시 도전해보세요";
-      feedbackEl.className = "quiz-feedback wrong";
-      feedbackEl.hidden = false;
+      showFeedbackWithCloseBtn("오답입니다. 오늘의 기회를 사용했습니다.", "wrong");
+      onResult({ status: "wrong" });
 
-      const closeBtn = document.createElement("button");
-      closeBtn.className = "btn-secondary quiz-close-btn";
-      closeBtn.innerText = "닫기";
-      closeBtn.addEventListener("click", () => overlay.remove());
-      overlay.querySelector(".quiz-actions").appendChild(closeBtn);
+    } catch (err) {
+      console.error(err);
+      showFeedbackWithCloseBtn("서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.", "wrong");
+      onResult({ status: "error" });
     }
   });
 }

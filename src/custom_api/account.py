@@ -4,8 +4,8 @@ import os
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
-from math import floor
 import random
+from math import floor
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from decimal import Decimal
@@ -15,11 +15,23 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
+
+# 로컬에서 프론트(file:// 또는 다른 포트)와 붙여서 테스트할 수 있도록 CORS 허용.
+# 이게 없으면 curl로는 정상 응답이 와도, 브라우저 fetch()는 응답을 막아버려서
+# JS 쪽에서는 "서버에 연결할 수 없다"처럼 보이는 네트워크 에러로 나타난다.
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
+
 # internal API imports
-import stock
-import order
-import news
-import quiz
+# import stock
+# import order
+# import news
+# import quiz
 
 # Helper Function: midnight of certain datetime object
 def Midnight(dt):
@@ -36,6 +48,9 @@ DATABASE_URL = os.environ.get(
 engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
+
+# README 기획안: 계좌 생성 직후 100만원 시드 자산 지급
+SEED_BALANCE = 1_000_000
 
 # test required
 class UserAccount(Base):
@@ -93,16 +108,18 @@ def id_exists():
         data = request.form
         
     userId = request.args.get('id')
-    
+
     try:
         if session.get(UserAccount, userId) is not None:
             return jsonify({
                 "status": "success",
+                "available": False,
                 "message": "아이디가 중복됩니다."
             }), 200
         else:
             return jsonify({
                 "status": "success",
+                "available": True,
                 "message": "사용할 수 있는 아이디입니다."
             }), 200
     except:
@@ -124,11 +141,13 @@ def nickname_exists():
         if session.query(UserAccount).filter_by(Nickname=nickname).first() is not None:
             return jsonify({
                 "status": "success",
+                "available": False,
                 "message": "닉네임이 중복됩니다."
             }), 200
         else:
             return jsonify({
                 "status": "success",
+                "available": True,
                 "message": "사용할 수 있는 닉네임입니다."
             }), 200
     except:
@@ -147,8 +166,8 @@ def Create():
         data = request.form
     
     nickname = data.get('nickname')
-    userId = data.get('userId')
-    password = data.get('password')
+    userId = data.get('id')
+    password = data.get('pw')
 
     if not nickname or not userId or not password:
         return jsonify({
@@ -156,8 +175,14 @@ def Create():
             "message": "유효하지 않은 닉네임, ID 또는 비밀번호. 계정 생성에 실패하였습니다."
         }), 400
 
+    if session.get(UserAccount, userId) is not None or session.query(UserAccount).filter_by(Nickname=nickname).first() is not None:
+        return jsonify({
+            "status": "fail",
+            "message": "아이디 또는 닉네임이 중복됩니다."
+        }), 400
+
     # default profile is embedded in website
-    
+
     user = UserAccount(
         ID=userId,
         PW=generate_password_hash(password),
@@ -176,9 +201,9 @@ def Create():
         return jsonify({
             "status": "success",
             "message": "계정이 생성되었습니다.",
-            "userId": user.ID,
+            "id": user.ID,
             "nickname": user.Nickname
-        }), 200
+        }), 201
     except:
         session.rollback()
         return jsonify({
@@ -195,8 +220,8 @@ def Authenticate():
     else:
         data = request.form
 
-    userId = data.get('userId')
-    password = data.get('password')
+    userId = data.get('id')
+    password = data.get('pw')
 
     if not userId or not password:
         return jsonify({
@@ -210,7 +235,7 @@ def Authenticate():
         return jsonify({
             "status": "success",
             "message": "로그인이 완료되었습니다.",
-            "userId": user.ID
+            "id": user.ID
         }), 200
     else:
         return jsonify({

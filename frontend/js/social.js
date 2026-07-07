@@ -1,16 +1,19 @@
+let currentFriends = [];
+let currentFriendRequest = null;
+
 document.addEventListener("DOMContentLoaded", () => {
 
   // TODO: 백엔드 API 완성되면 아래 더미 데이터 대신 fetch로 교체
-  const mockFriendRequest = { fromName: "OO" }; // 요청이 없으면 null로 두면 카드 자체가 숨겨짐
+  currentFriendRequest = { fromName: "OO" }; // 요청이 없으면 null로 두면 카드 자체가 숨겨짐
 
-  const mockFriends = [
-    { name: "김지우" },
-    { name: "김서연" },
+  currentFriends = [
+    { name: "aaa" },
+    { name: "bbb" },
   ];
 
   const mockFriendRanking = [
-    { rank: 1, name: "서연", pct: 6.2, isMe: false },
-    { rank: 2, name: "지우", pct: 3.1, isMe: false },
+    { rank: 1, name: "aaa", pct: 6.2, isMe: false },
+    { rank: 2, name: "bbb", pct: 3.1, isMe: false },
     { rank: 3, name: "나", pct: 0.8, isMe: true },
   ];
 
@@ -23,8 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
     { rank: 6, name: "OOO", pct: -16.2, isMe: false },
   ];
 
-  renderFriendRequest(mockFriendRequest);
-  renderFriendList(mockFriends);
+  renderFriendRequest(currentFriendRequest);
+  renderFriendList(currentFriends);
   renderRanking("friendRanking", mockFriendRanking);
   renderRanking("globalRanking", mockGlobalRanking);
 
@@ -40,6 +43,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function deleteFriend(index) {
+  const friend = currentFriends[index];
+  if (!friend) return;
+
+  const confirmed = confirm(`${friend.name}님을 친구에서 삭제하시겠어요?`);
+  if (!confirmed) return;
+
+  currentFriends.splice(index, 1);
+  renderFriendList(currentFriends);
+  alert(`${friend.name}님이 친구 목록에서 삭제되었습니다.`);
+  // TODO: 친구 삭제 API 호출
+}
+
 function renderFriendRequest(request) {
   const card = document.getElementById("friendRequestCard");
   if (!request) {
@@ -49,13 +65,26 @@ function renderFriendRequest(request) {
   card.hidden = false;
   document.getElementById("requestText").innerText = `${request.fromName}님이 친구 요청을 보냈어요`;
 
+  const acceptBtn = document.getElementById("acceptBtn");
+  const rejectBtn = document.getElementById("rejectBtn");
+
+  acceptBtn.replaceWith(acceptBtn.cloneNode(true));
+  rejectBtn.replaceWith(rejectBtn.cloneNode(true));
+
   document.getElementById("acceptBtn").addEventListener("click", () => {
+    currentFriends.push({ name: request.fromName });
+    currentFriendRequest = null;
+    renderFriendRequest(currentFriendRequest);
+    renderFriendList(currentFriends);
+    alert(`${request.fromName}님과 친구가 되었습니다.`);
     // TODO: 친구 요청 수락 API 호출
-    card.hidden = true;
   });
+
   document.getElementById("rejectBtn").addEventListener("click", () => {
+    currentFriendRequest = null;
+    renderFriendRequest(currentFriendRequest);
+    alert(`${request.fromName}님의 친구 요청을 거절했습니다.`);
     // TODO: 친구 요청 거절 API 호출
-    card.hidden = true;
   });
 }
 
@@ -64,12 +93,20 @@ function renderFriendList(friends) {
   const countEl = document.getElementById("friendCount");
   if (countEl) countEl.innerText = `${friends.length}명`;
 
-  listEl.innerHTML = friends.map(f => `
+  listEl.innerHTML = friends.map((f, index) => `
     <div class="friend-row">
       <div class="avatar-circle"></div>
       <span class="friend-name">${f.name}</span>
+      <button class="friend-delete-btn" data-friend-index="${index}" aria-label="친구 삭제">×</button>
     </div>
   `).join("");
+
+  listEl.querySelectorAll(".friend-delete-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.friendIndex);
+      deleteFriend(index);
+    });
+  });
 }
 
 function renderRanking(containerId, rankingList) {

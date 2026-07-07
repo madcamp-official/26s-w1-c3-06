@@ -15,7 +15,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title" id="userTitle">OO님의 계좌</h1>
-        <p class="page-subtitle" id="virtualDay">가상거래 2일차</p>
+        <p class="page-subtitle" id="virtualDay"></p>
       </div>
       <button class="btn-primary btn-income" id="incomeBtn">오늘의 기본 소득 10,000원 받기</button>
     </div>
@@ -59,17 +59,6 @@
 
           <div class="table-row" id="holdingsList">
             <!-- 홀딩 목록: JS에서 API 응답으로 이 안을 채움 -->
-            <div class="holding-row">
-              <div class="holding-info">
-                <div class="holding-logo"></div>
-                <div>
-                  <p class="holding-name">기업명</p>
-                  <p class="holding-desc">기업 설명</p>
-                </div>
-              </div>
-              <span class="align-right holding-value">-</span>
-              <span class="align-right holding-return">-</span>
-            </div>
           </div>
         </div>
 
@@ -88,6 +77,7 @@
     </div>
   </main>
 
+  <script src="js/date-utils.js"></script>
   <script src="js/navbar.js"></script>
   <script src="js/quiz.js"></script>
   <script src="js/home.js"></script>
