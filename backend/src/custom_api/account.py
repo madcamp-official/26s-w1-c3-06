@@ -101,6 +101,13 @@ class AccountStock(Base):
 def Midnight(dt):
     return datetime.combine(dt.date(), time.min)
 
+def LatestNewsDate():
+    ''' News_List에 있는 가장 최근 뉴스 날짜(달력 날짜). 뉴스가 없으면 None.
+    실시간 스크래핑이 아니라 배치로 쌓이는 뉴스라, "오늘의 뉴스"는 실제 오늘 날짜가 아니라
+    가장 최근에 쌓인 날짜의 뉴스를 뜻한다. '''
+    latest = session.query(func.max(news.NewsEntry.News_Date)).scalar()
+    return latest.date() if latest else None
+
 # ----------------------------------------------------------------------
 # Core APIs 
 # ----------------------------------------------------------------------
@@ -291,12 +298,14 @@ def View():
             }
             mockHoldingsList.append(mockHolding)
 
-        # mockNews
+        # mockNews: 누적이 아니라 가장 최근 날짜("오늘")의 뉴스만
+        latestDate = LatestNewsDate()
         recent_news = (
             session
             .query(news.NewsEntry)
+            .filter(func.date(news.NewsEntry.News_Date) == latestDate)
             .order_by(news.NewsEntry.News_Date.desc()).limit(5).all()
-        )
+        ) if latestDate else []
 
         mockNewsList = []
 
@@ -512,6 +521,55 @@ def Delete():
         return jsonify({
             "status": "fail",
             "message": "계정 삭제에 실패했습니다."
+        }), 400
+
+# test required
+@app.route('/stock/news', methods=['GET'])
+def StockNews():
+    stockName = request.args.get('stock')
+
+    if not stockName:
+        return jsonify({
+            "status": "fail",
+            "message": "종목을 지정해주세요."
+        }), 400
+
+    try:
+        latestDate = LatestNewsDate()
+        if not latestDate:
+            return jsonify({
+                "status": "success",
+                "message": "관련 뉴스가 없습니다.",
+                "news": []
+            }), 200
+
+        stmt = (
+            select(news.NewsEntry)
+            .join(news.StockNewsEntry, news.NewsEntry.News_ID == news.StockNewsEntry.News_ID)
+            .where(
+                news.StockNewsEntry.Stock_Name == stockName,
+                func.date(news.NewsEntry.News_Date) == latestDate
+            )
+            .order_by(news.NewsEntry.News_Date.desc())
+        )
+        articles = session.execute(stmt).scalars().all()
+
+        newsList = [{
+            "title": a.News_Title,
+            "source": a.Publisher,
+            "link": a.News_Body,
+            "date": a.News_Date.strftime("%Y-%m-%d")
+        } for a in articles]
+
+        return jsonify({
+            "status": "success",
+            "message": "관련 뉴스를 성공적으로 불러왔습니다.",
+            "news": newsList
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "관련 뉴스를 불러오지 못했습니다."
         }), 400
 
 # test required

@@ -78,7 +78,18 @@
       "Bash(python3 -c \"import playwright; print\\('playwright python available'\\)\")",
       "Bash(pip show *)",
       "Bash(npx --version)",
-      "Bash(pkill -f \"http.server 8080\")"
+      "Bash(pkill -f \"http.server 8080\")",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT * FROM \"News_List\";')",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT * FROM \"News_Related\";')",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT \"Stock_Name\" FROM \"Stock_List\";')",
+      "Bash(python3 seed_news.py)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT count\\(*\\) FROM \"Stock_List\";')",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT count\\(*\\) FROM \"News_List\";')",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT count\\(*\\) FROM \"News_Related\";')",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT \"Stock_Name\", count\\(*\\) FROM \"News_Related\" GROUP BY \"Stock_Name\" ORDER BY 2 DESC LIMIT 5;')",
+      "Bash(curl -s \"http://localhost:5000/stock/news?stock=삼성전자\")",
+      "Bash(curl -s -G \"http://localhost:5000/stock/news\" --data-urlencode \"stock=삼성전자\")",
+      "Bash(curl -sv \"http://localhost:5000/stock/news?stock=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90\")"
     ]
   }
 }

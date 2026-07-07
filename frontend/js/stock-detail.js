@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   const requestedStock = params.get("stock") ? decodeURIComponent(params.get("stock")) : "삼성전자";
 
@@ -31,29 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cashBalance: 312000,
   };
 
-  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
-  const mockNewsMap = {
-    "삼성전자": [
-      { title: "삼성전자 ‘비스포크 AI 스팀’ 로봇청소기, 월 판매 2만 대 돌파", link: "#" },
-      { title: "삼성전자 미국 법인, 9월부터 이전‥인력 감축은 무관", link: "#" },
-    ],
-    "SK하이닉스": [
-      { title: "SK하이닉스 부스 찾은 젠슨 황…HBM웨이퍼에 더 만들어주세요", link: "#" },
-      { title: "삼성전자·SK하이닉스 주식 10년 묻어둔 가수 소유…수익금 보태 집 샀다", link: "#" },
-    ],
-    "LG전자": [
-      { title: "젠슨 황 효과에 LG전자 이틀 연속 상한가…사진보다 주문서가 중요", link: "#" },
-      { title: "LG전자 주가 올 들어 300% 폭등…AI 동맹 기대감", link: "#" },
-    ],
-    "카카오": [
-      { title: "카톡 개편 이끈 홍민택 CPO 퇴사…카카오 조직개편 본격화", link: "#" },
-      { title: "카카오 노조, 파업 돌입한다…4시간 부분파업 예고", link: "#" },
-    ],
-  };
-  const mockNews = mockNewsMap[mockStock.name] || [
-    { title: `${mockStock.name} 관련 최신 뉴스를 불러오는 중입니다.`, link: "#" },
-  ];
-
   let state = {
     tradeType: "buy",
     quantity: 1,
@@ -61,9 +38,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderStockHeader(mockStock);
   renderHolding(mockStock.name, mockHolding);
-  renderNews(mockNews);
   renderChart(mockStock.priceHistory);
   updateTradeAmount(mockStock.currentPrice, state.quantity);
+  loadNews(mockStock.name);
 
   // 매수/매도 토글
   document.getElementById("buyBtn").addEventListener("click", () => setTradeType("buy"));
@@ -139,6 +116,21 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+async function loadNews(stockName) {
+  try {
+    const res = await fetch(`http://localhost:5000/stock/news?stock=${encodeURIComponent(stockName)}`);
+    if (!res.ok) throw new Error("관련 뉴스를 불러오지 못했습니다");
+
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "관련 뉴스를 불러오지 못했습니다");
+
+    renderNews(data.news);
+  } catch (err) {
+    console.error(err);
+    renderNews([]);
+  }
+}
+
 function renderStockHeader(stock) {
   document.getElementById("stockName").innerText = stock.name;
   document.getElementById("stockDesc").innerText = stock.desc;
@@ -169,7 +161,7 @@ function renderNews(newsList) {
   const listEl = document.getElementById("newsList");
   // 원본 디자인 의도 그대로: 제목 + 링크만 표시, 날짜는 표시하지 않음
   if (!newsList || newsList.length === 0) {
-    listEl.innerHTML = `<p class="card-caption">관련 뉴스를 찾을 수 없습니다.</p>`;
+    listEl.innerHTML = `<p class="card-caption">오늘 관련 뉴스가 없습니다.</p>`;
     return;
   }
   listEl.innerHTML = newsList.map(n => `
