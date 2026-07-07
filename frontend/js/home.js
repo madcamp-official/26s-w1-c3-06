@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  * 지금은 더미 데이터를 반환하고, 백엔드 계좌 조회 API가 완성되면
  * 이 함수 내부만 아래 fetch 코드로 바꾸면 된다 (호출부는 그대로).
  *
- *   const res = await fetch(`http://localhost:8000/account?id=${encodeURIComponent(id)}`);
+ *   const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
  *   if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
  *   return await res.json();
  *
@@ -86,6 +86,11 @@ function renderAccount(account, snapshot) {
 
   const incomeBtn = document.getElementById("incomeBtn");
 
+  // 퀴즈 모달이 지금 열려 있는 중인지 구분하는 변수.
+  // 홈 화면에서 퀴즈를 여는 요청(클릭)과, 결과를 받아 홈 화면 상태를 갱신하는 시점
+  // 양쪽에서 이 값을 확인/갱신해서 모달이 중복으로 열리는 것을 막는다.
+  let isQuizOpen = false;
+
   function lockIncomeBtn() {
     incomeBtn.disabled = true;
     incomeBtn.innerText = "오늘의 기본 소득 받기 완료";
@@ -97,9 +102,16 @@ function renderAccount(account, snapshot) {
   }
 
   incomeBtn.addEventListener("click", () => {
+    if (isQuizOpen) return; // 이미 퀴즈 요청이 진행 중이면 재요청(모달 중복 오픈) 무시
+
+    isQuizOpen = true;
+    incomeBtn.disabled = true;
+
     openQuizModal({
       id: account.id,
       onResult: (result) => {
+        isQuizOpen = false;
+
         if (result.status === "correct") {
           account.balance = typeof result.balance === "number"
             ? result.balance
@@ -114,8 +126,11 @@ function renderAccount(account, snapshot) {
         } else if (result.status === "wrong" || result.status === "already_used") {
           account.lastBailout = true;
           lockIncomeBtn();
+
+        } else {
+          // status === "error": 서버에 연결이 안 된 것뿐이라 하루 기회를 소모 처리하지 않고 버튼을 다시 활성화
+          incomeBtn.disabled = false;
         }
-        // status === "error": 서버에 연결이 안 된 것뿐이라 하루 기회를 소모 처리하지 않음 (버튼 그대로 둠)
       },
     });
   });

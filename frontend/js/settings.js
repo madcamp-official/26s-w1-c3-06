@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+        `http://localhost:5000/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
       );
 
       if (!res.ok) throw new Error("nickname check failed");

@@ -55,8 +55,26 @@ const QUIZ_BANK = [
 ];
 
 /**
+ * 더미 출제 함수. 백엔드 퀴즈 조회 API가 완성되면 이 함수 내부만
+ * 아래 fetch 코드로 바꾸면 된다 (호출부는 그대로). endpoint: GET /quiz
+ *
+ *   const res = await fetch("http://localhost:8000/quiz");
+ *   if (!res.ok) throw new Error("quiz fetch failed");
+ *   return await res.json();
+ *
+ * 정답(answerIndex)은 채점에 필요한 값이라 mockSubmitQuiz 내부에서만 쓰고,
+ * 실제 서버라면 이 응답에 담아 클라이언트로 내려주지 않는다 (조작 방지).
+ *
+ * @returns {Promise<{quizNum: number, question: string, options: string[]}>}
+ */
+async function mockFetchQuiz() {
+  const quiz = QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
+  return { quizNum: quiz.quizNum, question: quiz.question, options: quiz.options };
+}
+
+/**
  * 더미 채점 함수. 백엔드 퀴즈 제출 API가 완성되면 이 함수 내부만
- * 아래 fetch 코드로 바꾸면 된다 (요청/응답 형식은 미리 맞춰둔 상태).
+ * 아래 fetch 코드로 바꾸면 된다 (요청/응답 형식은 미리 맞춰둔 상태). endpoint: POST /quiz/submit
  *
  *   const res = await fetch("http://localhost:8000/quiz/submit", {
  *     method: "POST",
@@ -75,10 +93,6 @@ async function mockSubmitQuiz({ id, quizNum, answerIndex }) {
   return { status: isCorrect ? "correct" : "wrong" };
 }
 
-function getRandomQuiz() {
-  return QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
-}
-
 /**
  * 퀴즈 모달을 띄운다.
  * @param {Object} params
@@ -88,8 +102,18 @@ function getRandomQuiz() {
  *   status: "correct" | "wrong" | "already_used" | "error"
  *   balance: status가 "correct"일 때만 내려오는 갱신된 잔고
  */
-function openQuizModal({ id, onResult }) {
-  const quiz = getRandomQuiz();
+async function openQuizModal({ id, onResult }) {
+  let quiz;
+
+  try {
+    quiz = await mockFetchQuiz();
+  } catch (err) {
+    console.error(err);
+    alert("퀴즈를 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
+    onResult({ status: "error" });
+    return;
+  }
+
   let selectedIndex = null;
 
   const overlay = document.createElement("div");

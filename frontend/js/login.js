@@ -11,7 +11,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
   try {
     // TODO: 백엔드 로그인 API(account_Authenticate) 응답 형식 확정되면 맞춰서 조정
-    const res = await fetch("http://localhost:8000/auth/login", {
+    const res = await fetch("http://localhost:5000/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, pw }),
