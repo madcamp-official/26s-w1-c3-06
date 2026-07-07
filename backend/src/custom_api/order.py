@@ -69,8 +69,9 @@ class OrderEntry(Base):
     def __repr__(self):
         return f"Order(Name: {self.Stock_Name})"
 
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
+# ----------------------------------------------------------------------
+# Core APIs 
+# ----------------------------------------------------------------------
 
 @app.route('/', methods=['POST'])
 def Create():

@@ -90,9 +90,6 @@ class AccountStock(Base):
     def __repr__(self):
         return f"StockOwned(Name: {self.Stock_Name}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
 
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
-
 # ----------------------------------------------------------------------
 # Helper Functions
 # ----------------------------------------------------------------------

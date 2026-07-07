@@ -45,8 +45,9 @@ class RankingEntry(Base):
     def __repr__(self):
         return f"Ranking(ID: {self.ID}, Daily Return: {self.Return_Daily})"
 
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
+# ----------------------------------------------------------------------
+# Core APIs 
+# ----------------------------------------------------------------------
 
 def Register(ID):
     user = session.get(account.UserAccount, ID)

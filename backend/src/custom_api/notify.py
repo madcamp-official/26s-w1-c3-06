@@ -48,10 +48,11 @@ class NoticeEntry(Base):
     def __repr__(self):
         return f"Notice(Number: {self.Noti_Num}, Head: {self.Noti_Head}, Body: {self.Noti_Body}, Date: {self.Noti_Time})"
 
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
+# ----------------------------------------------------------------------
+# Core APIs 
+# ----------------------------------------------------------------------
 
-# !! WIP - 루트와 request 종류가 모두 일치할 시 한 함수만 존재할 수 있음 !!
+# !! WIP !!
 @app.route('/home/notice')
 def StockNotice():
     '''TODO'''

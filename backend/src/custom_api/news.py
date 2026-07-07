@@ -73,8 +73,5 @@ class StockNewsEntry(Base):
     def __repr__(self):
         return f"Stock News(News Order: {self.Related_Ord}, Stock Name: {self.Stock_Name}, News ID: {self.News_ID})"
 
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

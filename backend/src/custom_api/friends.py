@@ -61,9 +61,6 @@ class FriendEntry(Base):
     def __repr__(self):
         return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Friend_Date} Status: {self.Friend_Status})"
 
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
-
 # test required
 @app.route('/social/request-friends', methods=['POST'])
 def Request():

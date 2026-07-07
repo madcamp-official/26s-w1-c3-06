@@ -39,9 +39,20 @@ class QuizEntry(Base):
         
     def __repr__(self):
         return f"Quiz(Num: {Quiz_Num}, Body: {Quiz_Body})"
+
+# ----------------------------------------------------------------------
+# Core APIs 
+# ----------------------------------------------------------------------
+
+with open('data/quiz.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+    quiz = data.get('quiz', [])
+
     
-# Database tables will be created when the Flask app starts
-# Base.metadata.create_all(engine)
+
+# ----------------------------------------------------------------------
+# Core APIs 
+# ----------------------------------------------------------------------
 
 # test required
 def Show(quiz_num):
