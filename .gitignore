@@ -3,4 +3,4 @@
 .env.local
 .env.*.local
 !.env.example
-__pycache__/
+/backend/src/custom_api/__pycache__/
