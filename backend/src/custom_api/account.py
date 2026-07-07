@@ -252,7 +252,7 @@ def View():
     else:
         data = request.form
 
-    userId = data.get('userId')
+    userId = request.args.get('id')
     user = session.get(UserAccount, userId)
 
     if not user:
