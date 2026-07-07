@@ -608,6 +608,23 @@ input::placeholder {
   white-space: nowrap;
 }
 
+.friend-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.friend-delete-btn:hover {
+  color: var(--color-danger);
+}
+
 .highlight-card { background: #EEF0FF; border-color: var(--color-accent); }
 .request-text { font-size: 13px; margin-bottom: 12px; }
 .request-actions { display: flex; gap: 8px; }
@@ -627,7 +644,7 @@ input::placeholder {
   flex-shrink: 0;
 }
 
-.friend-name { font-size: 13px; }
+.friend-name { font-size: 13px; flex: 1; }
 
 .ranking-row {
   display: flex; align-items: center; gap: 12px;
@@ -908,4 +925,25 @@ input::placeholder {
 
 .notification-delete-btn:hover {
   color: var(--color-danger);
+}
+
+
+/* ── settings.html 중복확인 버튼 추가분 ── */
+
+.field-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.field-with-button input {
+  flex: 1;
+}
+
+.field-with-button .btn-auto {
+  white-space: nowrap;
+}
+
+.field-message {
+  font-size: 11px;
+  margin-top: 5px;
 }
