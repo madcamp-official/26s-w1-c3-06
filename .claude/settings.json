@@ -13,7 +13,23 @@
       "Bash(timeout 8 python3 main.py)",
       "Bash(python3 -c \"import main; print\\('IMPORT OK'\\)\")",
       "Bash(pkill -f \"python3 main.py\")",
-      "Bash(curl -s \"http://localhost:5000/auth/check-id?id=finaltest\" -w \"\\\\nHTTP %{http_code}\\\\n\")"
+      "Bash(curl -s \"http://localhost:5000/auth/check-id?id=finaltest\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(xargs -I{} echo {})",
+      "Bash(python3 -c ' *)",
+      "Bash(pg_isready)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c \"\\\\dt\")",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT * FROM \"User_Info\" LIMIT 5;')",
+      "Bash(curl -s \"http://localhost:5000/account?id=minji\")",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c '\\\\d \"Stock_List\"')",
+      "Bash(ps -p 810454 -o pid,cmd)",
+      "Bash(ps -p 806463 -o pid,cmd)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c '\\\\d \"News_List\"')",
+      "Read(//proc/806463/fd/**)",
+      "Read(//proc/806463/**)",
+      "Bash(pwdx 806463)",
+      "Bash(ps --ppid 806463 -o pid,cmd)",
+      "Bash(python3 -m json.tool)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT * FROM \"Stock_Owned\" LIMIT 5;')"
     ]
   }
 }

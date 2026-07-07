@@ -1,13 +1,12 @@
 # external API imports
 import os
-import time
 
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 import random
 from math import floor
-from datetime import datetime
+from datetime import datetime, time
 from zoneinfo import ZoneInfo
 from decimal import Decimal
 
@@ -272,36 +271,36 @@ def View():
         stock_sum = 0
         mockHoldingsList = []
 
-        for stock, desc in user_stocks:
-            value = stock.Own_Quantity * stock.Own_Avg
+        for holding, desc in user_stocks:
+            value = holding.Own_Quantity * holding.Own_Avg
             # mockAccount
             stock_sum += value
-            
+
             # mockHoldings
             mockHolding = {
-                "name": stock.Stock_Name,
+                "name": holding.Stock_Name,
                 "desc": desc,
                 "value": int(value),
-                "returnPct": (100 * stock.Own_PriceChange / value).quantize(Decimal('0.1'))
+                "returnPct": (100 * holding.Own_PriceChange / value).quantize(Decimal('0.1'))
             }
-            mockHoldingsList.append(mockHolding)   
+            mockHoldingsList.append(mockHolding)
 
         # mockNews
         recent_news = (
             session
-            .query(StockNewsEntry)
-            .order_by(StockNewsEntry.News_Date.desc()).limit(5).all()
+            .query(news.NewsEntry)
+            .order_by(news.NewsEntry.News_Date.desc()).limit(5).all()
         )
 
         mockNewsList = []
 
-        for news in recent_news:
-            mockNews = {
-                "title": news.News_Title,
-                "source": news.Publisher,
-                "link": news.News_Body
-            }
-            mockNewsList.append(mockNews)
+        for article in recent_news:
+            mockNewsList.append({
+                "title": article.News_Title,
+                "source": article.Publisher,
+                "link": article.News_Body,
+                "date": article.News_Date.strftime("%Y-%m-%d")
+            })
         
         return jsonify({
             "status": "success",

@@ -36,20 +36,18 @@ class NewsEntry(Base):
     News_ID: Mapped[int] = mapped_column(Integer, primary_key=True)
     News_Title: Mapped[str] = mapped_column(Text)
     News_Body: Mapped[str] = mapped_column(Text)
-    Reporter: Mapped[str] = mapped_column(String(10), nullable=True)
     Publisher: Mapped[str] = mapped_column(String(10), nullable=True)
     News_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, ID=0, title="", body="", reporter=None, publisher=None, news_date=None):
+    def __init__(self, ID=0, title="", body="", publisher=None, news_date=None):
         self.News_ID = ID
         self.News_Title = title
         self.News_Body = body
-        self.Reporter = reporter
         self.Publisher = publisher
         self.News_Date = news_date
-        
+
     def __repr__(self):
-        return f"News(ID: {self.News_ID}, Title: {self.News_Title}, Reporter: {self.Reporter})"
+        return f"News(ID: {self.News_ID}, Title: {self.News_Title})"
 
 # test required
 class StockNewsEntry(Base):

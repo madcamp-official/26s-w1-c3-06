@@ -34,10 +34,12 @@ class StockEntry(Base):
 
     Stock_Name: Mapped[str] = mapped_column(String(20), primary_key=True)
     Stock_Logo: Mapped[bytes] = mapped_column(LargeBinary)
+    Stock_Desc: Mapped[str] = mapped_column(Text, nullable=True)
 
-    def __init__(self, Stock_Name="", Stock_Logo=None):
+    def __init__(self, Stock_Name="", Stock_Logo=None, Stock_Desc=None):
         self.Stock_Name = Stock_Name
         self.Stock_Logo = Stock_Logo
+        self.Stock_Desc = Stock_Desc
 
     def __repr__(self):
         return f"Stock(Name: {self.Stock_Name})"
