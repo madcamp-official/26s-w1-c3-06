@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -m 3 \"http://localhost:5000/auth/check-nickname?nickname=test\" -w \"\\\\nHTTP %{http_code}\\\\n\")"
+    ]
+  }
+}

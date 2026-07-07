@@ -3,10 +3,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 계좌 정보(LastBailout 포함)는 항상 백엔드 응답 기준으로 판단한다 (localStorage로 하루 1회 제한 X)
   const account = await fetchAccount();
 
-  const mockSnapshot = {
-    total_asset: 1043200,
-  };
-
   const mockHoldings = [
     {
       stock_name: "삼성전자",
@@ -31,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     },
   ];
 
-  renderAccount(account, mockSnapshot);
+  renderAccount(account);
   renderHoldings(mockHoldings);
   renderNews(mockNews);
 
@@ -42,39 +38,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 /**
  * 계좌 정보(User_Info)를 불러온다. LastBailout은 여기서 내려오는 값을 그대로 신뢰한다.
- *
- * 지금은 더미 데이터를 반환하고, 백엔드 계좌 조회 API가 완성되면
- * 이 함수 내부만 아래 fetch 코드로 바꾸면 된다 (호출부는 그대로).
- *
- *   const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
- *   if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
- *   return await res.json();
- *
  * @returns {Promise<{id, nickname, reg_date, balance, return, lastBailout, profile}>}
  */
 async function fetchAccount() {
   const id = localStorage.getItem("id") || "minji"; // TODO: 로그인 연동되면 세션/토큰에서 가져오기
 
-  return {
-    id,
-    nickname: "민지",
-    reg_date: "2026-07-03",
-    balance: 312000,
-    return: 43200,
-    lastBailout: false,
-    profile: null,
-  };
+  try {
+    const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
+    if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    // 백엔드 연결 실패 시 임시 표시용. 실제로는 에러 화면/재로그인 유도가 필요함
+    return {
+      id,
+      nickname: "(오프라인)",
+      reg_date: new Date().toISOString(),
+      balance: 0,
+      return: 0,
+      lastBailout: false,
+      profile: null,
+    };
+  }
 }
 
-function renderAccount(account, snapshot) {
+function renderAccount(account) {
   document.getElementById("userTitle").innerText =
     `${account.nickname}님의 계좌`;
 
   document.getElementById("virtualDay").innerText =
     `${getTodayLabel()} | 모의투자 ${calculateVirtualDay(account.reg_date)}일차`;
 
+  // TODO: 보유 주식 평가금액이 붙으면 balance + 보유주식 평가금액 합산으로 교체
+  // 지금은 보유 주식 연동 전이라 현금 잔고를 총자산으로 그대로 표시
   document.getElementById("totalAsset").innerText =
-    snapshot.total_asset.toLocaleString() + "원";
+    account.balance.toLocaleString() + "원";
 
   const profitEl = document.getElementById("profitLoss");
   const sign = account.return >= 0 ? "+" : "";

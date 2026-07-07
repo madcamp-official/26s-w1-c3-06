@@ -125,7 +125,8 @@ def id_exists():
                 "available": True,
                 "message": "사용할 수 있는 아이디입니다."
             }), 200
-    except:
+    except Exception as e:
+        print(f"[check-id error] {e}")  # TODO: 원인 파악되면 이 임시 로그는 제거
         return jsonify({
             "status": "fail",
             "message": "중복 검사에 실패했습니다."
@@ -153,7 +154,8 @@ def nickname_exists():
                 "available": True,
                 "message": "사용할 수 있는 닉네임입니다."
             }), 200
-    except:
+    except Exception as e:
+        print(f"[check-nickname error] {e}")  # TODO: 원인 파악되면 이 임시 로그는 제거
         return jsonify({
             "status": "fail",
             "message": "중복 검사에 실패했습니다."
