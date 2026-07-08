@@ -6,7 +6,8 @@ from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, 
 
 import random
 from math import floor
-from datetime import datetime, time
+from datetime import datetime, time, date
+from typing import Optional
 from zoneinfo import ZoneInfo
 from decimal import Decimal
 
@@ -63,7 +64,7 @@ class UserAccount(Base):
     Reg_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
-    LastBailout: Mapped[bool] = mapped_column(Boolean)
+    Last_Bailout_Date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     Nickname: Mapped[str] = mapped_column(String(12),unique=True,nullable=True)
     Profile: Mapped[bytes] = mapped_column(LargeBinary,nullable=True)
         
@@ -100,6 +101,9 @@ class AccountStock(Base):
 # ----------------------------------------------------------------------
 def Midnight(dt):
     return datetime.combine(dt.date(), time.min)
+
+def Today():
+    return datetime.now().astimezone().date()
 
 def LatestNewsDate():
     ''' News_List에 있는 가장 최근 뉴스 날짜(달력 날짜). 뉴스가 없으면 None.
@@ -201,7 +205,7 @@ def Create():
         Reg_Date=datetime.now().astimezone(),
         Balance=SEED_BALANCE,
         Return=0,
-        LastBailout=False,
+        Last_Bailout_Date=None,
         Nickname=nickname,
         Profile=None,
     )
@@ -327,7 +331,7 @@ def View():
                 "profitLoss": user.Return,
                 "cashBalance": max([0, int(user.Balance - stock_sum)]),
                 "stockCount": len(user_stocks),
-                "hasReceivedIncomeToday": user.LastBailout
+                "hasReceivedIncomeToday": user.Last_Bailout_Date == Today()
             },
             "mockHoldings": mockHoldingsList,
             "mockNews": mockNewsList
@@ -350,7 +354,7 @@ def DailyBailout():
             "message": "퀴즈를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
-    if user.LastBailout == True:
+    if user.Last_Bailout_Date == Today():
         return jsonify({
             "status": "success",
             "already_used": True,
@@ -406,7 +410,7 @@ def SubmitAndReward():
         raise Exception("퀴즈 채점 불가능")
 
     try:
-        already_used = user.LastBailout == True
+        already_used = user.Last_Bailout_Date == Today()
 
         if QuizCorrect and not already_used:
             user.Balance += 10000
@@ -427,7 +431,7 @@ def SubmitAndReward():
                 "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
             }), 200
 
-        user.LastBailout = True
+        user.Last_Bailout_Date = Today()
         session.commit()
         return result
     except Exception:
