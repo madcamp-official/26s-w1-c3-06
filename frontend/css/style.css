@@ -237,6 +237,14 @@ input::placeholder {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
+.auth-logo {
+  display: block;
+  width: 62px;
+  height: 78px;
+  object-fit: contain;
+  margin: 0 auto 10px;
+}
+
 .login-title {
   font-size: 20px;
   font-weight: 700;
@@ -821,9 +829,24 @@ input::placeholder {
   gap: 28px;
 }
 
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-accent);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.navbar-brand-image {
+  display: block;
+  width: 25px;
+  height: 34px;
+  object-fit: contain;
+}
+
 .navbar-logo {
   font-weight: 700;
-  color: var(--color-accent);
   font-size: 15px;
   white-space: nowrap;
 }
