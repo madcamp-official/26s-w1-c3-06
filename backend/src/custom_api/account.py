@@ -339,7 +339,8 @@ def View():
                 "profitLoss": user.Return,
                 "cashBalance": max([0, int(user.Balance - stock_sum)]),
                 "stockCount": len(user_stocks),
-                "hasReceivedIncomeToday": user.Last_Bailout_Date == Today()
+                "hasReceivedIncomeToday": user.Last_Bailout_Date == Today(),
+                "profileImage": user.Profile.decode("utf-8") if user.Profile else None
             },
             "mockHoldings": mockHoldingsList,
             "mockNews": mockNewsList
