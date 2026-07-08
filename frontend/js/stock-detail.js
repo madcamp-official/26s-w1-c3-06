@@ -393,7 +393,11 @@ function computeYAxisRange(low, high, referencePrice) {
   let max = Math.ceil((safeHigh + padding) / unit) * unit;
   if (max - min < unit) max = min + unit;
 
-  return { min, max, unit };
+  const tickCount = 5;
+  const tickStep = (max - min) / (tickCount - 1);
+  const ticks = Array.from({ length: tickCount }, (_, i) => min + tickStep * i);
+
+  return { min, max, ticks };
 }
 
 /**
@@ -411,7 +415,7 @@ function renderChart(chartState, stock) {
   const referencePrice = stock.k || stock.openPrice || stock.currentPrice || 1;
   const low = Math.min(stock.todayLow ?? stock.openPrice, stock.openPrice);
   const high = Math.max(stock.todayHigh ?? stock.openPrice, stock.openPrice);
-  const { min: yMin, max: yMax, unit } = computeYAxisRange(low, high, referencePrice);
+  const { min: yMin, max: yMax, ticks: yTicks } = computeYAxisRange(low, high, referencePrice);
 
   const paddingLeft = 64;
   const paddingRight = 16;
@@ -430,14 +434,14 @@ function renderChart(chartState, stock) {
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
   ctx.lineWidth = 1;
-  for (let price = yMin; price <= yMax + unit * 0.5; price += unit) {
+  yTicks.forEach((price) => {
     const y = toY(price);
     ctx.beginPath();
     ctx.moveTo(paddingLeft, y);
     ctx.lineTo(paddingLeft + w, y);
     ctx.stroke();
     ctx.fillText(Math.round(price).toLocaleString(), paddingLeft - 8, y);
-  }
+  });
 
   // 가로축: 6시간 간격 시각 라벨
   ctx.textAlign = "center";

@@ -43,14 +43,14 @@ def NextPrice(currentPrice, mu, sigma):
     return currentPrice * math.exp(drift + shock)
 
 
-def TickStock(stockCode, params):
+def TickStock(db_session, stockCode, params):
     ''' 종목 하나를 한 스텝(1초치) 전진시킨다. 오늘 행이 없으면 전날 종가를 시가로 새로 만든다. '''
     today = TodayMidnight()
 
-    todayRow = account.session.get(stock.StockPriceEntry, (today, stockCode))
+    todayRow = db_session.get(stock.StockPriceEntry, (today, stockCode))
     if not todayRow:
         prevRow = (
-            account.session.query(stock.StockPriceEntry)
+            db_session.query(stock.StockPriceEntry)
             .filter(stock.StockPriceEntry.Stock_Code == stockCode, stock.StockPriceEntry.Trade_Date < today)
             .order_by(stock.StockPriceEntry.Trade_Date.desc())
             .first()
@@ -61,8 +61,8 @@ def TickStock(stockCode, params):
             Trade_Date=today, Stock_Code=stockCode,
             Open=openPrice, High=openPrice, Low=openPrice, Close=openPrice, Volume=0,
         )
-        account.session.add(todayRow)
-        account.session.flush()
+        db_session.add(todayRow)
+        db_session.flush()
 
     newPrice = max(1, round(NextPrice(todayRow.Close, float(params.Mu), float(params.Sigma))))
     todayRow.Close = newPrice
@@ -74,19 +74,26 @@ def TickStock(stockCode, params):
 
 
 def TickAll():
-    stocks = account.session.query(stock.StockEntry).all()
-    paramsByCode = {p.Stock_Code: p for p in account.session.query(stock.StockParams).all()}
+    db_session = account.Session()
+    try:
+        stocks = db_session.query(stock.StockEntry).all()
+        paramsByCode = {p.Stock_Code: p for p in db_session.query(stock.StockParams).all()}
 
-    updated = 0
-    for s in stocks:
-        params = paramsByCode.get(s.Stock_Code)
-        if not params:
-            continue
-        TickStock(s.Stock_Code, params)
-        updated += 1
+        updated = 0
+        for s in stocks:
+            params = paramsByCode.get(s.Stock_Code)
+            if not params:
+                continue
+            TickStock(db_session, s.Stock_Code, params)
+            updated += 1
 
-    account.session.commit()
-    return updated
+        db_session.commit()
+        return updated
+    except Exception:
+        db_session.rollback()
+        raise
+    finally:
+        db_session.close()
 
 
 def run():
@@ -96,7 +103,6 @@ def run():
             updated = TickAll()
             print(f"[price_generator] {datetime.now(KST).strftime('%H:%M:%S')} ticked {updated} stocks")
         except Exception as e:
-            account.session.rollback()
             print(f"[price_generator] tick failed: {e}")
         time.sleep(SECONDS_PER_TICK)
 
