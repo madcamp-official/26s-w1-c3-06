@@ -83,13 +83,15 @@ class AccountStock(Base):
     __tablename__ = "Stock_Owned"
 
     Stock_Code: Mapped[int] = mapped_column(primary_key=True)
-    ID: Mapped[str]
+    ID: Mapped[str] = mapped_column(primary_key=True)
     Own_Quantity: Mapped[int] = mapped_column(Integer)
     Own_PriceChange: Mapped[int] = mapped_column(Integer)
     Own_Avg: Mapped[Decimal] = mapped_column(Numeric(12, 4))
 
+    # Stock_Code -> Stock_List FK는 실제 DB엔 있지만(db/schema.sql), Stock_List가 stock.py의
+    # 별도 Base에 있어서 여기서 문자열 참조하면 NoReferencedTableError가 난다 (order.py의
+    # OrderEntry와 같은 이유). ID -> User_Info는 이 파일의 같은 Base라 안전하게 유지한다.
     __table_args__ = (
-        ForeignKeyConstraint(["Stock_Code"], ["Stock_List.Stock_Code"]),
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
@@ -297,16 +299,27 @@ def View():
         mockHoldingsList = []
 
         for holding, name, desc in user_stocks:
-            value = holding.Own_Quantity * holding.Own_Avg
-            # mockAccount
-            stock_sum += value
+            costBasis = holding.Own_Quantity * holding.Own_Avg
+            # mockAccount: 현금 보유량은 취득원가 기준으로 뺀다 (실현되지 않은 평가손익은 총자산에 안 잡힘)
+            stock_sum += costBasis
+
+            # 평가금액/평가손익은 실시간 현재가(price_generator.py가 갱신) 대비 평균단가 기준으로 계산한다
+            currentPrice = stock.CurrentPrice(holding.Stock_Code)
+            if currentPrice is None:
+                currentPrice = holding.Own_Avg
+
+            marketValue = holding.Own_Quantity * Decimal(currentPrice)
+            profitLoss = (Decimal(currentPrice) - holding.Own_Avg) * holding.Own_Quantity
+            returnPct = (profitLoss / costBasis * 100).quantize(Decimal('0.1')) if costBasis else Decimal('0.0')
+            if returnPct == 0:
+                returnPct = Decimal('0.0')  # quantize가 만드는 "-0.0" 표시 방지
 
             # mockHoldings
             mockHolding = {
                 "name": name,
                 "desc": desc,
-                "value": int(value),
-                "returnPct": (100 * holding.Own_PriceChange / value).quantize(Decimal('0.1'))
+                "value": int(marketValue),
+                "returnPct": returnPct
             }
             mockHoldingsList.append(mockHolding)
 
@@ -540,6 +553,146 @@ def Delete():
         }), 400
 
 # test required
+@app.route('/stock-list', methods=['GET'])
+def StockList():
+    try:
+        stocks = session.query(stock.StockEntry).order_by(stock.StockEntry.Stock_Code).all()
+        result = []
+        for s in stocks:
+            price = stock.CurrentPrice(s.Stock_Code)
+            result.append({
+                "stockCode": s.Stock_Code,
+                "name": s.Stock_Name,
+                "stock_desc": s.Stock_Desc,
+                "price": price,
+                "changePct": stock.DailyChangePct(s.Stock_Code) if price is not None else None,
+            })
+        return jsonify({
+            "status": "success",
+            "message": "종목 목록을 성공적으로 불러왔습니다.",
+            "stocks": result
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "fail",
+            "message": "종목 목록을 불러오지 못했습니다."
+        }), 400
+
+@app.route('/stock-detail', methods=['GET'])
+def StockDetail():
+    stockName = request.args.get('stock')
+    userId = request.args.get('userId')  # 있으면 보유 정보도 같이 내려준다
+
+    stockEntry = session.query(stock.StockEntry).filter(stock.StockEntry.Stock_Name == stockName).first()
+    if not stockEntry:
+        return jsonify({
+            "status": "fail",
+            "message": "종목을 찾지 못했습니다."
+        }), 400
+
+    try:
+        todayRow = stock.TodayRow(stockEntry.Stock_Code)
+        params = session.get(stock.StockParams, stockEntry.Stock_Code)
+        result = {
+            "stockCode": stockEntry.Stock_Code,
+            "name": stockEntry.Stock_Name,
+            "desc": stockEntry.Stock_Desc,
+            "currentPrice": stock.CurrentPrice(stockEntry.Stock_Code),
+            "openPrice": todayRow.Open if todayRow else None,
+            "todayHigh": todayRow.High if todayRow else None,
+            "todayLow": todayRow.Low if todayRow else None,
+            "k": float(params.K) if params else None,
+            "changePct": stock.DailyChangePct(stockEntry.Stock_Code),
+            "priceHistory": stock.PriceHistory(stockEntry.Stock_Code, days=5),
+        }
+
+        if userId:
+            holding = session.get(AccountStock, (stockEntry.Stock_Code, userId))
+            result["holding"] = {
+                "quantity": holding.Own_Quantity,
+                "avgPrice": float(holding.Own_Avg),
+            } if holding else None
+
+        return jsonify({
+            "status": "success",
+            "message": "종목 상세 정보를 성공적으로 불러왔습니다.",
+            "stock": result
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "fail",
+            "message": "종목 상세 정보를 불러오지 못했습니다."
+        }), 400
+
+@app.route('/order', methods=['POST'])
+def PlaceOrder():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get('userId')
+    position = data.get('position')
+
+    try:
+        stockCode = int(data.get('stockCode'))
+        quantity = int(data.get('quantity'))
+    except (TypeError, ValueError):
+        return jsonify({
+            "status": "fail",
+            "message": "종목 코드와 수량을 확인해주세요."
+        }), 400
+
+    success, message, resultData = order.ExecuteOrder(userId, stockCode, quantity, position)
+
+    if not success:
+        return jsonify({"status": "fail", "message": message}), 400
+
+    return jsonify({
+        "status": "success",
+        "message": message,
+        **(resultData or {})
+    }), 200
+
+@app.route('/history', methods=['GET'])
+def TransactionHistory():
+    userId = request.args.get('userId')
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "거래 내역을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        stmt = (
+            select(order.OrderEntry, stock.StockEntry.Stock_Name)
+            .join(stock.StockEntry, order.OrderEntry.Stock_Code == stock.StockEntry.Stock_Code)
+            .where(order.OrderEntry.ID == userId, order.OrderEntry.Order_Result == order.ord_res.SUCCESS)
+            .order_by(order.OrderEntry.Order_Date.desc())
+        )
+        rows = session.execute(stmt).all()
+
+        history = [{
+            "type": "buy" if str(orderEntry.Order_Position).endswith("BTO") else "sell",
+            "stockName": stockName,
+            "quantity": orderEntry.Order_Quantity,
+            "amount": (orderEntry.Order_Price or 0) * orderEntry.Order_Quantity,
+            "order_date": orderEntry.Order_Date.strftime("%Y-%m-%d")
+        } for orderEntry, stockName in rows]
+
+        return jsonify({
+            "status": "success",
+            "message": "거래 내역을 성공적으로 불러왔습니다.",
+            "history": history
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "fail",
+            "message": "거래 내역을 불러오지 못했습니다."
+        }), 400
+
 @app.route('/stock/news', methods=['GET'])
 def StockNews():
     stockName = request.args.get('stock')

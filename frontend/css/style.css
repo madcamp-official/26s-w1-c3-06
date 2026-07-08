@@ -511,11 +511,13 @@ input::placeholder {
 .price-change.down { color: var(--color-down); }
 
 .chart-placeholder {
-  height: 220px;
+  height: 260px;
   display: flex; align-items: center; justify-content: center;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
+
+.chart-ohlc-stats { margin-bottom: 14px; }
 
 .news-item-link {
   display: block;

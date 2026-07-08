@@ -1,233 +1,105 @@
+"""실시간(모의) 주가 생성기.
 
-
-
-"""
-Real-time stock price generator using Geometric Brownian Motion (GBM),
-with live Black-Scholes option pricing and Greeks.
-
-GBM is the stochastic process the Black-Scholes model assumes for the
-underlying asset:
+Geometric Brownian Motion(GBM)으로 종목별 시세를 1초 간격으로 갱신한다:
 
     S(t + dt) = S(t) * exp((mu - 0.5 * sigma**2) * dt + sigma * sqrt(dt) * Z)
 
-where Z ~ N(0, 1). Each frame of the animation advances the price by one
-step and recomputes the Black-Scholes call/put price and Greeks from the
-current simulated price and the remaining time to expiry.
+mu/sigma는 Stock_Params에 저장된 연 단위(annualized) 값이고, dt는 "1초를 1년의 몇 분의 1로
+볼 것인가"로 변환한 값이다. 즉 실제 달력상 하루 안에서 1초마다 아주 작은 스텝을 계속 쌓아가는
+방식이라, 하루가 지나는 동안 그래프가 자연스럽게 흔들린다.
 
-Requirements:
-    pip install numpy matplotlib
+하루 롤오버: 그날의 첫 틱에서 Stock_DailyPrice에 그 날짜 행이 없으면, 전날의 마지막 Close를
+그 날의 새로운 Open(S0)으로 삼아 새 행을 만든다. 그 뒤로는 매 틱마다 같은 행의
+Close(=최신 시세)/High/Low/Volume만 갱신한다 (하루에 한 번이 아니라 하루 안에서 계속 갱신됨).
 
-Run:
-    python black_scholes_simulator.py
-
-Controls:
-    Sliders at the bottom adjust mu, sigma, r, K live.
-    Space bar: pause / resume
-    R key: reset the simulation
+실행: `python3 price_generator.py`를 custom_api 디렉터리에서 실행 (main.py와는 별개의 프로세스로
+계속 떠 있어야 한다. main.py처럼 Ctrl+C로 종료할 때까지 무한 루프를 돈다).
 """
-
 import math
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-from matplotlib.animation import FuncAnimation
-from collections import deque
+import random
+import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+import account
+import stock
+
+KST = ZoneInfo("Asia/Seoul")
+
+SECONDS_PER_TICK = 1
+YEAR_SECONDS = 365 * 24 * 3600
+DT_YEARS = SECONDS_PER_TICK / YEAR_SECONDS  # 1초를 연 단위 시간으로 환산
 
 
-# ----------------------------------------------------------------------
-# Black-Scholes pricing and Greeks
-# ----------------------------------------------------------------------
-
-def norm_cdf(x):
-    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+def TodayMidnight():
+    ''' seed_prices.py가 Trade_Date에 쓰는 것과 같은 KST 자정 기준(tz-aware) '''
+    return datetime.now(KST).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-def norm_pdf(x):
-    return math.exp(-x * x / 2.0) / math.sqrt(2.0 * math.pi)
+def NextPrice(currentPrice, mu, sigma):
+    z = random.gauss(0, 1)
+    drift = (mu - 0.5 * sigma * sigma) * DT_YEARS
+    shock = sigma * math.sqrt(DT_YEARS) * z
+    return currentPrice * math.exp(drift + shock)
 
 
-def black_scholes(S, K, T, r, sigma):
-    """Return call/put price and Greeks for the given inputs.
+def TickStock(stockCode, params):
+    ''' 종목 하나를 한 스텝(1초치) 전진시킨다. 오늘 행이 없으면 전날 종가를 시가로 새로 만든다. '''
+    today = TodayMidnight()
 
-    T is time to expiry in years. A tiny floor is applied to T to avoid
-    division by zero as expiry is approached.
-    """
-    T = max(T, 1.0 / (365.0 * 24.0))
-
-    d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
-    d2 = d1 - sigma * math.sqrt(T)
-
-    Nd1, Nd2 = norm_cdf(d1), norm_cdf(d2)
-    Nnd1, Nnd2 = norm_cdf(-d1), norm_cdf(-d2)
-    pdf1 = norm_pdf(d1)
-    disc = math.exp(-r * T)
-
-    call = S * Nd1 - K * disc * Nd2
-    put = K * disc * Nnd2 - S * Nnd1
-
-    gamma = pdf1 / (S * sigma * math.sqrt(T))
-    vega = S * pdf1 * math.sqrt(T) / 100.0            # per 1% change in vol
-
-    call_theta = (-(S * pdf1 * sigma) / (2 * math.sqrt(T)) - r * K * disc * Nd2) / 365.0
-    put_theta = (-(S * pdf1 * sigma) / (2 * math.sqrt(T)) + r * K * disc * Nnd2) / 365.0
-
-    call_rho = K * T * disc * Nd2 / 100.0             # per 1% change in rate
-    put_rho = -K * T * disc * Nnd2 / 100.0
-
-    return {
-        "call": call, "put": put,
-        "call_delta": Nd1, "put_delta": Nd1 - 1.0,
-        "gamma": gamma, "vega": vega,
-        "call_theta": call_theta, "put_theta": put_theta,
-        "call_rho": call_rho, "put_rho": put_rho,
-    }
-
-
-# ----------------------------------------------------------------------
-# GBM price simulator
-# ----------------------------------------------------------------------
-
-class GBMSimulator:
-    def __init__(self, s0=100.0, mu=0.05, sigma=0.25, texp_days=30, ticks_per_life=600):
-        self.s0 = s0
-        self.mu = mu
-        self.sigma = sigma
-        self.texp_days = texp_days
-        self.ticks_per_life = ticks_per_life
-        self.rng = np.random.default_rng()
-        self.reset()
-
-    def reset(self):
-        self.S = self.s0
-        self.elapsed_years = 0.0
-        self.expired = False
-        self.history = deque([self.s0], maxlen=self.ticks_per_life)
-
-    def total_years(self):
-        return self.texp_days / 365.0
-
-    def dt_years(self):
-        return self.total_years() / self.ticks_per_life
-
-    def step(self):
-        if self.expired:
-            return
-        dt = self.dt_years()
-        z = self.rng.standard_normal()
-        drift = (self.mu - 0.5 * self.sigma ** 2) * dt
-        shock = self.sigma * math.sqrt(dt) * z
-        self.S = self.S * math.exp(drift + shock)
-        self.elapsed_years += dt
-        self.history.append(self.S)
-        if self.elapsed_years >= self.total_years():
-            self.expired = True
-
-    def remaining_years(self):
-        return max(0.0, self.total_years() - self.elapsed_years)
-
-
-# ----------------------------------------------------------------------
-# Live animation
-# ----------------------------------------------------------------------
-
-def main():
-    sim = GBMSimulator(s0=100.0, mu=0.05, sigma=0.25, texp_days=30)
-    K0 = 100.0
-    r0 = 0.04
-
-    plt.style.use("dark_background")
-    fig, ax = plt.subplots(figsize=(11, 6.5))
-    plt.subplots_adjust(bottom=0.34, top=0.88)
-
-    line, = ax.plot([], [], color="#35D68C", linewidth=1.8)
-    dot = ax.scatter([], [], color="#35D68C", s=30, zorder=5)
-    strike_line = ax.axhline(K0, color="#E8A33D", linestyle="--", alpha=0.55, label="Strike K")
-
-    ax.set_xlim(0, sim.ticks_per_life)
-    ax.set_ylabel("Price ($)")
-    ax.set_xlabel("Tick")
-    ax.grid(alpha=0.15)
-    ax.legend(loc="upper left", fontsize=8, framealpha=0.2)
-
-    title_text = fig.text(0.02, 0.955, "", fontsize=15, fontfamily="monospace", color="#35D68C")
-    info_text = fig.text(0.02, 0.915, "", fontsize=10, fontfamily="monospace", color="#9AA6AD")
-    call_text = fig.text(0.55, 0.955, "", fontsize=10, fontfamily="monospace", color="#35D68C")
-    put_text = fig.text(0.55, 0.915, "", fontsize=10, fontfamily="monospace", color="#FF5D5D")
-
-    state = {"running": True}
-
-    # --- sliders ---
-    slider_color = "#E8A33D"
-    ax_mu = plt.axes([0.15, 0.22, 0.32, 0.03])
-    ax_sigma = plt.axes([0.15, 0.17, 0.32, 0.03])
-    ax_r = plt.axes([0.15, 0.12, 0.32, 0.03])
-    ax_k = plt.axes([0.15, 0.07, 0.32, 0.03])
-
-    s_mu = Slider(ax_mu, "mu (drift)", -0.30, 0.30, valinit=sim.mu, color=slider_color)
-    s_sigma = Slider(ax_sigma, "sigma (vol)", 0.01, 1.00, valinit=sim.sigma, color=slider_color)
-    s_r = Slider(ax_r, "r (rate)", 0.00, 0.15, valinit=r0, color=slider_color)
-    s_k = Slider(ax_k, "K (strike)", 10.0, 300.0, valinit=K0, color=slider_color)
-
-    params = {"r": r0, "K": K0}
-
-    def on_slider_change(_):
-        sim.mu = s_mu.val
-        sim.sigma = s_sigma.val
-        params["r"] = s_r.val
-        params["K"] = s_k.val
-        strike_line.set_ydata([params["K"], params["K"]])
-
-    for s in (s_mu, s_sigma, s_r, s_k):
-        s.on_changed(on_slider_change)
-
-    def on_key(event):
-        if event.key == " ":
-            state["running"] = not state["running"]
-        elif event.key.lower() == "r":
-            sim.reset()
-
-    fig.canvas.mpl_connect("key_press_event", on_key)
-
-    def update(_frame):
-        if state["running"]:
-            sim.step()
-
-        hist = list(sim.history)
-        xs = list(range(sim.ticks_per_life - len(hist), sim.ticks_per_life))
-        line.set_data(xs, hist)
-        dot.set_offsets([[xs[-1], hist[-1]]])
-
-        lo, hi = min(hist + [params["K"]]), max(hist + [params["K"]])
-        pad = (hi - lo) * 0.15 or hi * 0.1 or 5
-        ax.set_ylim(lo - pad, hi + pad)
-
-        change = sim.S - sim.s0
-        pct = change / sim.s0 * 100
-        arrow = "+" if change >= 0 else ""
-        title_text.set_text(f"SIM  ${sim.S:6.2f}   {arrow}{change:.2f} ({arrow}{pct:.2f}%)")
-        title_text.set_color("#35D68C" if change >= 0 else "#FF5D5D")
-
-        remaining_days = sim.remaining_years() * 365
-        status = "EXPIRED" if sim.expired else ("RUNNING" if state["running"] else "PAUSED")
-        info_text.set_text(f"t-to-expiry: {remaining_days:6.2f}d   status: {status}")
-
-        bs = black_scholes(sim.S, params["K"], sim.remaining_years(), params["r"], sim.sigma)
-        call_text.set_text(
-            f"CALL ${bs['call']:6.2f}  d={bs['call_delta']:+.3f}  "
-            f"g={bs['gamma']:.4f}  th={bs['call_theta']:+.3f}  "
-            f"v={bs['vega']:.3f}  rho={bs['call_rho']:+.3f}"
+    todayRow = account.session.get(stock.StockPriceEntry, (today, stockCode))
+    if not todayRow:
+        prevRow = (
+            account.session.query(stock.StockPriceEntry)
+            .filter(stock.StockPriceEntry.Stock_Code == stockCode, stock.StockPriceEntry.Trade_Date < today)
+            .order_by(stock.StockPriceEntry.Trade_Date.desc())
+            .first()
         )
-        put_text.set_text(
-            f"PUT  ${bs['put']:6.2f}  d={bs['put_delta']:+.3f}  "
-            f"g={bs['gamma']:.4f}  th={bs['put_theta']:+.3f}  "
-            f"v={bs['vega']:.3f}  rho={bs['put_rho']:+.3f}"
+        openPrice = prevRow.Close if prevRow else max(1, round(float(params.K) or 50000))
+
+        todayRow = stock.StockPriceEntry(
+            Trade_Date=today, Stock_Code=stockCode,
+            Open=openPrice, High=openPrice, Low=openPrice, Close=openPrice, Volume=0,
         )
+        account.session.add(todayRow)
+        account.session.flush()
 
-        return line, dot, strike_line, title_text, info_text, call_text, put_text
+    newPrice = max(1, round(NextPrice(todayRow.Close, float(params.Mu), float(params.Sigma))))
+    todayRow.Close = newPrice
+    todayRow.High = max(todayRow.High, newPrice)
+    todayRow.Low = min(todayRow.Low, newPrice)
+    todayRow.Volume = (todayRow.Volume or 0) + random.randint(100, 3000)
 
-    anim = FuncAnimation(fig, update, interval=100, blit=False, cache_frame_data=False)
-    plt.show()
+    return newPrice
+
+
+def TickAll():
+    stocks = account.session.query(stock.StockEntry).all()
+    paramsByCode = {p.Stock_Code: p for p in account.session.query(stock.StockParams).all()}
+
+    updated = 0
+    for s in stocks:
+        params = paramsByCode.get(s.Stock_Code)
+        if not params:
+            continue
+        TickStock(s.Stock_Code, params)
+        updated += 1
+
+    account.session.commit()
+    return updated
+
+
+def run():
+    print(f"[price_generator] starting, {SECONDS_PER_TICK}s per tick")
+    while True:
+        try:
+            updated = TickAll()
+            print(f"[price_generator] {datetime.now(KST).strftime('%H:%M:%S')} ticked {updated} stocks")
+        except Exception as e:
+            account.session.rollback()
+            print(f"[price_generator] tick failed: {e}")
+        time.sleep(SECONDS_PER_TICK)
 
 
 if __name__ == "__main__":
-    main()
+    run()

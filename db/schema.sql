@@ -27,6 +27,18 @@ CREATE TABLE "Stock_List" (
 	CONSTRAINT "PK_Stock_List" PRIMARY KEY ("Stock_Code")
 );
 
+-- 종목별 GBM 주가 생성 파라미터. price_generator.py가 이 값으로 하루 안에서 10초 간격 시세를
+-- 생성한다. mu/sigma/r은 연 단위(annualized), K는 참고용 기준가(strike류)로 저장한다.
+CREATE TABLE "Stock_Params" (
+	"Stock_Code"	INT		NOT NULL,
+	"Mu"	NUMERIC(10,6)		NULL,
+	"Sigma"	NUMERIC(10,6)		NULL,
+	"R"	NUMERIC(10,6)		NULL,
+	"K"	NUMERIC(14,2)		NULL,
+	CONSTRAINT "PK_Stock_Params" PRIMARY KEY ("Stock_Code"),
+	CONSTRAINT "FK_Stock_Params_Stock_Code" FOREIGN KEY ("Stock_Code") REFERENCES "Stock_List" ("Stock_Code")
+);
+
 CREATE TABLE "Quiz" (
 	"Quiz_Num"	INT		NOT NULL,
 	"Quiz_Body"	JSONB		NULL,
@@ -71,6 +83,7 @@ CREATE TABLE "Stock_Order" (
 	"Order_Position"	ord_pos		NULL,
 	"Order_Result"	ord_res		NULL,
 	"Order_Date"	TIMESTAMPTZ		NULL,
+	"Order_Price"INT		NULL,
 	CONSTRAINT "PK_Stock_Order" PRIMARY KEY ("Order_ID"),
 	CONSTRAINT "FK_Stock_Order_Stock_Code" FOREIGN KEY ("Stock_Code") REFERENCES "Stock_List" ("Stock_Code"),
 	CONSTRAINT "FK_Stock_Order_ID" FOREIGN KEY ("ID") REFERENCES "User_Info" ("ID")
@@ -105,7 +118,7 @@ CREATE TABLE "Daily_Snapshot" (
 
 CREATE TABLE "Stock_DailyPrice" (
 	"Trade_Date"	TIMESTAMPTZ		NOT NULL,
-	"Stock_Code"	VARCHAR(20)		NOT NULL,
+	"Stock_Code"	INT		NOT NULL,
 	"Open"	INT		NULL,
 	"High"	INT		NULL,
 	"Low"	INT		NULL,
