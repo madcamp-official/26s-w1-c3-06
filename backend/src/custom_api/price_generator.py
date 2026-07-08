@@ -8,9 +8,7 @@ thread from main.py.
 import math
 import random
 import time
-from collections import defaultdict, deque
 from datetime import datetime
-from threading import Lock
 from zoneinfo import ZoneInfo
 
 import account
@@ -23,31 +21,6 @@ SECONDS_PER_TICK = 1
 YEAR_SECONDS = 365 * 24 * 3600
 DT_YEARS = SECONDS_PER_TICK / YEAR_SECONDS
 STOCK_MOVE_NOTICE_THRESHOLD = 3.0
-PRICE_HISTORY_SECONDS = 10 * 60
-PRICE_HISTORY_MAX_POINTS = PRICE_HISTORY_SECONDS // SECONDS_PER_TICK + 1
-
-_recent_prices = defaultdict(lambda: deque(maxlen=PRICE_HISTORY_MAX_POINTS))
-_recent_prices_lock = Lock()
-
-
-def RecordRecentPrice(stockCode, price, timestamp=None):
-    point = {
-        "timestamp": timestamp if timestamp is not None else time.time(),
-        "price": price,
-    }
-    with _recent_prices_lock:
-        _recent_prices[stockCode].append(point)
-
-
-def GetRecentPrices(stockCode):
-    cutoff = time.time() - PRICE_HISTORY_SECONDS
-    with _recent_prices_lock:
-        history = _recent_prices.get(stockCode)
-        if not history:
-            return []
-        while history and history[0]["timestamp"] < cutoff:
-            history.popleft()
-        return list(history)
 
 
 def TodayMidnight():
@@ -108,19 +81,14 @@ def TickAll():
         paramsByCode = {p.Stock_Code: p for p in db_session.query(stock.StockParams).all()}
 
         updated = 0
-        generatedPrices = []
         for stockEntry in stocks:
             params = paramsByCode.get(stockEntry.Stock_Code)
             if not params:
                 continue
-            newPrice = TickStock(db_session, stockEntry, params)
-            generatedPrices.append((stockEntry.Stock_Code, newPrice))
+            TickStock(db_session, stockEntry, params)
             updated += 1
 
         db_session.commit()
-        timestamp = time.time()
-        for stockCode, price in generatedPrices:
-            RecordRecentPrice(stockCode, price, timestamp)
         return updated
     except Exception:
         db_session.rollback()
