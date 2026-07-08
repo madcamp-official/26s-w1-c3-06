@@ -49,23 +49,20 @@ class NewsEntry(Base):
 class StockNewsEntry(Base):
     __tablename__ = "News_Related"
 
-    Related_Ord: Mapped[int] = mapped_column(Integer, primary_key=True)
-    Stock_Code: Mapped[int]
-    News_ID: Mapped[int]
+    News_ID: Mapped[int] = mapped_column(Integer, primary_key=True)
+    Stock_Code: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     __table_args__ = (
         ForeignKeyConstraint(["Stock_Code"], ["Stock_List.Stock_Code"]),
         ForeignKeyConstraint(["News_ID"], ["News_List.News_ID"]),
     )
 
-    # default profile is embedded in website
-    def __init__(self, Related_Ord, Stock_Code, News_ID=0):
-        self.Related_Ord = Related_Ord
-        self.Stock_Code = Stock_Code
+    def __init__(self, News_ID, Stock_Code):
         self.News_ID = News_ID
+        self.Stock_Code = Stock_Code
 
     def __repr__(self):
-        return f"Stock News(News Order: {self.Related_Ord}, Stock Code: {self.Stock_Code}, News ID: {self.News_ID})"
+        return f"Stock News(News ID: {self.News_ID}, Stock Code: {self.Stock_Code})"
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

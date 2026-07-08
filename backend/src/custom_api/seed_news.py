@@ -50,7 +50,6 @@ def run():
             existing_stock.Stock_Name = name
     account.session.commit()
 
-    ord_counters = {}
     for i, a in enumerate(articles, start=1):
         stock_code = name_to_code[a["stock_name"]]
         news_date = datetime.strptime(a["news_date"], "%Y-%m-%d").replace(tzinfo=KST)
@@ -63,11 +62,9 @@ def run():
             news_date=news_date,
         ))
 
-        ord_counters[stock_code] = ord_counters.get(stock_code, 0) + 1
         account.session.add(news.StockNewsEntry(
-            Related_Ord=ord_counters[stock_code],
-            Stock_Code=stock_code,
             News_ID=i,
+            Stock_Code=stock_code,
         ))
 
     account.session.commit()
