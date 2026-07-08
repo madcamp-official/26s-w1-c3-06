@@ -129,10 +129,9 @@ CREATE TABLE "Stock_DailyPrice" (
 );
 
 CREATE TABLE "News_Related" (
-	"Related_Ord"	INT		NOT NULL,
-	"Stock_Code"	INT		NOT NULL,
 	"News_ID"	INT		NOT NULL,
-	CONSTRAINT "PK_News_Related" PRIMARY KEY ("Related_Ord", "Stock_Code"),
+	"Stock_Code"	INT		NOT NULL,
+	CONSTRAINT "PK_News_Related" PRIMARY KEY ("News_ID", "Stock_Code"),
 	CONSTRAINT "FK_News_Related_Stock_Code" FOREIGN KEY ("Stock_Code") REFERENCES "Stock_List" ("Stock_Code"),
 	CONSTRAINT "FK_News_Related_News_ID" FOREIGN KEY ("News_ID") REFERENCES "News_List" ("News_ID")
 );
