@@ -89,7 +89,7 @@
 
 <center>
   <img
-    src="./public/image/proj_erd.png"
+    src="./public/image/proj_erd_v2.png"
     width="90%"
   />
 </center>
