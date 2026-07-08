@@ -13,7 +13,7 @@
  * @returns {Promise<{status, already_used?, quiz_num?, quiz_body?, message}>}
  */
 async function fetchQuiz(id) {
-  const res = await fetch(`/api/quiz?userId=${encodeURIComponent(id)}`);
+  const res = await fetch(`/api/quiz?id=${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error("퀴즈를 불러오지 못했습니다");
   return await res.json();
 }
