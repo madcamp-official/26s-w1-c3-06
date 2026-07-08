@@ -38,7 +38,7 @@ def run():
         stock_code, stock_desc = name_to_code[name], name_to_desc[name]
         existing_stock = account.session.get(stock.StockEntry, stock_code)
         if existing_stock is None:
-            file_path="../../../frontend/public/stock_logos/" + name + ".png"
+            file_path="../../../frontend/logos/" + name + ".png"
             with open(file_path, "rb") as f:
                 logo_bytes = f.read()
                 account.session.add(stock.StockEntry(
