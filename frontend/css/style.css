@@ -191,6 +191,7 @@ input::placeholder {
 .file-upload-label {
   display: inline-block;
   text-align: center;
+  margin-right: 8px;
 }
 
 .file-upload-label:hover { background: #FAFAFB; }
@@ -660,7 +661,9 @@ input::placeholder {
 .avatar-circle {
   width: 40px; height: 40px;
   border-radius: 50%;
-  background: #EEF0FF;
+  background-color: #EEF0FF;
+  background-size: cover;
+  background-position: center;
   flex-shrink: 0;
 }
 
@@ -680,7 +683,7 @@ input::placeholder {
 }
 
 .ranking-row .avatar-circle { width: 36px; height: 36px; }
-.ranking-row.me .avatar-circle { background: var(--color-accent); }
+.ranking-row.me .avatar-circle { background-color: var(--color-accent); }
 
 .ranking-name { flex: 1; font-size: 13px; }
 .ranking-name.me { color: var(--color-accent); font-weight: 700; }

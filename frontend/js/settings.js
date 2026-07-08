@@ -21,8 +21,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 새로 고른 프로필 사진(base64). 안 바꿨으면 null로 두고 저장 요청에 아예 포함시키지 않는다
   // (백엔드에 Profile을 읽어오는 API가 아직 없어서, 화면에는 localStorage 캐시로만 미리보기한다).
   let pendingProfile = null;
+  // "사진 삭제" 버튼을 눌렀는지 여부. pendingProfile=null만으로는 "안 바꿈"과 "지움"을 구분할 수
+  // 없어서 별도 플래그로 구분하고, 저장 시 profile:null을 명시적으로 보낸다.
+  let profileDeleted = false;
 
-  profileImage.src = localStorage.getItem("profileImage") || "https://placehold.co/96x96";
+  profileImage.src = localStorage.getItem("profileImage") || "image/default-profile.svg";
   profileID.innerText = `@${id}`;
 
   try {
@@ -101,9 +104,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       // 화면 미리보기만 바로 반영하고, 실제 저장(localStorage 캐시 + PATCH /settings 전송)은
       // 저장하기 버튼을 눌렀을 때만 이루어진다.
       pendingProfile = reader.result;
+      profileDeleted = false;
       profileImage.src = reader.result;
     };
     reader.readAsDataURL(file);
+  });
+
+  document.getElementById("removeProfileImageBtn").addEventListener("click", () => {
+    pendingProfile = null;
+    profileDeleted = true;
+    profileImageInput.value = "";
+    profileImage.src = "image/default-profile.svg";
   });
 
   document.getElementById("saveBtn").addEventListener("click", async () => {
@@ -123,6 +134,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const body = { userId: id, nickname };
     if (password) body.password = password;
     if (pendingProfile) body.profile = pendingProfile;
+    else if (profileDeleted) body.profile = null;
 
     try {
       const res = await fetch("http://localhost:5000/settings", {
@@ -146,6 +158,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (pendingProfile) {
         localStorage.setItem("profileImage", pendingProfile);
         pendingProfile = null;
+      } else if (profileDeleted) {
+        localStorage.removeItem("profileImage");
+        profileDeleted = false;
       }
 
       alert("저장됐어요");

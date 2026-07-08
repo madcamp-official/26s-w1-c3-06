@@ -129,6 +129,12 @@ function renderFriendRequest(request) {
   });
 }
 
+/** 프로필 사진이 없으면 기본 실루엣 이미지를 쓴다 */
+function avatarStyleAttr(profileImage) {
+  const url = profileImage || "image/default-profile.svg";
+  return ` style="background-image: url('${url}')"`;
+}
+
 function renderFriendList(friends) {
   const listEl = document.getElementById("friendList");
   const countEl = document.getElementById("friendCount");
@@ -136,7 +142,7 @@ function renderFriendList(friends) {
 
   listEl.innerHTML = friends.map((f, index) => `
     <div class="friend-row">
-      <div class="avatar-circle"></div>
+      <div class="avatar-circle"${avatarStyleAttr(f.profileImage)}></div>
       <span class="friend-name">${f.name}</span>
       <button class="friend-delete-btn" data-friend-index="${index}" aria-label="친구 삭제">×</button>
     </div>
@@ -158,7 +164,7 @@ function renderRanking(containerId, rankingList) {
     return `
       <div class="ranking-row ${r.isMe ? 'me' : ''}">
         <span class="rank-number">${r.rank}</span>
-        <div class="avatar-circle"></div>
+        <div class="avatar-circle"${avatarStyleAttr(r.profileImage)}></div>
         <span class="ranking-name ${r.isMe ? 'me' : ''}">${r.name}</span>
         <span class="ranking-pct ${pctClass}">${sign}${r.pct}%</span>
       </div>

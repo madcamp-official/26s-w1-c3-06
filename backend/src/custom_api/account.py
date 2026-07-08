@@ -43,6 +43,7 @@ import news
 import quiz
 import ranking
 import friends
+import notify
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
@@ -81,26 +82,26 @@ class UserAccount(Base):
 class AccountStock(Base):
     __tablename__ = "Stock_Owned"
 
-    Stock_Name: Mapped[str] = mapped_column(primary_key=True)
+    Stock_Code: Mapped[int] = mapped_column(primary_key=True)
     ID: Mapped[str]
     Own_Quantity: Mapped[int] = mapped_column(Integer)
     Own_PriceChange: Mapped[int] = mapped_column(Integer)
     Own_Avg: Mapped[Decimal] = mapped_column(Numeric(12, 4))
 
     __table_args__ = (
-        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
+        ForeignKeyConstraint(["Stock_Code"], ["Stock_List.Stock_Code"]),
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
-    def __init__(self, Stock_Name="", ID="", Own_Quantity=0, Own_Avg=Decimal("0")):
-        self.Stock_Name = Stock_Name
+    def __init__(self, Stock_Code=0, ID="", Own_Quantity=0, Own_Avg=Decimal("0")):
+        self.Stock_Code = Stock_Code
         self.ID = ID
         self.Own_Quantity = Own_Quantity
         self.Own_PriceChange = 0
         self.Own_Avg = Own_Avg
 
     def __repr__(self):
-        return f"StockOwned(Name: {self.Stock_Name}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
+        return f"StockOwned(Code: {self.Stock_Code}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
 
 # ----------------------------------------------------------------------
 # Helper Functions
@@ -286,23 +287,23 @@ def View():
 
     try:
         stmt = (
-            select(AccountStock, stock.StockEntry.Stock_Desc)
-            .join(stock.StockEntry, AccountStock.Stock_Name == stock.StockEntry.Stock_Name)
+            select(AccountStock, stock.StockEntry.Stock_Name, stock.StockEntry.Stock_Desc)
+            .join(stock.StockEntry, AccountStock.Stock_Code == stock.StockEntry.Stock_Code)
             .where(AccountStock.ID == user.ID)
         )
         user_stocks = session.execute(stmt).all()
-        
+
         stock_sum = 0
         mockHoldingsList = []
 
-        for holding, desc in user_stocks:
+        for holding, name, desc in user_stocks:
             value = holding.Own_Quantity * holding.Own_Avg
             # mockAccount
             stock_sum += value
 
             # mockHoldings
             mockHolding = {
-                "name": holding.Stock_Name,
+                "name": name,
                 "desc": desc,
                 "value": int(value),
                 "returnPct": (100 * holding.Own_PriceChange / value).quantize(Decimal('0.1'))
@@ -468,7 +469,6 @@ def Update():
 
     password = data.get('password')
     nickname = data.get('nickname')
-    profile = data.get('profile')
 
     if not nickname:
         return jsonify({
@@ -480,9 +480,12 @@ def Update():
         if password:
             user.PW = generate_password_hash(password)
         user.Nickname = nickname
-        if profile is not None:
+        # 'profile' 키가 아예 없으면 그대로 두고, profile:null로 명시적으로 오면 삭제(None)한다.
+        # data.get('profile')만으로는 "키 없음"과 "null로 지움"을 구분할 수 없어서 in으로 따로 확인한다.
+        if 'profile' in data:
+            profile = data.get('profile')
             # Profile 컬럼은 bytea라 base64 문자열(data:image/...;base64,...)을 바로 넣을 수 없다.
-            user.Profile = profile.encode("utf-8") if isinstance(profile, str) else profile
+            user.Profile = profile.encode("utf-8") if isinstance(profile, str) else None
         session.commit()
 
         return jsonify({
@@ -613,7 +616,10 @@ def SocialRanking():
                     "rank": i + 1,
                     "name": e["user"].Nickname,
                     "pct": e["pct"],
-                    "isMe": e["user"].ID == userId
+                    "isMe": e["user"].ID == userId,
+                    # Profile은 bytea에 "data:image/...;base64,..." 문자열을 그대로 저장해둔 것이라
+                    # utf-8로 디코드하면 <img src="">에 바로 쓸 수 있는 data URL이 된다.
+                    "profileImage": e["user"].Profile.decode("utf-8") if e["user"].Profile else None
                 }
                 for i, e in enumerate(entryList[:10])
             ]
@@ -693,7 +699,14 @@ def SocialView():
             session.query(UserAccount).filter(UserAccount.ID.in_(friendIds)).all()
             if friendIds else []
         )
-        friendList = [{"id": u.ID, "name": u.Nickname} for u in friendUsers]
+        friendList = [
+            {
+                "id": u.ID,
+                "name": u.Nickname,
+                "profileImage": u.Profile.decode("utf-8") if u.Profile else None
+            }
+            for u in friendUsers
+        ]
 
         pending = friends.GetPendingRequest(userId)
         friendRequest = None
@@ -732,6 +745,55 @@ def DeleteFriends():
         return jsonify({"status": "fail", "message": "삭제할 관계를 찾지 못했습니다."}), 400
 
     return jsonify({"status": "success", "message": "친구 관계가 삭제되었습니다."}), 200
+
+@app.route('/notifications', methods=['GET'])
+def ListNotificationsView():
+    userId = request.args.get('userId')
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "알림을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        notifications = notify.ListNotifications(userId)
+        return jsonify({
+            "status": "success",
+            "message": "알림을 성공적으로 불러왔습니다.",
+            "notifications": notifications
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "fail",
+            "message": "알림을 불러오지 못했습니다."
+        }), 400
+
+@app.route('/notifications/delete', methods=['POST'])
+def DeleteNotificationView():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get('userId')
+    notiNum = data.get('notiNum')
+
+    if not session.get(UserAccount, userId):
+        return jsonify({
+            "status": "fail",
+            "message": "다시 로그인해 주세요."
+        }), 401
+
+    deleted = notify.DeleteNotification(notiNum, userId)
+    if not deleted:
+        return jsonify({
+            "status": "fail",
+            "message": "삭제할 알림을 찾지 못했습니다."
+        }), 400
+
+    return jsonify({"status": "success", "message": "알림을 삭제했습니다."}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, port=5000)
