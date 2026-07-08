@@ -27,6 +27,13 @@ class ord_res(Enum):
     CANCELLED = "CANCELLED"
     PENDING = "PENDING"
 
+# define custom exceptions
+class PriceDeficientError(Exception):
+    pass
+
+class OrderRedundantError(Exception):
+    pass
+
 # create engine
 class Base(DeclarativeBase):
     pass
@@ -88,6 +95,7 @@ def Create():
     user = session.get(account.UserAccount, userId)
 
     stock_code = request.args.get('stock_code')
+    stock = session.get(stock.Stock)
 
     tradeType = data.get('tradeType')
     quantity = data.get('quantity')
@@ -100,9 +108,13 @@ def Create():
 
     try:
         cashBalance = 0 '''현금보유량, account의 helper 함수로 가져옴'''
+
+        if cashBalance < quantity * 
         orderId = session.query(func.max(OrderEntry.Order_ID)).scalar() + 1 if session.query(func.max(OrderEntry.Order_ID)).scalar() else 1
 
-        
+        if session.get(OrderEntry, orderId) is not None:
+            raise OrderRedundantError("같은 시간에 다른 주문이 있었습니다.")
+
         new_order = OrderEntry(
             Order_ID = orderId,
             Stock_Code = stock_code,
@@ -120,9 +132,19 @@ def Create():
             "message": "주식을 정상적으로 주문했습니다.",
             "order": new_order
         }), 200 
-    except Exception as : 
-
-    except:
+    except PriceDeficientError: 
+        return jsonify({
+            "status": "success",
+            "message": "아이디가 중복됩니다.",
+            "order": None
+        }), 200
+    except OrderRedundantError:
+        return jsonify({
+            "status": "success",
+            "message": "주문 ID가 중복됩니다.",
+            "order": None
+        }), 200
+    except Exception:
         return jsonify({
             "status": "fail",
             "message": "주문에 실패했습니다."
