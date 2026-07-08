@@ -431,6 +431,7 @@ input::placeholder {
 .stock-list-card { padding: 0; overflow: hidden; }
 
 .stock-table-header {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
   padding: 12px 24px;
   border-bottom: 1px solid var(--color-border);
   background: #FAFAFB;
@@ -439,7 +440,7 @@ input::placeholder {
 
 .stock-row {
   display: grid;
-  grid-template-columns: 2.4fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
   align-items: center;
   padding: 14px 24px;
   border-bottom: 1px solid var(--color-border);
@@ -471,8 +472,34 @@ input::placeholder {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.stock-price { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
-.stock-change { font-size: 13px; font-weight: 600; }
+.stock-quote-header {
+  text-align: right;
+}
+
+.stock-quote {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 14px;
+  min-width: 0;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-price {
+  min-width: 92px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.stock-change {
+  min-width: 56px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+}
 .stock-change.up { color: var(--color-up); }
 .stock-change.down { color: var(--color-down); }
 

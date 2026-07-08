@@ -156,7 +156,7 @@ async function openQuizModal({ id, onResult }) {
 
       // data.correct === false
       optionButtons[selectedIndex].classList.add("wrong");
-      showFeedbackWithCloseBtn("오답입니다. 오늘의 기회를 사용했습니다.", "wrong");
+      showFeedbackWithCloseBtn("퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요.", "wrong");
       onResult({ status: "wrong" });
 
     } catch (err) {

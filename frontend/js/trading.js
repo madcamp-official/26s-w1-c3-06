@@ -95,8 +95,10 @@ function renderStockList(stocks) {
             ${desc ? `<p class="stock-desc">${desc}</p>` : ""}
           </div>
         </div>
-        <span class="stock-price">${priceText}</span>
-        <span class="stock-change ${changeClass}">${changeText}</span>
+        <div class="stock-quote">
+          <span class="stock-price">${priceText}</span>
+          <span class="stock-change ${changeClass}">${changeText}</span>
+        </div>
       </div>
     `;
   }).join("");
