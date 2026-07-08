@@ -40,16 +40,6 @@ class QuizEntry(Base):
 # Core APIs 
 # ----------------------------------------------------------------------
 
-with open('data/quiz.json', 'r', encoding='utf-8') as f:
-    data = json.load(f)
-    quiz = data.get('quiz', [])
-
-
-
-# ----------------------------------------------------------------------
-# Core APIs 
-# ----------------------------------------------------------------------
-
 def Show(quiz_num):
     quiz = session.get(QuizEntry, quiz_num)
     if not quiz:
