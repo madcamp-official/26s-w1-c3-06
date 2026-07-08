@@ -1,62 +1,90 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const searchInput = document.getElementById("searchInput");
+  const listEl = document.getElementById("stockList");
 
-  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
-  // 실제 API 응답에는 stock_desc 필드가 DB(Stock_List.Stock_Desc)에서 그대로 내려옴
-  
-  //임시...
-  const mockStocks = [ 
-    { name: "삼성전자", stock_desc: "반도체와 스마트폰을 만드는 회사", price: 72300, changePct: 2.3 },
-    { name: "SK하이닉스", stock_desc: "반도체 메모리를 만드는 회사", price: 184300, changePct: 0.9 },
-    { name: "SK스퀘어", stock_desc: "여러 IT·게임 회사에 투자하는 지주회사", price: 1256000, changePct: 1.87 },
-    { name: "삼성전기", stock_desc: "전자제품 속 핵심 부품을 만드는 회사", price: 2680000, changePct: -3.2 },
-    { name: "현대차", stock_desc: "자동차를 만드는 회사", price: 231500, changePct: 4.1 },
-    { name: "LG에너지솔루션", stock_desc: "배터리를 만드는 회사", price: 412000, changePct: -1.1 },
-    { name: "삼성생명", stock_desc: "생명보험 서비스를 하는 회사", price: 118000, changePct: 2.8 },
-    { name: "삼성물산", stock_desc: "건설과 무역, 패션 사업을 하는 회사", price: 156000, changePct: 0.4 },
-    { name: "삼성바이오로직스", stock_desc: "의약품을 위탁 생산하는 회사", price: 1050000, changePct: 1.2 },
-    { name: "한화에어로스페이스", stock_desc: "항공기 엔진과 방위산업 장비를 만드는 회사", price: 890000, changePct: 5.6 },
-    { name: "KB금융", stock_desc: "은행과 금융 서비스를 하는 지주회사", price: 98000, changePct: 0.2 },
-    { name: "기아", stock_desc: "자동차를 만드는 회사", price: 112000, changePct: 3.1 },
-    { name: "신한지주", stock_desc: "은행과 금융 서비스를 하는 지주회사", price: 62000, changePct: 0.6 },
-    { name: "SK", stock_desc: "여러 계열사를 관리하는 지주회사", price: 178000, changePct: -0.8 },
-    { name: "현대모비스", stock_desc: "자동차 부품을 만드는 회사", price: 265000, changePct: 1.9 },
-    { name: "셀트리온", stock_desc: "바이오 의약품을 만드는 회사", price: 189000, changePct: 2.5 },
-    { name: "삼성SDI", stock_desc: "배터리를 만드는 회사", price: 402000, changePct: -2.1 },
-    { name: "하나금융지주", stock_desc: "은행과 금융 서비스를 하는 지주회사", price: 68000, changePct: 0.3 },
-    { name: "LS ELECTRIC", stock_desc: "전력 설비와 전기 장비를 만드는 회사", price: 298000, changePct: 4.4 },
-    { name: "한화오션", stock_desc: "선박을 만드는 회사", price: 78000, changePct: 3.8 },
-    { name: "LG전자", stock_desc: "가전제품과 전자기기를 만드는 회사", price: 118000, changePct: 6.2 },
-    { name: "NAVER", stock_desc: "검색과 인터넷 서비스를 하는 회사", price: 198700, changePct: 1.8 },
-    { name: "삼성화재", stock_desc: "손해보험 서비스를 하는 회사", price: 412000, changePct: 0.9 },
-    { name: "두산", stock_desc: "에너지·로봇·소재 사업을 하는 회사", price: 289000, changePct: 5.9 },
-    { name: "HD한국조선해양", stock_desc: "선박을 만드는 회사", price: 178000, changePct: 2.2 },
-    { name: "POSCO홀딩스", stock_desc: "철강을 만드는 회사", price: 342000, changePct: -1.4 },
-    { name: "카카오", stock_desc: "메신저와 콘텐츠 서비스를 하는 회사", price: 41200, changePct: 0.0 },
-    { name: "크래프톤", stock_desc: "게임을 만드는 회사", price: 268000, changePct: 0.5 },
-    { name: "엔씨소프트", stock_desc: "게임을 만드는 회사", price: 156800, changePct: 1.2 },
-    { name: "하이브", stock_desc: "아이돌 소속사, 엔터테인먼트 회사", price: 213000, changePct: -0.5 },
-  ];
+  let stocks = [];
 
-  renderStockList(mockStocks);
+  try {
+    stocks = await fetchStockList();
+    renderStockList(stocks);
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = `<p class="card-caption">종목 목록을 불러오지 못했습니다.</p>`;
+  }
 
-  document.getElementById("searchInput").addEventListener("input", (e) => {
-    const keyword = e.target.value.trim();
-    const filtered = mockStocks.filter(s => s.name.includes(keyword));
+  searchInput.addEventListener("input", (e) => {
+    const keyword = e.target.value.trim().toLowerCase();
+    const filtered = stocks.filter((stock) =>
+      stock.name.toLowerCase().includes(keyword)
+    );
     renderStockList(filtered);
   });
 });
 
+const STOCK_DESC_FALLBACK = {
+  "삼성전자": "반도체와 스마트폰을 만드는 회사",
+  "SK하이닉스": "반도체 메모리를 만드는 회사",
+  "SK스퀘어": "여러 IT·게임 회사에 투자하는 지주회사",
+  "삼성전기": "전자제품 속 핵심 부품을 만드는 회사",
+  "현대차": "자동차를 만드는 회사",
+  "LG에너지솔루션": "배터리를 만드는 회사",
+  "삼성생명": "생명보험 서비스를 하는 회사",
+  "삼성물산": "건설과 무역, 패션 사업을 하는 회사",
+  "삼성바이오로직스": "의약품을 위탁 생산하는 회사",
+  "한화에어로스페이스": "항공기 엔진과 방위산업 장비를 만드는 회사",
+  "KB금융": "은행과 금융 서비스를 하는 지주회사",
+  "기아": "자동차를 만드는 회사",
+  "신한지주": "은행과 금융 서비스를 하는 지주회사",
+  "SK": "여러 계열사를 관리하는 지주회사",
+  "현대모비스": "자동차 부품을 만드는 회사",
+  "셀트리온": "바이오 의약품을 만드는 회사",
+  "삼성SDI": "배터리를 만드는 회사",
+  "하나금융지주": "은행과 금융 서비스를 하는 지주회사",
+  "LS ELECTRIC": "전력 설비와 전기 장비를 만드는 회사",
+  "한화오션": "선박을 만드는 회사",
+  "LG전자": "가전제품과 전자기기를 만드는 회사",
+  "NAVER": "검색과 인터넷 서비스를 하는 회사",
+  "삼성화재": "손해보험 서비스를 하는 회사",
+  "두산": "에너지·로봇·소재 사업을 하는 회사",
+  "HD한국조선해양": "선박을 만드는 회사",
+  "POSCO홀딩스": "철강을 만드는 회사",
+  "카카오": "메신저와 콘텐츠 서비스를 하는 회사",
+  "크래프톤": "게임을 만드는 회사",
+  "엔씨소프트": "게임을 만드는 회사",
+  "하이브": "아이돌 소속사, 엔터테인먼트 회사",
+};
+
+async function fetchStockList() {
+  const res = await fetch("/api/stock-list");
+  if (!res.ok) {
+    throw new Error("Failed to fetch stock list.");
+  }
+
+  const data = await res.json();
+  if (data.status !== "success") {
+    throw new Error(data.message || "Failed to fetch stock list.");
+  }
+
+  return data.stocks || [];
+}
+
 function renderStockList(stocks) {
   const listEl = document.getElementById("stockList");
 
-  listEl.innerHTML = stocks.map(stock => {
-    const priceText = stock.price.toLocaleString() + "원";
-    const changeClass = stock.changePct >= 0 ? "up" : "down";
-    const sign = stock.changePct >= 0 ? "+" : "";
-    const changeText = `${sign}${stock.changePct.toFixed(1)}%`;
+  if (!stocks || stocks.length === 0) {
+    listEl.innerHTML = `<p class="card-caption">검색 결과가 없습니다.</p>`;
+    return;
+  }
 
-    // 설명은 DB(Stock_List.Stock_Desc)에서 API 응답으로 그대로 내려오는 값
-    const desc = stock.stock_desc || "";
+  listEl.innerHTML = stocks.map((stock) => {
+    const priceText = stock.price === null || stock.price === undefined
+      ? "-"
+      : `${Number(stock.price).toLocaleString()}원`;
+    const changePct = Number(stock.changePct || 0);
+    const changeClass = changePct >= 0 ? "up" : "down";
+    const sign = changePct >= 0 ? "+" : "";
+    const changeText = `${sign}${changePct.toFixed(1)}%`;
+    const desc = getStockDesc(stock);
 
     return `
       <div class="stock-row" data-stock-name="${stock.name}">
@@ -73,10 +101,14 @@ function renderStockList(stocks) {
     `;
   }).join("");
 
-  listEl.querySelectorAll(".stock-row").forEach(row => {
+  listEl.querySelectorAll(".stock-row").forEach((row) => {
     row.addEventListener("click", () => {
       const stockName = row.dataset.stockName;
       window.location.href = `stock-detail.html?stock=${encodeURIComponent(stockName)}`;
     });
   });
+}
+
+function getStockDesc(stock) {
+  return stock.stock_desc || stock.desc || STOCK_DESC_FALLBACK[stock.name] || "";
 }

@@ -198,6 +198,39 @@ async function fetchAccount(id) {
   return data;
 }
 
+const STOCK_DESC_FALLBACK = {
+  "삼성전자": "반도체와 스마트폰을 만드는 회사",
+  "SK하이닉스": "반도체 메모리를 만드는 회사",
+  "SK스퀘어": "여러 IT·게임 회사에 투자하는 지주회사",
+  "삼성전기": "전자제품 속 핵심 부품을 만드는 회사",
+  "현대차": "자동차를 만드는 회사",
+  "LG에너지솔루션": "배터리를 만드는 회사",
+  "삼성생명": "생명보험 서비스를 하는 회사",
+  "삼성물산": "건설과 무역, 패션 사업을 하는 회사",
+  "삼성바이오로직스": "의약품을 위탁 생산하는 회사",
+  "한화에어로스페이스": "항공기 엔진과 방위산업 장비를 만드는 회사",
+  "KB금융": "은행과 금융 서비스를 하는 지주회사",
+  "기아": "자동차를 만드는 회사",
+  "신한지주": "은행과 금융 서비스를 하는 지주회사",
+  "SK": "여러 계열사를 관리하는 지주회사",
+  "현대모비스": "자동차 부품을 만드는 회사",
+  "셀트리온": "바이오 의약품을 만드는 회사",
+  "삼성SDI": "배터리를 만드는 회사",
+  "하나금융지주": "은행과 금융 서비스를 하는 지주회사",
+  "LS ELECTRIC": "전력 설비와 전기 장비를 만드는 회사",
+  "한화오션": "선박을 만드는 회사",
+  "LG전자": "가전제품과 전자기기를 만드는 회사",
+  "NAVER": "검색과 인터넷 서비스를 하는 회사",
+  "삼성화재": "손해보험 서비스를 하는 회사",
+  "두산": "에너지·로봇·소재 사업을 하는 회사",
+  "HD한국조선해양": "선박을 만드는 회사",
+  "POSCO홀딩스": "철강을 만드는 회사",
+  "카카오": "메신저와 콘텐츠 서비스를 하는 회사",
+  "크래프톤": "게임을 만드는 회사",
+  "엔씨소프트": "게임을 만드는 회사",
+  "하이브": "아이돌 소속사, 엔터테인먼트 회사",
+};
+
 async function loadNews(stockName) {
   try {
     const res = await fetch(`/api/stock/news?stock=${encodeURIComponent(stockName)}`);
@@ -226,7 +259,7 @@ function buildHoldingView(holding, currentPrice) {
 
 function renderStockHeader(stock) {
   document.getElementById("stockName").innerText = stock.name;
-  document.getElementById("stockDesc").innerText = stock.desc || "";
+  document.getElementById("stockDesc").innerText = getStockDesc(stock);
   document.getElementById("currentPrice").innerText = (stock.currentPrice || 0).toLocaleString() + "원";
 
   const logoEl = document.getElementById("stockLogo");
@@ -236,6 +269,10 @@ function renderStockHeader(stock) {
   const isUp = stock.changePct >= 0;
   changeEl.innerText = `${isUp ? "▲" : "▼"}${Math.abs(stock.changePct || 0).toFixed(1)}%`;
   changeEl.className = `price-change ${isUp ? "up" : "down"}`;
+}
+
+function getStockDesc(stock) {
+  return stock.desc || stock.stock_desc || STOCK_DESC_FALLBACK[stock.name] || "";
 }
 
 function renderHolding(stockName, holding) {
