@@ -39,8 +39,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadSocialData() {
   try {
     const [socialRes, rankingRes] = await Promise.all([
-      fetch(`/api/social?userId=${encodeURIComponent(currentUserId)}`),
-      fetch(`/api/social/ranking?userId=${encodeURIComponent(currentUserId)}`),
+      fetch(`/api/social?id=${encodeURIComponent(currentUserId)}`),
+      fetch(`/api/social/ranking?id=${encodeURIComponent(currentUserId)}`),
     ]);
 
     const socialData = await socialRes.json();
