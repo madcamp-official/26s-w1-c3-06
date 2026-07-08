@@ -124,22 +124,6 @@
 | account.ListNotificationsView | /notifications | 알림 목록 보기 | GET | |
 | account.DeleteNotificationView | /notifications/delete | 알림 목록 보기 | POST | |
 
-| stock_PriceUpToDate | | 가상주식 가격을 연동 (50ms 단위) | | | 
-| stock_ShowList | | 가상주식 목록 - 기업명, 기업 로고, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
-| stock_ShowEntry | | 단일 주식의 그래프, 현재 주가 표시 | | | 
-| order_Create | | 가상주식 주문 (매수 / 매도, 주문량 설정) | | |
-| order_Edit | | 가상주식 주문 수정 (주문량 변경) | | |
-| order_Destroy | | 가상주식 주문 취소 | | |
-| order_Sign | | 주문 가격 도달시 가상주식 주문 체결 | | |
-| ranking_Update | | 일간 주식 수익 랭킹 업데이트 | | |
-| ranking_Show | | 일간 주식 수익 랭킹 표시 | | |
-| notify_Stock | | 마지막 공지 시점으로부터 단일 주식의 주가 변화를 알림으로 공지함 | | |
-| notify_Order | | 주문의 체결 성공 / 실패 / 취소를 알림으로 공지함 | | |
-| notify_Friends | | 친구 요청 발신 / 수신, 친구 삭제를 알림으로 공지함 | | |
-| quiz_Show | | 오늘의 퀴즈 보여주기 | | |
-| quiz_Submit | | 퀴즈 정답 제출 | | |
-| quiz_Check | | 퀴즈 정답 채점 | | |
-
 ---
 
 ## 배포 결과물
