@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/order", {
+      const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  */
 async function fetchStockDetail(stockName, userId) {
   const res = await fetch(
-    `http://localhost:5000/stock-detail?stock=${encodeURIComponent(stockName)}&id=${encodeURIComponent(userId)}`
+    `/api/stock-detail?stock=${encodeURIComponent(stockName)}&id=${encodeURIComponent(userId)}`
   );
   if (!res.ok) throw new Error("종목 정보를 불러오지 못했습니다");
 
@@ -189,7 +189,7 @@ async function fetchStockDetail(stockName, userId) {
  * @returns {Promise<{status, message, mockAccount, mockHoldings, mockNews}>}
  */
 async function fetchAccount(id) {
-  const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
+  const res = await fetch(`/api/account?id=${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
 
   const data = await res.json();
@@ -200,7 +200,7 @@ async function fetchAccount(id) {
 
 async function loadNews(stockName) {
   try {
-    const res = await fetch(`http://localhost:5000/stock/news?stock=${encodeURIComponent(stockName)}`);
+    const res = await fetch(`/api/stock/news?stock=${encodeURIComponent(stockName)}`);
     if (!res.ok) throw new Error("관련 뉴스를 불러오지 못했습니다");
 
     const data = await res.json();
