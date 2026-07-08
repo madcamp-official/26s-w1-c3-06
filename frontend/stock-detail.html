@@ -21,7 +21,7 @@
 
         <div class="card">
           <div class="stock-header">
-            <div class="stock-logo-lg">로고</div>
+            <div class="stock-logo-lg" id="stockLogo"></div>
             <div class="stock-header-info">
               <p class="stock-name-lg" id="stockName">기업명</p>
               <span class="desc-badge" id="stockDesc">기업설명</span>
@@ -36,6 +36,24 @@
 
         <div class="card">
           <p class="card-title">주가 그래프</p>
+          <div class="holding-stats chart-ohlc-stats">
+            <div>
+              <p class="card-caption">시가</p>
+              <p class="stat-value" id="openPriceLabel">-</p>
+            </div>
+            <div>
+              <p class="card-caption">고가</p>
+              <p class="stat-value" id="highPriceLabel">-</p>
+            </div>
+            <div>
+              <p class="card-caption">저가</p>
+              <p class="stat-value" id="lowPriceLabel">-</p>
+            </div>
+            <div>
+              <p class="card-caption">현재가</p>
+              <p class="stat-value" id="nowPriceLabel">-</p>
+            </div>
+          </div>
           <div class="chart-placeholder">
             <canvas id="priceChart"></canvas>
           </div>

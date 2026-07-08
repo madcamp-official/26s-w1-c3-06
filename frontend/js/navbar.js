@@ -38,21 +38,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNotificationBell();
 });
 
-// TODO: 백엔드 완성되면 이 더미 데이터 대신 fetch("http://localhost:8000/notifications?user_id=...")로 교체
-// id는 프론트에서 삭제 처리할 때 구분용으로만 씀 (실제로는 noti_num 등을 쓰면 됨)
-let notifications = [
-  { id: 1, type: "order", title: "삼성전자 1주 매수가 체결됐어요", time: "12분 전" },
-  { id: 2, type: "owned", title: "카카오, 오늘 3.1% 올랐어요", time: "1시간 전", related_name: "카카오" },
-  { id: 3, type: "friend", title: "민수님이 친구 요청을 보냈어요", time: "3시간 전" },
-  { id: 4, type: "owned", title: "LG전자, 오늘 4.6% 올랐어요", time: "5시간 전", related_name: "LG전자" },
-  { id: 5, type: "order", title: "카카오 2주 매도가 체결됐어요", time: "어제" },
-];
+// id는 서버가 내려주는 실제 Noti_Num. 삭제 요청에 그대로 실어 보낸다.
+let notifications = [];
 
 function setupNotificationBell() {
   const bell = document.getElementById("notificationBell");
   const dropdown = document.getElementById("notificationDropdown");
 
-  renderNotifications();
+  loadNotifications();
 
   bell.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -68,6 +61,42 @@ function setupNotificationBell() {
   dropdown.addEventListener("click", (e) => {
     e.stopPropagation();
   });
+}
+
+async function loadNotifications() {
+  const userId = localStorage.getItem("id");
+  if (!userId) {
+    notifications = [];
+    renderNotifications();
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:5000/notifications?userId=${encodeURIComponent(userId)}`);
+    if (!res.ok) throw new Error("알림을 불러오지 못했습니다");
+
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "알림을 불러오지 못했습니다");
+
+    notifications = data.notifications;
+  } catch (err) {
+    console.error(err);
+    notifications = [];
+  }
+  renderNotifications();
+}
+
+/** 서버가 내려주는 ISO 시각 문자열을 "12분 전" 같은 상대 시간으로 바꾼다 */
+function formatRelativeTime(isoString) {
+  const diffMin = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000);
+  if (diffMin < 1) return "방금 전";
+  if (diffMin < 60) return `${diffMin}분 전`;
+
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}시간 전`;
+
+  const diffDay = Math.floor(diffHour / 24);
+  return diffDay === 1 ? "어제" : `${diffDay}일 전`;
 }
 
 function renderNotifications() {
@@ -100,7 +129,7 @@ function renderNotifications() {
         <span class="notification-icon">${iconMap[n.type] || "🔔"}</span>
         <div class="notification-content">
           <p class="notification-title">${n.title}</p>
-          <p class="notification-time">${n.time}</p>
+          <p class="notification-time">${formatRelativeTime(n.time)}</p>
         </div>
       </a>
       <button class="notification-delete-btn" data-id="${n.id}" aria-label="알림 삭제">×</button>
@@ -109,13 +138,30 @@ function renderNotifications() {
 
   // 삭제 버튼 이벤트 연결
   listEl.querySelectorAll(".notification-delete-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const id = Number(btn.dataset.id);
-      // TODO: 백엔드 완성되면 여기서 삭제 API 호출 (또는 읽음 처리 API)
-      notifications = notifications.filter(n => n.id !== id);
-      renderNotifications();
+      const notiNum = Number(btn.dataset.id);
+      const userId = localStorage.getItem("id");
+
+      try {
+        const res = await fetch("http://localhost:5000/notifications/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, notiNum }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.status !== "success") {
+          throw new Error(data.message || "알림 삭제에 실패했습니다");
+        }
+
+        notifications = notifications.filter(n => n.id !== notiNum);
+        renderNotifications();
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
+      }
     });
   });
 }

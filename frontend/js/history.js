@@ -1,21 +1,35 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const id = localStorage.getItem("id");
+  if (!id) {
+    window.location.href = "index.html";
+    return;
+  }
 
-  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체
-  // order_date: 실제 Stock_Order.Order_Date 값 그대로 (YYYY-MM-DD)
-  const mockHistory = [
-    { type: "sell", stockName: "삼성전자", quantity: "1주", amount: 300000, order_date: "2026-06-02" },
-    { type: "buy", stockName: "삼성전자", quantity: "1주", amount: 300000, order_date: "2026-06-01" },
-  ];
+  try {
+    const res = await fetch(`http://localhost:5000/history?userId=${encodeURIComponent(id)}`);
+    if (!res.ok) throw new Error("거래 내역을 불러오지 못했습니다");
 
-  renderHistory(mockHistory);
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "거래 내역을 불러오지 못했습니다");
+
+    renderHistory(data.history);
+  } catch (err) {
+    console.error(err);
+    renderHistory([]);
+  }
 });
 
 /**
  * @param {Array} history - {type, stockName, quantity, amount, order_date} 목록
- *   order_date: DB의 Stock_Order.Order_Date 그대로 (YYYY-MM-DD) -> 계산 없이 그대로 표시
+ *   order_date: DB에 저장된 실제 날짜(YYYY-MM-DD) 그대로 -> 계산 없이 포맷만 해서 표시
  */
 function renderHistory(history) {
   const listEl = document.getElementById("historyList");
+
+  if (!history || history.length === 0) {
+    listEl.innerHTML = `<p class="card-caption">아직 거래 내역이 없어요.</p>`;
+    return;
+  }
 
   listEl.innerHTML = history.map(item => {
     const tagLabel = item.type === "buy" ? "매수" : "매도";

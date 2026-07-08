@@ -18,11 +18,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let currentNickname = "";
   let isNicknameChecked = true;
-  // 새로 고른 프로필 사진(base64). 안 바꿨으면 null로 두고 저장 요청에 아예 포함시키지 않는다
-  // (백엔드에 Profile을 읽어오는 API가 아직 없어서, 화면에는 localStorage 캐시로만 미리보기한다).
+  // 새로 고른 프로필 사진(base64). 안 바꿨으면 null로 두고 저장 요청에 아예 포함시키지 않는다.
   let pendingProfile = null;
+  // "사진 삭제" 버튼을 눌렀는지 여부. pendingProfile=null만으로는 "안 바꿈"과 "지움"을 구분할 수
+  // 없어서 별도 플래그로 구분하고, 저장 시 profile:null을 명시적으로 보낸다.
+  let profileDeleted = false;
 
-  profileImage.src = localStorage.getItem("profileImage") || "https://placehold.co/96x96";
+  profileImage.src = "image/default-profile.svg";
   profileID.innerText = `@${id}`;
 
   try {
@@ -35,6 +37,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     currentNickname = data.mockAccount.nickname;
     profileName.innerText = currentNickname;
     nicknameInput.value = currentNickname;
+    // 사진은 항상 백엔드(User_Info.Profile)를 기준으로 표시한다. localStorage 캐시는 로그아웃하면
+    // 지워지므로(다른 계정 사진이 남아 보이는 것 방지) 신뢰할 수 있는 출처가 아니다.
+    profileImage.src = data.mockAccount.profileImage || "image/default-profile.svg";
   } catch (err) {
     console.error(err);
     alert("계정 정보를 불러오지 못했습니다. 다시 로그인해 주세요.");
@@ -101,9 +106,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       // 화면 미리보기만 바로 반영하고, 실제 저장(localStorage 캐시 + PATCH /settings 전송)은
       // 저장하기 버튼을 눌렀을 때만 이루어진다.
       pendingProfile = reader.result;
+      profileDeleted = false;
       profileImage.src = reader.result;
     };
     reader.readAsDataURL(file);
+  });
+
+  document.getElementById("removeProfileImageBtn").addEventListener("click", () => {
+    pendingProfile = null;
+    profileDeleted = true;
+    profileImageInput.value = "";
+    profileImage.src = "image/default-profile.svg";
   });
 
   document.getElementById("saveBtn").addEventListener("click", async () => {
@@ -123,6 +136,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const body = { userId: id, nickname };
     if (password) body.password = password;
     if (pendingProfile) body.profile = pendingProfile;
+    else if (profileDeleted) body.profile = null;
 
     try {
       const res = await fetch("http://localhost:5000/settings", {
@@ -143,16 +157,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       profileName.innerText = nickname;
       localStorage.setItem("nickname", nickname);
 
-      if (pendingProfile) {
-        localStorage.setItem("profileImage", pendingProfile);
-        pendingProfile = null;
-      }
+      pendingProfile = null;
+      profileDeleted = false;
 
       alert("저장됐어요");
     } catch (err) {
       console.error(err);
       alert(err.message || "서버에 연결할 수 없어요. 잠시 후 다시 시도해주세요.");
     }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.clear();
+    window.location.href = "index.html";
   });
 
   document.getElementById("deleteAccountBtn").addEventListener("click", async () => {

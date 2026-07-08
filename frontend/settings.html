@@ -21,11 +21,12 @@
 
     <!-- 프로필 카드 -->
     <div class="card profile-card">
-      <img class="profile-avatar" id="profileAvatar" src="https://placehold.co/96x96" alt="프로필 사진" />
+      <img class="profile-avatar" id="profileAvatar" src="image/default-profile.svg" alt="프로필 사진" />
       <div>
         <p class="profile-name" id="profileName">김혜리</p>
         <p class="profile-handle" id="profileHandle">@ireyhye</p>
       </div>
+      <button class="btn-secondary btn-auto profile-logout-btn" id="logoutBtn">로그아웃</button>
     </div>
 
     <!-- 개인정보 수정 카드 -->
@@ -34,7 +35,9 @@
 
       <div class="field-group">
         <label class="field-label" for="profileImageInput">프로필 사진</label>
-        <input type="file" id="profileImageInput" accept="image/*" />
+        <label class="btn-secondary btn-auto file-upload-label" for="profileImageInput">사진 선택</label>
+        <button type="button" class="btn-secondary btn-auto" id="removeProfileImageBtn">사진 삭제</button>
+        <input type="file" id="profileImageInput" accept="image/*" class="visually-hidden-input" />
       </div>
 
       <div class="field-group">

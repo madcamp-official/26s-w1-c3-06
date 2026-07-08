@@ -37,7 +37,7 @@ function renderStockList(stocks) {
     return `
       <div class="stock-row">
         <div class="stock-info">
-          <div class="stock-logo">로고</div>
+          <div class="stock-logo" style="background-image: url('logos/${encodeURIComponent(stock.name)}.png')"></div>
           <div>
             <p class="stock-name">${stock.name}</p>
             <p class="stock-desc">${stock.desc}</p>
