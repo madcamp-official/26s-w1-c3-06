@@ -155,6 +155,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.clear();
+    window.location.href = "index.html";
+  });
+
   document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
     const confirmed = confirm(
       "정말 계좌를 삭제하시겠어요?\n보유주식, 거래내역, 친구 목록이 모두 사라지며 복구할 수 없습니다."

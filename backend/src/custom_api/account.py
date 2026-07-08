@@ -6,7 +6,8 @@ from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, 
 
 import random
 from math import floor
-from datetime import datetime, time
+from datetime import datetime, time, date
+from typing import Optional
 from zoneinfo import ZoneInfo
 from decimal import Decimal
 
@@ -42,7 +43,6 @@ import news
 import quiz
 import ranking
 import friends
-import notify
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
@@ -55,6 +55,10 @@ session = Session()
 # README 기획안: 계좌 생성 직후 100만원 시드 자산 지급
 SEED_BALANCE = 1_000_000
 
+# 기본소득 퀴즈 정답 보상. 랭킹 수익률(ranking.py)은 이 금액을 제외한 순수 주식 손익만 반영해야 한다.
+QUIZ_REWARD = 10_000
+
+# test required
 class UserAccount(Base):
     __tablename__ = "User_Info"
 
@@ -63,42 +67,49 @@ class UserAccount(Base):
     Reg_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
-    LastBailout: Mapped[bool] = mapped_column(Boolean)
+    Last_Bailout_Date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    # 거래(매매)와 무관하게 Balance에 더해진 현금의 누계(가입 시드 + 퀴즈 보상 등).
+    # 랭킹(ranking.py)이 총자산 증감에서 이 누계의 증감을 빼면 순수 주식 손익만 남는다.
+    Non_Stock_Cash: Mapped[int] = mapped_column(Integer)
     Nickname: Mapped[str] = mapped_column(String(12),unique=True,nullable=True)
     Profile: Mapped[bytes] = mapped_column(LargeBinary,nullable=True)
         
     def __repr__(self):
         return f"User(ID: {self.ID}, PW: {self.PW}, Balance: {self.Balance})"
 
+# test required
 class AccountStock(Base):
     __tablename__ = "Stock_Owned"
 
-    Stock_Code: Mapped[int] = mapped_column(primary_key=True)
+    Stock_Name: Mapped[str] = mapped_column(primary_key=True)
     ID: Mapped[str]
     Own_Quantity: Mapped[int] = mapped_column(Integer)
     Own_PriceChange: Mapped[int] = mapped_column(Integer)
     Own_Avg: Mapped[Decimal] = mapped_column(Numeric(12, 4))
 
     __table_args__ = (
-        ForeignKeyConstraint(["Stock_Code"], ["Stock_List.Stock_Code"]),
+        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
-    def __init__(self, Stock_Code, ID, Own_Quantity=0, Own_Avg=Decimal("0")):
-        self.Stock_Code = Stock_Code
+    def __init__(self, Stock_Name="", ID="", Own_Quantity=0, Own_Avg=Decimal("0")):
+        self.Stock_Name = Stock_Name
         self.ID = ID
         self.Own_Quantity = Own_Quantity
         self.Own_PriceChange = 0
         self.Own_Avg = Own_Avg
 
     def __repr__(self):
-        return f"StockOwned(Code: {self.Stock_Code}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
+        return f"StockOwned(Name: {self.Stock_Name}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
 
 # ----------------------------------------------------------------------
 # Helper Functions
 # ----------------------------------------------------------------------
 def Midnight(dt):
     return datetime.combine(dt.date(), time.min)
+
+def Today():
+    return datetime.now().astimezone().date()
 
 def LatestNewsDate():
     ''' News_List에 있는 가장 최근 뉴스 날짜(달력 날짜). 뉴스가 없으면 None.
@@ -167,7 +178,8 @@ def nickname_exists():
             "message": "중복 검사에 실패했습니다."
         }), 400
 
-# Create an account and stage onto DB / Redundancy Check
+# Create an account and stage onto DB / Redundancy Check (wip)
+# !! test required !!
 @app.route('/auth/signup', methods=['POST'])
 def Create():
     if request.is_json:
@@ -199,7 +211,8 @@ def Create():
         Reg_Date=datetime.now().astimezone(),
         Balance=SEED_BALANCE,
         Return=0,
-        LastBailout=False,
+        Last_Bailout_Date=None,
+        Non_Stock_Cash=SEED_BALANCE,
         Nickname=nickname,
         Profile=None,
     )
@@ -222,6 +235,7 @@ def Create():
         }), 400
 
 # Receive login request and authenticate
+# test required
 @app.route('/auth/login', methods=['POST'])
 def Authenticate():
     if request.is_json:
@@ -253,6 +267,7 @@ def Authenticate():
         }), 401
 
 # Show main page and feature (almost) everything
+# test required
 @app.route('/account', methods=['GET'])
 def View():
     if request.is_json:
@@ -272,7 +287,7 @@ def View():
     try:
         stmt = (
             select(AccountStock, stock.StockEntry.Stock_Desc)
-            .join(stock.StockEntry, AccountStock.Stock_Code == stock.StockEntry.Stock_Code)
+            .join(stock.StockEntry, AccountStock.Stock_Name == stock.StockEntry.Stock_Name)
             .where(AccountStock.ID == user.ID)
         )
         user_stocks = session.execute(stmt).all()
@@ -323,7 +338,7 @@ def View():
                 "profitLoss": user.Return,
                 "cashBalance": max([0, int(user.Balance - stock_sum)]),
                 "stockCount": len(user_stocks),
-                "hasReceivedIncomeToday": user.LastBailout
+                "hasReceivedIncomeToday": user.Last_Bailout_Date == Today()
             },
             "mockHoldings": mockHoldingsList,
             "mockNews": mockNewsList
@@ -334,6 +349,7 @@ def View():
             "message": "홈 화면을 불러오지 못했습니다."
         }), 400
         
+# test required
 @app.route('/quiz', methods=['GET'])
 def DailyBailout():
     userId = request.args.get('userId')
@@ -345,7 +361,7 @@ def DailyBailout():
             "message": "퀴즈를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
         }), 401
 
-    if user.LastBailout == True:
+    if user.Last_Bailout_Date == Today():
         return jsonify({
             "status": "success",
             "already_used": True,
@@ -374,6 +390,7 @@ def DailyBailout():
             "message": "퀴즈 불러오기에 실패했습니다."
         }), 400
 
+# test required
 @app.route('/quiz/submit', methods=['POST'])
 def SubmitAndReward():
     if request.is_json:
@@ -400,10 +417,11 @@ def SubmitAndReward():
         raise Exception("퀴즈 채점 불가능")
 
     try:
-        already_used = user.LastBailout == True
+        already_used = user.Last_Bailout_Date == Today()
 
         if QuizCorrect and not already_used:
-            user.Balance += 10000
+            user.Balance += QUIZ_REWARD
+            user.Non_Stock_Cash += QUIZ_REWARD
 
         if QuizCorrect:
             result = jsonify({
@@ -421,7 +439,7 @@ def SubmitAndReward():
                 "message": "퀴즈를 틀렸습니다. 내일 다시 기회를 노리세요."
             }), 200
 
-        user.LastBailout = True
+        user.Last_Bailout_Date = Today()
         session.commit()
         return result
     except Exception:
@@ -431,6 +449,7 @@ def SubmitAndReward():
             "message": "퀴즈 채점에 실패했습니다."
         }), 400
 
+# test required
 @app.route('/settings', methods=['PATCH'])
 def Update():
     if request.is_json:
@@ -477,6 +496,7 @@ def Update():
             "message": "계정 정보 수정에 실패했습니다."
         }), 400
 
+# test required
 @app.route('/settings', methods=['POST'])
 def Delete():
     if request.is_json:
@@ -515,6 +535,7 @@ def Delete():
             "message": "계정 삭제에 실패했습니다."
         }), 400
 
+# test required
 @app.route('/stock/news', methods=['GET'])
 def StockNews():
     stockName = request.args.get('stock')
@@ -538,7 +559,7 @@ def StockNews():
             select(news.NewsEntry)
             .join(news.StockNewsEntry, news.NewsEntry.News_ID == news.StockNewsEntry.News_ID)
             .where(
-                news.StockNewsEntry.Stock_Code == stockCode,
+                news.StockNewsEntry.Stock_Name == stockName,
                 func.date(news.NewsEntry.News_Date) == latestDate
             )
             .order_by(news.NewsEntry.News_Date.desc())
@@ -563,6 +584,7 @@ def StockNews():
             "message": "관련 뉴스를 불러오지 못했습니다."
         }), 400
 
+# test required
 @app.route('/social/ranking', methods=['GET'])
 def SocialRanking():
     userId = request.args.get('userId')
@@ -614,6 +636,7 @@ def SocialRanking():
             "message": "랭킹을 불러오지 못했습니다."
         }), 400
 
+# test required
 @app.route('/social/request-friends', methods=['POST'])
 def RequestFriends():
     if request.is_json:
@@ -635,6 +658,7 @@ def RequestFriends():
         "toId": toId
     }), 200
 
+# test required
 @app.route('/social/accept-friends', methods=['POST'])
 def AcceptFriends():
     if request.is_json:
@@ -651,6 +675,7 @@ def AcceptFriends():
 
     return jsonify({"status": "success", "message": message}), 200
 
+# test required
 @app.route('/social', methods=['GET'])
 def SocialView():
     userId = request.args.get('userId')
@@ -691,6 +716,7 @@ def SocialView():
             "message": "친구 정보를 불러오지 못했습니다."
         }), 400
 
+# test required
 @app.route('/social/delete-friends', methods=['POST'])
 def DeleteFriends():
     if request.is_json:
@@ -706,55 +732,6 @@ def DeleteFriends():
         return jsonify({"status": "fail", "message": "삭제할 관계를 찾지 못했습니다."}), 400
 
     return jsonify({"status": "success", "message": "친구 관계가 삭제되었습니다."}), 200
-
-@app.route('/notifications', methods=['GET'])
-def ListNotificationsView():
-    userId = request.args.get('userId')
-    user = session.get(UserAccount, userId)
-
-    if not user:
-        return jsonify({
-            "status": "fail",
-            "message": "알림을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
-        }), 401
-
-    try:
-        notifications = notify.ListNotifications(userId)
-        return jsonify({
-            "status": "success",
-            "message": "알림을 성공적으로 불러왔습니다.",
-            "notifications": notifications
-        }), 200
-    except Exception:
-        return jsonify({
-            "status": "fail",
-            "message": "알림을 불러오지 못했습니다."
-        }), 400
-
-@app.route('/notifications/delete', methods=['POST'])
-def DeleteNotificationView():
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = request.form
-
-    userId = data.get('userId')
-    notiNum = data.get('notiNum')
-
-    if not session.get(UserAccount, userId):
-        return jsonify({
-            "status": "fail",
-            "message": "다시 로그인해 주세요."
-        }), 401
-
-    deleted = notify.DeleteNotification(notiNum, userId)
-    if not deleted:
-        return jsonify({
-            "status": "fail",
-            "message": "삭제할 알림을 찾지 못했습니다."
-        }), 400
-
-    return jsonify({"status": "success", "message": "알림을 삭제했습니다."}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, port=5000)

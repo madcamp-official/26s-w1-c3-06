@@ -1,13 +1,61 @@
+/** changePct(전일 대비 등락률)를 거꾸로 적용해 5개 지점짜리 그래프용 더미 이력을 만듦 */
+function buildPriceHistory(currentPrice, changePct) {
+  const startPrice = Math.round(currentPrice / (1 + changePct / 100));
+  const points = 5;
+  const history = [];
+  for (let i = 0; i < points; i++) {
+    const ratio = i / (points - 1);
+    history.push(Math.round(startPrice + (currentPrice - startPrice) * ratio));
+  }
+  history[points - 1] = currentPrice;
+  return history;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   const requestedStock = params.get("stock") ? decodeURIComponent(params.get("stock")) : "삼성전자";
 
-  const mockStockCatalog = [
-    { name: "삼성전자", desc: "반도체와 스마트폰을 만드는 회사", currentPrice: 72300, changePct: 2.3, priceHistory: [68400, 69200, 70100, 71400, 72300] },
-    { name: "SK하이닉스", desc: "반도체 메모리를 만드는 회사", currentPrice: 184300, changePct: 0.9, priceHistory: [180000, 182500, 183600, 184100, 184300] },
-    { name: "LG전자", desc: "가전제품과 전자기기를 만드는 회사", currentPrice: 118000, changePct: 6.2, priceHistory: [112000, 113500, 115000, 116500, 118000] },
-    { name: "카카오", desc: "메신저와 콘텐츠 서비스를 하는 회사", currentPrice: 41200, changePct: 0.0, priceHistory: [41000, 41200, 41100, 41200, 41200] },
+  // TODO: 백엔드 API 완성되면 이 더미 데이터 대신 fetch로 교체 (trading.js의 mockStocks와 동일한 목록)
+  const mockStocks = [
+    { name: "삼성전자", desc: "반도체와 스마트폰을 만드는 회사", price: 72300, changePct: 2.3 },
+    { name: "SK하이닉스", desc: "반도체 메모리를 만드는 회사", price: 184300, changePct: 0.9 },
+    { name: "SK스퀘어", desc: "여러 IT·게임 회사에 투자하는 지주회사", price: 1256000, changePct: 1.87 },
+    { name: "삼성전기", desc: "전자제품 속 핵심 부품을 만드는 회사", price: 2680000, changePct: -3.2 },
+    { name: "현대차", desc: "자동차를 만드는 회사", price: 231500, changePct: 4.1 },
+    { name: "LG에너지솔루션", desc: "배터리를 만드는 회사", price: 412000, changePct: -1.1 },
+    { name: "삼성생명", desc: "생명보험 서비스를 하는 회사", price: 118000, changePct: 2.8 },
+    { name: "삼성물산", desc: "건설과 무역, 패션 사업을 하는 회사", price: 156000, changePct: 0.4 },
+    { name: "삼성바이오로직스", desc: "의약품을 위탁 생산하는 회사", price: 1050000, changePct: 1.2 },
+    { name: "한화에어로스페이스", desc: "항공기 엔진과 방위산업 장비를 만드는 회사", price: 890000, changePct: 5.6 },
+    { name: "KB금융", desc: "은행과 금융 서비스를 하는 지주회사", price: 98000, changePct: 0.2 },
+    { name: "기아", desc: "자동차를 만드는 회사", price: 112000, changePct: 3.1 },
+    { name: "신한지주", desc: "은행과 금융 서비스를 하는 지주회사", price: 62000, changePct: 0.6 },
+    { name: "SK", desc: "여러 계열사를 관리하는 지주회사", price: 178000, changePct: -0.8 },
+    { name: "현대모비스", desc: "자동차 부품을 만드는 회사", price: 265000, changePct: 1.9 },
+    { name: "셀트리온", desc: "바이오 의약품을 만드는 회사", price: 189000, changePct: 2.5 },
+    { name: "삼성SDI", desc: "배터리를 만드는 회사", price: 402000, changePct: -2.1 },
+    { name: "하나금융지주", desc: "은행과 금융 서비스를 하는 지주회사", price: 68000, changePct: 0.3 },
+    { name: "LS ELECTRIC", desc: "전력 설비와 전기 장비를 만드는 회사", price: 298000, changePct: 4.4 },
+    { name: "한화오션", desc: "선박을 만드는 회사", price: 78000, changePct: 3.8 },
+    { name: "LG전자", desc: "가전제품과 전자기기를 만드는 회사", price: 118000, changePct: 6.2 },
+    { name: "NAVER", desc: "검색과 인터넷 서비스를 하는 회사", price: 198700, changePct: 1.8 },
+    { name: "삼성화재", desc: "손해보험 서비스를 하는 회사", price: 412000, changePct: 0.9 },
+    { name: "두산", desc: "에너지·로봇·소재 사업을 하는 회사", price: 289000, changePct: 5.9 },
+    { name: "HD한국조선해양", desc: "선박을 만드는 회사", price: 178000, changePct: 2.2 },
+    { name: "POSCO홀딩스", desc: "철강을 만드는 회사", price: 342000, changePct: -1.4 },
+    { name: "카카오", desc: "메신저와 콘텐츠 서비스를 하는 회사", price: 41200, changePct: 0.0 },
+    { name: "크래프톤", desc: "게임을 만드는 회사", price: 268000, changePct: 0.5 },
+    { name: "엔씨소프트", desc: "게임을 만드는 회사", price: 156800, changePct: 1.2 },
+    { name: "하이브", desc: "아이돌 소속사, 엔터테인먼트 회사", price: 213000, changePct: -0.5 },
   ];
+
+  const mockStockCatalog = mockStocks.map(s => ({
+    name: s.name,
+    desc: s.desc,
+    currentPrice: s.price,
+    changePct: s.changePct,
+    priceHistory: buildPriceHistory(s.price, s.changePct),
+  }));
 
   const mockStock = mockStockCatalog.find(s => s.name === requestedStock) || {
     name: requestedStock,
@@ -135,6 +183,9 @@ function renderStockHeader(stock) {
   document.getElementById("stockName").innerText = stock.name;
   document.getElementById("stockDesc").innerText = stock.desc;
   document.getElementById("currentPrice").innerText = stock.currentPrice.toLocaleString() + "원";
+
+  const logoEl = document.getElementById("stockLogo");
+  logoEl.style.backgroundImage = `url('logos/${encodeURIComponent(stock.name)}.png')`;
 
   const changeEl = document.getElementById("priceChange");
   const isUp = stock.changePct >= 0;

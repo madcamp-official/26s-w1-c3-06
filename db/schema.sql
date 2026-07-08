@@ -12,7 +12,8 @@ CREATE TABLE "User_Info" (
 	"Reg_Date"	TIMESTAMPTZ		NULL,
 	"Balance"	INT		NULL,
 	"Return"	INT		NULL,
-	"LastBailout"	BOOLEAN		NULL,
+	"Last_Bailout_Date"	DATE		NULL,
+	"Non_Stock_Cash"	INT		NULL,
 	"Nickname"	VARCHAR(12)		NULL,
 	"Profile"	BYTEA		NULL,
 	CONSTRAINT "PK_User_Info" PRIMARY KEY ("ID")
@@ -97,6 +98,7 @@ CREATE TABLE "Daily_Snapshot" (
 	"Snapshot_Date"	TIMESTAMPTZ		NOT NULL,
 	"ID"	VARCHAR(16)		NOT NULL,
 	"Total_Asset"	INT		NULL,
+	"Non_Stock_Cash"	INT		NULL,
 	CONSTRAINT "PK_Daily_Snapshot" PRIMARY KEY ("Snapshot_Date", "ID"),
 	CONSTRAINT "FK_Daily_Snapshot_ID" FOREIGN KEY ("ID") REFERENCES "User_Info" ("ID")
 );

@@ -26,6 +26,7 @@
         <p class="profile-name" id="profileName">김혜리</p>
         <p class="profile-handle" id="profileHandle">@ireyhye</p>
       </div>
+      <button class="btn-secondary btn-auto profile-logout-btn" id="logoutBtn">로그아웃</button>
     </div>
 
     <!-- 개인정보 수정 카드 -->
@@ -34,7 +35,8 @@
 
       <div class="field-group">
         <label class="field-label" for="profileImageInput">프로필 사진</label>
-        <input type="file" id="profileImageInput" accept="image/*" />
+        <label class="btn-secondary btn-auto file-upload-label" for="profileImageInput">사진 선택</label>
+        <input type="file" id="profileImageInput" accept="image/*" class="visually-hidden-input" />
       </div>
 
       <div class="field-group">
