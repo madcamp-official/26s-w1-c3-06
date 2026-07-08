@@ -102,19 +102,30 @@
 
 | Method | Endpoint | 설명 | 요청 | 응답 |
 |---|---|---|---|---|
-| account_Create | | 계좌 및 계정 생성; 기본금 1,000,000원 지급 | | |
-| account_Authenticate | | 계좌 아이디 및 비밀번호 정보 일치 확인 | | |
-| account_Show | | 계좌명, 보유 주식, 최근 거래 내역, 수익 금액 및 수익률, 계좌 잔고 불러오기 | | |
-| account_Edit | | 계좌 정보를 변경 | | |
-| account_DailyBailout | | 구제금을 요청한 계좌에서 매일 하루에 한하여 10,000원의 수익 지급. 중복 지급 요청시 거부 | | |
-| account_Delete | | 계정 삭제 | | | 
-| news_View | | 단일 주식의 관련 뉴스 확인 | | |
-| friends_Request | | 친구 요청 발신 | | |
-| friends_Show | | 친구 목록 확인 | | |
-| friends_Delete | | 친구 삭제 | | |
+| account.Create | /auth/signup | 계좌 및 계정 생성; 기본금 1,000,000원 지급 | POST | |
+| account.Authenticate | /auth/login | 계좌 아이디 및 비밀번호 정보 일치 확인 | POST | |
+| account.id_exists | /auth/check-id?id={id} | 계좌 아이디 및 비밀번호 정보 일치 확인 | GET | |
+| account.nickname_exists | /auth/check-nickname?nickname={nickname} | 계좌 아이디 및 비밀번호 정보 일치 확인 | GET | |
+| account.View | /account?id={id} | 계좌명, 보유 주식, 수익 금액 및 수익률, 계좌 잔고, 관련 뉴스 불러오기 | GET | |
+| account.DailyBailout | /quiz?userId={userId} | 오늘의 퀴즈 풀기 | GET | |
+| account.SubmitAndReward | /quiz/submit | 오늘의 퀴즈 채점 및 보상 받기 | POST | |
+| account.Update | /settings | 계좌 정보 (프로필 사진, 닉네임, 비밀번호)를 변경 | PATCH | |
+| account.Delete | /settings | 계정 삭제 | POST | | 
+| account.StockList | /stock-list | 전체 주식 리스트 불러오기 | GET | |
+| account.StockDetail | /stock-detail | 주식 정보 보기 | GET | |
+| account.PlaceOrder | /order | 주식 주문하기 | POST | |
+| account.TransactionHistory | /history?userId={userId} | 주식 주문 내역 보기 | GET | |
+| account.StockNews | /stock/news?stock={stock} | 주식 관련 뉴스 열람 | GET | |
+| account.SocialRanking | /social/ranking?userId={userId} | 주식 투자 수익 랭킹 보기 | GET | |
+| account.RequestFriends | /social/request-friends | 친구 신청하기 | POST | |
+| account.AcceptFriends | /social/accept-friends | 친구 신청 수락하기 | POST | |
+| account.SocialView | /social | 친구 목록 열람 | GET | |
+| account.DeleteFriends | /social/delete-friends | 친구 삭제 | POST | |
+| account.ListNotificationsView | /notifications | 알림 목록 보기 | GET | |
+| account.DeleteNotificationView | /notifications/delete | 알림 목록 보기 | POST | |
+
 | stock_PriceUpToDate | | 가상주식 가격을 연동 (50ms 단위) | | | 
 | stock_ShowList | | 가상주식 목록 - 기업명, 기업 로고, 현재 주가, 주가 변동분 표시 (보유 주식과 검색 결과로 나온 주식 모두 적용) | | |
-| stock_Search | | 주식을 기업명 일치에 의해 검색 | | |
 | stock_ShowEntry | | 단일 주식의 그래프, 현재 주가 표시 | | | 
 | order_Create | | 가상주식 주문 (매수 / 매도, 주문량 설정) | | |
 | order_Edit | | 가상주식 주문 수정 (주문량 변경) | | |
