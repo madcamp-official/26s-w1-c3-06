@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 /**
  * @returns {Promise<{status, message, stock}>} stock: {stockCode, name, desc, currentPrice, changePct, priceHistory, holding}
  */
-async function fetchStockDetail(stockName, userId) {
+async function fetchStockDetail(stockName, id) {
   const res = await fetch(
     `/api/stock-detail?stock=${encodeURIComponent(stockName)}&id=${encodeURIComponent(id)}`
   );
