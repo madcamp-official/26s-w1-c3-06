@@ -720,8 +720,13 @@ input::placeholder {
   width: 16px; text-align: center;
 }
 
-.ranking-row .avatar-circle { width: 36px; height: 36px; }
-.ranking-row.me .avatar-circle { background-color: var(--color-accent); }
+.ranking-row .avatar-circle {
+  width: 36px;
+  height: 36px;
+  background-color: #F4F4F6;
+}
+
+.ranking-row.me .avatar-circle { background-color: #FFFFFF; }
 
 .ranking-name { flex: 1; font-size: 13px; }
 .ranking-name.me { color: var(--color-accent); font-weight: 700; }
