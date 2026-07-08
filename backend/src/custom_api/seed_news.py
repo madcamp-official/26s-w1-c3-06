@@ -23,10 +23,15 @@ def run():
 
     stock_names = sorted(set(a["stock_name"] for a in articles))
 
-    existing_stocks = {s.Stock_Name for s in account.session.query(stock.StockEntry).all()}
+    # Stock_List의 PK는 이제 Stock_Code라, 이름으로 뉴스를 다는 이 스크립트는 먼저 이름->코드를
+    # 알아야 한다. 기사에 나온 종목인데 아직 Stock_List에 없으면 새 코드를 배정해서 추가한다.
+    name_to_code = {s.Stock_Name: s.Stock_Code for s in account.session.query(stock.StockEntry).all()}
+    next_code = max(name_to_code.values(), default=0) + 1
     for name in stock_names:
-        if name not in existing_stocks:
-            account.session.add(stock.StockEntry(Stock_Name=name))
+        if name not in name_to_code:
+            account.session.add(stock.StockEntry(Stock_Code=next_code, Stock_Name=name))
+            name_to_code[name] = next_code
+            next_code += 1
     account.session.commit()
 
     ord_counters = {}
@@ -41,11 +46,11 @@ def run():
             news_date=news_date,
         ))
 
-        stock_name = a["stock_name"]
-        ord_counters[stock_name] = ord_counters.get(stock_name, 0) + 1
+        stock_code = name_to_code[a["stock_name"]]
+        ord_counters[stock_code] = ord_counters.get(stock_code, 0) + 1
         account.session.add(news.StockNewsEntry(
-            Related_Ord=ord_counters[stock_name],
-            Stock_Name=stock_name,
+            Related_Ord=ord_counters[stock_code],
+            Stock_Code=stock_code,
             News_ID=i,
         ))
 

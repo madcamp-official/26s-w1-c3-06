@@ -712,11 +712,20 @@ def StockNews():
                 "news": []
             }), 200
 
+        # News_Related는 이제 Stock_Code로 연결되어 있으므로, 이름으로 들어온 요청을 코드로 바꾼다.
+        stockEntry = session.query(stock.StockEntry).filter(stock.StockEntry.Stock_Name == stockName).first()
+        if not stockEntry:
+            return jsonify({
+                "status": "success",
+                "message": "관련 뉴스가 없습니다.",
+                "news": []
+            }), 200
+
         stmt = (
             select(news.NewsEntry)
             .join(news.StockNewsEntry, news.NewsEntry.News_ID == news.StockNewsEntry.News_ID)
             .where(
-                news.StockNewsEntry.Stock_Name == stockName,
+                news.StockNewsEntry.Stock_Code == stockEntry.Stock_Code,
                 func.date(news.NewsEntry.News_Date) == latestDate
             )
             .order_by(news.NewsEntry.News_Date.desc())
