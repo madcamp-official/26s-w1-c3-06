@@ -15,6 +15,7 @@ import ranking
 import notify
 import friends
 import quiz
+import price_generator
 
 # Get the Flask app from account module
 app = account.app
