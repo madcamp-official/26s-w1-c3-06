@@ -942,6 +942,13 @@ def DeleteNotificationView():
 
     userId = data.get('userId')
     notiNum = data.get('notiNum')
+    try:
+        notiNum = int(notiNum)
+    except (TypeError, ValueError):
+        return jsonify({
+            "status": "fail",
+            "message": "삭제할 알림 번호가 올바르지 않습니다."
+        }), 400
 
     if not session.get(UserAccount, userId):
         return jsonify({

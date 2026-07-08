@@ -151,7 +151,7 @@ def ExecuteOrder(userId, stockCode, quantity, position):
             account.session.add(holding)
 
         orderEntry = logOrder(ord_res.SUCCESS)
-        notify.NotifyOrderFilled(orderEntry, stockEntry.Stock_Name)
+        notify.NotifyOrderFilled(orderEntry, stockEntry.Stock_Name, db_session=account.session)
         account.session.commit()
         return True, f"{stockEntry.Stock_Name} {quantity}주 매수 완료", {
             "balance": user.Balance, "cashBalance": CashBalance(user)
@@ -175,7 +175,7 @@ def ExecuteOrder(userId, stockCode, quantity, position):
     user.Return += realizedPnL
 
     orderEntry = logOrder(ord_res.SUCCESS)
-    notify.NotifyOrderFilled(orderEntry, stockEntry.Stock_Name)
+    notify.NotifyOrderFilled(orderEntry, stockEntry.Stock_Name, db_session=account.session)
     account.session.commit()
     return True, f"{stockEntry.Stock_Name} {quantity}주 매도 완료 (실현손익 {realizedPnL:+,}원)", {
         "balance": user.Balance, "cashBalance": CashBalance(user)

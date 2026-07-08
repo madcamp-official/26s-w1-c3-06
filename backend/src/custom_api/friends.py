@@ -89,8 +89,8 @@ def RequestFriend(fromId, toId):
 
     entry = FriendEntry(FromID=fromId, ToID=toId, status=fnd_sts.REQUESTED)
     session.add(entry)
+    notify.NotifyFriendRequest(fromUser, toUser, db_session=session)
     session.commit()
-    notify.NotifyFriendRequest(fromUser, toUser)
     return entry, toUser.Nickname + "님에게 친구 요청을 전송했습니다.", toUser.Nickname
 
 def AcceptFriend(fromId, toId):

@@ -46,6 +46,7 @@ function setupNotificationBell() {
   const dropdown = document.getElementById("notificationDropdown");
 
   loadNotifications();
+  setInterval(loadNotifications, 10000);
 
   bell.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -72,7 +73,7 @@ async function loadNotifications() {
   }
 
   try {
-    const res = await fetch(`/api/notifications?id=${encodeURIComponent(id)}`);
+    const res = await fetch(`/api/notifications?id=${encodeURIComponent(userId)}`);
     if (!res.ok) throw new Error("알림을 불러오지 못했습니다");
 
     const data = await res.json();
