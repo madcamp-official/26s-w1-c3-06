@@ -46,7 +46,7 @@ class StockEntry(Base):
     def __repr__(self):
         return f"Stock(Code: {self.Stock_Code}, Name: {self.Stock_Name}, Desc: {self.Stock_Desc})"
 
-# test required
+# !! WIP !!
 class StockPriceEntry(Base):
     __tablename__ = "Stock_DailyPrice"
 
@@ -94,12 +94,16 @@ def LatestPriceDate():
 def PriceUpToDate():
     pass
 
-# !! WIP !!
+# !! WIP - real-time stock price required !!
 @app.route('/stock-list', methods=['GET'])
 def View_List():
-
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+    
     userId = request.args.get('userId')
-    user = session.get(UserAccount, userId)
+    user = session.get(account.UserAccount, userId)
 
     if not user:
         return jsonify({
@@ -129,8 +133,8 @@ def View_List():
         mockStocksList = [{
             "name": s.Stock_Name,
             "desc": s.Stock_Desc,
-            "price": s.Close, '''블랙숄즈에 의한 실시간 가격'''
-            "changePct": (s.Close - s.Open) / s.Open * 100 if s.Open != 0 else 0 '''실시간 가격이 반영됨'''
+            "price": s.Stock_Price, '''블랙숄즈에 의한 실시간 가격'''
+            "changePct": (s.Stock_Price - s.Open) / s.Open * 100 if s.Open != 0 else 0 '''실시간 가격이 반영됨'''
         } for s in stocks]
 
         return jsonify({
@@ -147,10 +151,51 @@ def View_List():
 # !! WIP !!
 @app.route('/stock-detail', methods=['GET'])
 def View_Entry():
-    stock_code = request.args.get('stock_code')
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
 
+    userId = request.args.get('id')
+    user = session.get(account.UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "주식 시세를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    stock_code = request.args.get('stock_code')
     stock = session.get(StockEntry, stock_code)
 
+    try:
+        stmt = (
+            select(StockPriceEntry, StockEntry)
+            .join(StockEntry, StockEntry.Stock_Code == StockPriceEntry.Stock_Code)
+            .where(
+                func.date(StockPriceEntry.Trade_Date) == latestDate and StockEntry.Stock_Code == stock_code
+            )
+        )
+        targetPriceHistory = session.execute(stmt).scalars().all()
+
+        return jsonify({
+            "status": "success",
+            "message": "주식 시세를 불러왔습니다.",
+            "name": targetPriceHistory[0].Stock_Name,
+            "desc": targetPriceHistory[0].Stock_Desc,
+            "currentPrice": targetPriceHistory[-1].Stock_Price, '''블랙숄즈에 의한 실시간 가격'''
+            "changePct": (
+                    (targetPriceHistory[-1].Stock_Price - targetPriceHistory[0].Stock_Price) / 
+                    targetPriceHistory[0].Stock_Price * 100
+                    if targetPriceHistory[0].Stock_Price != 0 else 0
+                ) '''실시간 가격이 반영됨''',
+            "priceHistory": [p.Stock_Price for p in targetPriceHistory]
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "주식 시세를 불러오지 못했습니다."
+        }), 400
 
 
 if __name__ == '__main__':

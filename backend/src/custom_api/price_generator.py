@@ -1,31 +1,3 @@
-
-
-
-"""
-Real-time stock price generator using Geometric Brownian Motion (GBM),
-with live Black-Scholes option pricing and Greeks.
-
-GBM is the stochastic process the Black-Scholes model assumes for the
-underlying asset:
-
-    S(t + dt) = S(t) * exp((mu - 0.5 * sigma**2) * dt + sigma * sqrt(dt) * Z)
-
-where Z ~ N(0, 1). Each frame of the animation advances the price by one
-step and recomputes the Black-Scholes call/put price and Greeks from the
-current simulated price and the remaining time to expiry.
-
-Requirements:
-    pip install numpy matplotlib
-
-Run:
-    python black_scholes_simulator.py
-
-Controls:
-    Sliders at the bottom adjust mu, sigma, r, K live.
-    Space bar: pause / resume
-    R key: reset the simulation
-"""
-
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,10 +21,10 @@ def norm_pdf(x):
 def black_scholes(S, K, T, r, sigma):
     """Return call/put price and Greeks for the given inputs.
 
-    T is time to expiry in years. A tiny floor is applied to T to avoid
+    T is time to expiry in day. A tiny floor is applied to T to avoid
     division by zero as expiry is approached.
     """
-    T = max(T, 1.0 / (365.0 * 24.0))
+    T = max(T, 1.0 / (86400.0 * 24.0))
 
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
     d2 = d1 - sigma * math.sqrt(T)
@@ -68,8 +40,8 @@ def black_scholes(S, K, T, r, sigma):
     gamma = pdf1 / (S * sigma * math.sqrt(T))
     vega = S * pdf1 * math.sqrt(T) / 100.0            # per 1% change in vol
 
-    call_theta = (-(S * pdf1 * sigma) / (2 * math.sqrt(T)) - r * K * disc * Nd2) / 365.0
-    put_theta = (-(S * pdf1 * sigma) / (2 * math.sqrt(T)) + r * K * disc * Nnd2) / 365.0
+    call_theta = (-(S * pdf1 * sigma) / (2 * math.sqrt(T)) - r * K * disc * Nd2) / 86400.0
+    put_theta = (-(S * pdf1 * sigma) / (2 * math.sqrt(T)) + r * K * disc * Nnd2) / 86400.0
 
     call_rho = K * T * disc * Nd2 / 100.0             # per 1% change in rate
     put_rho = -K * T * disc * Nnd2 / 100.0
@@ -88,42 +60,42 @@ def black_scholes(S, K, T, r, sigma):
 # ----------------------------------------------------------------------
 
 class GBMSimulator:
-    def __init__(self, s0=100.0, mu=0.05, sigma=0.25, texp_days=30, ticks_per_life=600):
+    def __init__(self, s0=100.0, mu=0.05, sigma=0.25, texp_secs=30, ticks_per_life=8640):
         self.s0 = s0
         self.mu = mu
         self.sigma = sigma
-        self.texp_days = texp_days
+        self.texp_secs = texp_secs
         self.ticks_per_life = ticks_per_life
         self.rng = np.random.default_rng()
         self.reset()
 
     def reset(self):
         self.S = self.s0
-        self.elapsed_years = 0.0
+        self.elapsed_day = 0.0
         self.expired = False
         self.history = deque([self.s0], maxlen=self.ticks_per_life)
 
-    def total_years(self):
-        return self.texp_days / 365.0
+    def total_day(self):
+        return self.texp_secs / 86400.0
 
-    def dt_years(self):
-        return self.total_years() / self.ticks_per_life
+    def dt_day(self):
+        return self.total_day() / self.ticks_per_life
 
     def step(self):
         if self.expired:
             return
-        dt = self.dt_years()
+        dt = self.dt_day()
         z = self.rng.standard_normal()
         drift = (self.mu - 0.5 * self.sigma ** 2) * dt
         shock = self.sigma * math.sqrt(dt) * z
         self.S = self.S * math.exp(drift + shock)
-        self.elapsed_years += dt
+        self.elapsed_day += dt
         self.history.append(self.S)
-        if self.elapsed_years >= self.total_years():
+        if self.elapsed_day >= self.total_day():
             self.expired = True
 
-    def remaining_years(self):
-        return max(0.0, self.total_years() - self.elapsed_years)
+    def remaining_day(self):
+        return max(0.0, self.total_day() - self.elapsed_day)
 
 
 # ----------------------------------------------------------------------
@@ -131,7 +103,7 @@ class GBMSimulator:
 # ----------------------------------------------------------------------
 
 def main():
-    sim = GBMSimulator(s0=100.0, mu=0.05, sigma=0.25, texp_days=30)
+    sim = GBMSimulator(s0=100.0, mu=0.05, sigma=0.25, texp_secs=30)
     K0 = 100.0
     r0 = 0.04
 
@@ -207,11 +179,11 @@ def main():
         title_text.set_text(f"SIM  ${sim.S:6.2f}   {arrow}{change:.2f} ({arrow}{pct:.2f}%)")
         title_text.set_color("#35D68C" if change >= 0 else "#FF5D5D")
 
-        remaining_days = sim.remaining_years() * 365
+        remaining_secs = sim.remaining_day() * 86400
         status = "EXPIRED" if sim.expired else ("RUNNING" if state["running"] else "PAUSED")
-        info_text.set_text(f"t-to-expiry: {remaining_days:6.2f}d   status: {status}")
+        info_text.set_text(f"t-to-expiry: {remaining_secs:6.2f}d   status: {status}")
 
-        bs = black_scholes(sim.S, params["K"], sim.remaining_years(), params["r"], sim.sigma)
+        bs = black_scholes(sim.S, params["K"], sim.remaining_day(), params["r"], sim.sigma)
         call_text.set_text(
             f"CALL ${bs['call']:6.2f}  d={bs['call_delta']:+.3f}  "
             f"g={bs['gamma']:.4f}  th={bs['call_theta']:+.3f}  "

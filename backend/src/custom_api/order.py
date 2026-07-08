@@ -43,7 +43,7 @@ session = Session()
 # Core APIs 
 # ----------------------------------------------------------------------
 
-# !! WIP !!
+# test required
 class OrderEntry(Base):
     __tablename__ = "Stock_Order"
 
@@ -77,9 +77,56 @@ class OrderEntry(Base):
 # Core APIs 
 # ----------------------------------------------------------------------
 
-@app.route('/', methods=['POST'])
+@app.route('/stock-detail', methods=['POST'])
 def Create():
-    pass
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = request.args.get('id')
+    user = session.get(account.UserAccount, userId)
+
+    stock_code = request.args.get('stock_code')
+
+    tradeType = data.get('tradeType')
+    quantity = data.get('quantity')
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "주문을 요청하는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        cashBalance = 0 '''현금보유량, account의 helper 함수로 가져옴'''
+        orderId = session.query(func.max(OrderEntry.Order_ID)).scalar() + 1 if session.query(func.max(OrderEntry.Order_ID)).scalar() else 1
+
+        
+        new_order = OrderEntry(
+            Order_ID = orderId,
+            Stock_Code = stock_code,
+            ID = userId,
+            Order_Quantity = quantity,
+            Order_Position = ord_pos(tradeType),
+            Order_Result = ord_res,
+            Order_Date = Order_Date
+        )
+        session.add(new_order)
+        session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "주식을 정상적으로 주문했습니다.",
+            "order": new_order
+        }), 200 
+    except Exception as : 
+
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "주문에 실패했습니다."
+        }), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
