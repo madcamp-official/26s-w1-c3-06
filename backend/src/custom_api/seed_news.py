@@ -2,6 +2,11 @@
 seed_quiz.py와 동일한 위치/실행 방식: `python3 seed_news.py`를 custom_api 디렉터리에서 실행.
 이미 News_List에 데이터가 있으면 아무것도 하지 않는다(재실행 안전).
 """
+
+from sqlalchemy import *
+from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
+
+
 import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
