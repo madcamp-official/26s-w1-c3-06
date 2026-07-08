@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/history?userId=${encodeURIComponent(id)}`);
+    const res = await fetch(`http://localhost:5000/history?id=${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error("거래 내역을 불러오지 못했습니다");
 
     const data = await res.json();

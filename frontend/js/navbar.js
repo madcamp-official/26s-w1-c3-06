@@ -72,7 +72,7 @@ async function loadNotifications() {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/notifications?userId=${encodeURIComponent(userId)}`);
+    const res = await fetch(`http://localhost:5000/notifications?id=${encodeURIComponent(userId)}`);
     if (!res.ok) throw new Error("알림을 불러오지 못했습니다");
 
     const data = await res.json();

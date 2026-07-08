@@ -367,7 +367,7 @@ def View():
 # test required
 @app.route('/quiz', methods=['GET'])
 def DailyBailout():
-    userId = request.args.get('userId')
+    userId = request.args.get('id')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -581,7 +581,7 @@ def StockList():
 @app.route('/stock-detail', methods=['GET'])
 def StockDetail():
     stockName = request.args.get('stock')
-    userId = request.args.get('userId')  # 있으면 보유 정보도 같이 내려준다
+    userId = request.args.get('id')  # 있으면 보유 정보도 같이 내려준다
 
     stockEntry = session.query(stock.StockEntry).filter(stock.StockEntry.Stock_Name == stockName).first()
     if not stockEntry:
@@ -656,7 +656,7 @@ def PlaceOrder():
 
 @app.route('/history', methods=['GET'])
 def TransactionHistory():
-    userId = request.args.get('userId')
+    userId = request.args.get('id')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -744,7 +744,7 @@ def StockNews():
 # test required
 @app.route('/social/ranking', methods=['GET'])
 def SocialRanking():
-    userId = request.args.get('userId')
+    userId = request.args.get('id')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -838,7 +838,7 @@ def AcceptFriends():
 # test required
 @app.route('/social', methods=['GET'])
 def SocialView():
-    userId = request.args.get('userId')
+    userId = request.args.get('id')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -902,7 +902,7 @@ def DeleteFriends():
 
 @app.route('/notifications', methods=['GET'])
 def ListNotificationsView():
-    userId = request.args.get('userId')
+    userId = request.args.get('id')
     user = session.get(UserAccount, userId)
 
     if not user:
