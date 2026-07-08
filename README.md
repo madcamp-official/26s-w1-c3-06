@@ -75,7 +75,7 @@
 ### IA (정보 구조도)
 
 <p align="center">
-  <img src="./public/image/IA.png" width="900" alt="IA Diagram">
+  <img src="./public/image/IA.svg" width="100%" alt="야르 IA 정보 구조도">
 </p>
 
 ### 화면 설계 (Figma)

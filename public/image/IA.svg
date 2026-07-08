@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#747480"/>
+    </marker>
+    <style>
+      text { font-family: Pretendard, "Noto Sans KR", sans-serif; fill: #24242b; }
+      .title { font-size: 30px; font-weight: 700; }
+      .subtitle { font-size: 14px; fill: #73737e; }
+      .section { font-size: 13px; font-weight: 700; fill: #5b5fef; }
+      .node-title { font-size: 17px; font-weight: 700; }
+      .node-route { font-size: 11px; fill: #777783; }
+      .item { font-size: 14px; }
+      .line { fill: none; stroke: #747480; stroke-width: 2; marker-end: url(#arrow); }
+      .branch { fill: none; stroke: #b3b3bd; stroke-width: 1.7; }
+      .shared-line { fill: none; stroke: #5b5fef; stroke-width: 2; stroke-dasharray: 7 6; marker-end: url(#arrow); }
+      .root { fill: #5b5fef; }
+      .root-text { fill: white; font-size: 19px; font-weight: 700; }
+      .page { fill: white; stroke: #dadae2; stroke-width: 2; }
+      .auth { fill: #f6f5ff; stroke: #aaa7ff; stroke-width: 2; }
+      .home { fill: #f3f8ff; stroke: #72a7ed; stroke-width: 2; }
+      .trade { fill: #f2fbf7; stroke: #61b58c; stroke-width: 2; }
+      .social { fill: #fff8ef; stroke: #dfaa58; stroke-width: 2; }
+      .settings { fill: #fff4f5; stroke: #df7d87; stroke-width: 2; }
+      .shared { fill: #f7f7fa; stroke: #9a9aa5; stroke-width: 2; }
+      .divider { stroke: #e5e5ea; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1080" fill="#ffffff"/>
+  <text x="70" y="58" class="title">야르 IA 정보 구조도</text>
+  <text x="70" y="84" class="subtitle">모의 주식 투자 서비스의 화면 계층과 주요 이동 흐름</text>
+
+  <text x="70" y="137" class="section">AUTH</text>
+  <rect x="170" y="105" width="210" height="78" rx="8" class="auth"/>
+  <text x="275" y="137" text-anchor="middle" class="node-title">회원가입</text>
+  <text x="275" y="160" text-anchor="middle" class="node-route">signup.html</text>
+
+  <rect x="475" y="105" width="210" height="78" rx="8" class="auth"/>
+  <text x="580" y="137" text-anchor="middle" class="node-title">로그인</text>
+  <text x="580" y="160" text-anchor="middle" class="node-route">index.html</text>
+
+  <rect x="780" y="105" width="260" height="78" rx="8" class="root"/>
+  <text x="910" y="151" text-anchor="middle" class="root-text">앱 공통 영역</text>
+
+  <rect x="1230" y="105" width="260" height="78" rx="8" class="shared"/>
+  <text x="1360" y="137" text-anchor="middle" class="node-title">알림 센터</text>
+  <text x="1360" y="160" text-anchor="middle" class="node-route">주문 · 보유주식 · 친구 알림</text>
+
+  <path d="M380 144 H475" class="line"/>
+  <path d="M685 144 H780" class="line"/>
+  <path d="M1040 144 H1230" class="shared-line"/>
+
+  <text x="70" y="255" class="section">PRIMARY NAVIGATION</text>
+  <path d="M910 183 V224 H250 V286" class="branch"/>
+  <path d="M910 224 H620 V286" class="branch"/>
+  <path d="M910 224 H990 V286" class="branch"/>
+  <path d="M910 224 H1360 V286" class="branch"/>
+
+  <rect x="80" y="286" width="340" height="88" rx="8" class="home"/>
+  <text x="250" y="322" text-anchor="middle" class="node-title">홈</text>
+  <text x="250" y="347" text-anchor="middle" class="node-route">home.html · 자산 현황 및 학습</text>
+
+  <rect x="450" y="286" width="340" height="88" rx="8" class="trade"/>
+  <text x="620" y="322" text-anchor="middle" class="node-title">주식 거래</text>
+  <text x="620" y="347" text-anchor="middle" class="node-route">trading.html · 종목 탐색</text>
+
+  <rect x="820" y="286" width="340" height="88" rx="8" class="social"/>
+  <text x="990" y="322" text-anchor="middle" class="node-title">소셜</text>
+  <text x="990" y="347" text-anchor="middle" class="node-route">social.html · 친구 및 랭킹</text>
+
+  <rect x="1190" y="286" width="340" height="88" rx="8" class="settings"/>
+  <text x="1360" y="322" text-anchor="middle" class="node-title">설정</text>
+  <text x="1360" y="347" text-anchor="middle" class="node-route">settings.html · 계정 관리</text>
+
+  <path d="M250 374 V414" class="line"/>
+  <path d="M620 374 V414" class="line"/>
+  <path d="M990 374 V414" class="line"/>
+  <path d="M1360 374 V414" class="line"/>
+
+  <rect x="80" y="414" width="340" height="430" rx="8" class="page"/>
+  <text x="105" y="452" class="node-title">홈 주요 기능</text>
+  <line x1="105" y1="470" x2="395" y2="470" class="divider"/>
+  <text x="112" y="510" class="item">• 총자산 · 현금 · 수익 현황</text>
+  <text x="112" y="550" class="item">• 보유 종목 목록</text>
+  <text x="112" y="590" class="item">• 관련 뉴스</text>
+  <text x="112" y="630" class="item">• 일일 기본소득 받기</text>
+  <text x="112" y="670" class="item">• 퀴즈 참여</text>
+  <text x="112" y="710" class="item">• 최근 거래 내역</text>
+  <rect x="110" y="746" width="280" height="68" rx="7" class="home"/>
+  <text x="250" y="775" text-anchor="middle" class="node-title">거래 내역</text>
+  <text x="250" y="798" text-anchor="middle" class="node-route">history.html</text>
+
+  <rect x="450" y="414" width="340" height="430" rx="8" class="page"/>
+  <text x="475" y="452" class="node-title">거래 주요 기능</text>
+  <line x1="475" y1="470" x2="765" y2="470" class="divider"/>
+  <text x="482" y="510" class="item">• 종목명 검색</text>
+  <text x="482" y="550" class="item">• 현재가 · 등락률 목록</text>
+  <rect x="480" y="594" width="280" height="86" rx="7" class="trade"/>
+  <text x="620" y="627" text-anchor="middle" class="node-title">종목 상세</text>
+  <text x="620" y="652" text-anchor="middle" class="node-route">stock-detail.html</text>
+  <path d="M620 680 V720" class="line"/>
+  <rect x="480" y="720" width="130" height="70" rx="7" class="trade"/>
+  <text x="545" y="762" text-anchor="middle" class="item">매수</text>
+  <rect x="630" y="720" width="130" height="70" rx="7" class="trade"/>
+  <text x="695" y="762" text-anchor="middle" class="item">매도</text>
+  <text x="620" y="820" text-anchor="middle" class="node-route">주문 결과 안내</text>
+
+  <rect x="820" y="414" width="340" height="430" rx="8" class="page"/>
+  <text x="845" y="452" class="node-title">소셜 주요 기능</text>
+  <line x1="845" y1="470" x2="1135" y2="470" class="divider"/>
+  <text x="852" y="510" class="item">• 친구 ID 검색 및 요청</text>
+  <text x="852" y="550" class="item">• 친구 요청 수락 · 거절</text>
+  <text x="852" y="590" class="item">• 친구 목록 및 삭제</text>
+  <rect x="850" y="635" width="280" height="68" rx="7" class="social"/>
+  <text x="990" y="677" text-anchor="middle" class="item">친구 수익률 랭킹</text>
+  <rect x="850" y="723" width="280" height="68" rx="7" class="social"/>
+  <text x="990" y="765" text-anchor="middle" class="item">전체 사용자 랭킹</text>
+
+  <rect x="1190" y="414" width="340" height="430" rx="8" class="page"/>
+  <text x="1215" y="452" class="node-title">설정 주요 기능</text>
+  <line x1="1215" y1="470" x2="1505" y2="470" class="divider"/>
+  <text x="1222" y="510" class="item">• 프로필 사진 변경 · 삭제</text>
+  <text x="1222" y="550" class="item">• 닉네임 변경 및 중복 확인</text>
+  <text x="1222" y="590" class="item">• 비밀번호 변경</text>
+  <rect x="1220" y="635" width="280" height="68" rx="7" class="settings"/>
+  <text x="1360" y="677" text-anchor="middle" class="item">로그아웃</text>
+  <rect x="1220" y="723" width="280" height="68" rx="7" class="settings"/>
+  <text x="1360" y="765" text-anchor="middle" class="item">계정 삭제</text>
+
+  <text x="70" y="914" class="section">CROSS-FLOW</text>
+  <rect x="80" y="938" width="1450" height="92" rx="8" class="shared"/>
+  <text x="110" y="975" class="item">보유 종목 선택</text>
+  <path d="M235 970 H420" class="line"/>
+  <text x="445" y="975" class="item">종목 상세</text>
+  <text x="690" y="975" class="item">알림 선택</text>
+  <path d="M780 970 H930" class="line"/>
+  <text x="955" y="975" class="item">거래 내역 · 종목 상세 · 소셜</text>
+  <text x="110" y="1008" class="node-route">홈과 주식 거래 화면에서 종목 상세로 진입할 수 있으며, 알림 유형에 따라 관련 화면으로 이동합니다.</text>
+</svg>
