@@ -5,7 +5,6 @@ from sqlalchemy import *
 from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 import random
-from math import floor
 from datetime import datetime, time, date
 from typing import Optional
 from zoneinfo import ZoneInfo
@@ -385,8 +384,11 @@ def DailyBailout():
 
     try:
         # Show a quiz
-        quizLength = session.query(quiz.QuizEntry).count()
-        quizRanNum = floor(random.random() * quizLength)
+        quizNums = [row[0] for row in session.query(quiz.QuizEntry.Quiz_Num).all()]
+        if not quizNums:
+            raise ValueError("No quiz questions found")
+
+        quizRanNum = random.choice(quizNums)
         quizToday = quiz.Show(quizRanNum)
 
         if not quizToday:
