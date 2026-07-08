@@ -239,8 +239,8 @@ input::placeholder {
 
 .auth-logo {
   display: block;
-  width: 62px;
-  height: 78px;
+  width: 160px;
+  height: 74px;
   object-fit: contain;
   margin: 0 auto 10px;
 }
@@ -840,15 +840,9 @@ input::placeholder {
 
 .navbar-brand-image {
   display: block;
-  width: 25px;
-  height: 34px;
+  width: 76px;
+  height: 42px;
   object-fit: contain;
-}
-
-.navbar-logo {
-  font-weight: 700;
-  font-size: 15px;
-  white-space: nowrap;
 }
 
 .navbar-tab {

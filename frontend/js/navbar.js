@@ -20,8 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <nav class="navbar">
       <div class="navbar-left">
         <a href="home.html" class="navbar-brand" aria-label="야르 홈">
-          <img class="navbar-brand-image" src="image/yar-logo.png" alt="" />
-          <span class="navbar-logo">야르</span>
+          <img class="navbar-brand-image" src="image/yar-logo.png" alt="야르" />
         </a>
         ${tabsHtml}
       </div>
