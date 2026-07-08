@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   // 페이지를 연 뒤 수신한 가격을 최근 10분 동안 누적해 실시간 흐름을 그린다.
-  let chartState = initChartState(stockData.currentPrice);
+  let chartState = initChartState(stockData.currentPrice, stockData.intradayHistory);
 
   renderStockHeader(stockData);
   renderHolding(stockData.name, buildHoldingView(holding, stockData.currentPrice));
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /**
- * @returns {Promise<{status, message, stock}>} stock: {stockCode, name, desc, currentPrice, changePct, priceHistory, holding}
+ * @returns {Promise<{status, message, stock}>} stock: {stockCode, name, desc, currentPrice, changePct, priceHistory, intradayHistory, holding}
  */
 async function fetchStockDetail(stockName, id) {
   const res = await fetch(
@@ -332,10 +332,30 @@ function updateOhlcLabels(stock) {
   document.getElementById("nowPriceLabel").innerText = formatWon(stock.currentPrice);
 }
 
-/** 실제로 수신한 현재가 한 점으로 그래프 상태를 초기화한다. */
-function initChartState(currentPrice) {
+/** 서버가 준비한 최근 10분 이력에 현재가를 이어 그래프 상태를 초기화한다. */
+function initChartState(currentPrice, intradayHistory = []) {
+  const cutoff = chartNowSeconds() - CHART_WINDOW_SECONDS;
+  const points = intradayHistory
+    .filter(point =>
+      Number.isFinite(Number(point.timestamp)) &&
+      Number.isFinite(Number(point.price)) &&
+      Number(point.timestamp) >= cutoff
+    )
+    .map(point => ({
+      t: Number(point.timestamp),
+      price: Number(point.price),
+    }))
+    .sort((a, b) => a.t - b.t);
+
+  const lastPoint = points[points.length - 1];
+  if (!lastPoint || chartNowSeconds() - lastPoint.t > 0.5) {
+    points.push({ t: chartNowSeconds(), price: currentPrice });
+  } else {
+    lastPoint.price = currentPrice;
+  }
+
   return {
-    points: [{ t: chartNowSeconds(), price: currentPrice }],
+    points,
   };
 }
 

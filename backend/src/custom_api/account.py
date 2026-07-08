@@ -582,6 +582,8 @@ def StockList():
 
 @app.route('/stock-detail', methods=['GET'])
 def StockDetail():
+    import price_generator
+
     stockName = request.args.get('stock')
     userId = request.args.get('id')  # 있으면 보유 정보도 같이 내려준다
 
@@ -606,6 +608,7 @@ def StockDetail():
             "k": float(params.K) if params else None,
             "changePct": stock.DailyChangePct(stockEntry.Stock_Code),
             "priceHistory": stock.PriceHistory(stockEntry.Stock_Code, days=5),
+            "intradayHistory": price_generator.GetRecentPrices(stockEntry.Stock_Code),
         }
 
         if userId:
