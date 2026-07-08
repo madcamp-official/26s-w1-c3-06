@@ -124,12 +124,14 @@ def EnsureTodaySnapshotAndReturn(user):
     return stockDelta
 
 def ReturnPct(user, stockDelta):
-    ''' 순수 주식 손익(원단위)을 어제 종가 총자산 대비 퍼센트(소수점 첫째자리)로 환산한다 '''
+    ''' 순수 주식 손익(원단위)을 어제 종가 총자산 대비 퍼센트로 환산한다. 소수점 4자리까지
+    정밀도를 유지하고(다른 계산에 재사용할 수 있도록), 화면에 몇 자리를 보여줄지는
+    프론트(social.js)가 정한다. '''
     today = account.Midnight(datetime.now().astimezone())
     prevSnapshot = PrevSnapshot(user, today)
     if not prevSnapshot or not prevSnapshot.Total_Asset:
         return 0.0
-    return round(stockDelta / prevSnapshot.Total_Asset * 100, 1)
+    return round(stockDelta / prevSnapshot.Total_Asset * 100, 4)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

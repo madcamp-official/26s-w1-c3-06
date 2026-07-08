@@ -16,6 +16,7 @@ app = Flask(__name__)
 # internal API imports
 import account
 import stock
+import notify
 
 # define custom types
 class ord_pos(Enum):
@@ -118,7 +119,7 @@ def ExecuteOrder(userId, stockCode, quantity, position):
     orderDate = datetime.now().astimezone()
 
     def logOrder(result):
-        account.session.add(OrderEntry(
+        entry = OrderEntry(
             Order_ID=NextOrderId(),
             Stock_Code=stockCode,
             Buyer_ID=userId,
@@ -127,7 +128,10 @@ def ExecuteOrder(userId, stockCode, quantity, position):
             Order_Result=result,
             Order_Date=orderDate,
             Order_Price=price,
-        ))
+        )
+        account.session.add(entry)
+        account.session.flush()  # Notification_Order가 참조할 Stock_Order 행을 먼저 실제로 insert해둔다
+        return entry
 
     if position == "BTO":
         cash = CashBalance(user)
@@ -148,7 +152,8 @@ def ExecuteOrder(userId, stockCode, quantity, position):
             )
             account.session.add(holding)
 
-        logOrder(ord_res.SUCCESS)
+        orderEntry = logOrder(ord_res.SUCCESS)
+        notify.NotifyOrderFilled(orderEntry, stockEntry.Stock_Name)
         account.session.commit()
         return True, f"{stockEntry.Stock_Name} {quantity}주 매수 완료", {
             "balance": user.Balance, "cashBalance": CashBalance(user)
@@ -171,7 +176,8 @@ def ExecuteOrder(userId, stockCode, quantity, position):
     user.Balance += realizedPnL
     user.Return += realizedPnL
 
-    logOrder(ord_res.SUCCESS)
+    orderEntry = logOrder(ord_res.SUCCESS)
+    notify.NotifyOrderFilled(orderEntry, stockEntry.Stock_Name)
     account.session.commit()
     return True, f"{stockEntry.Stock_Name} {quantity}주 매도 완료 (실현손익 {realizedPnL:+,}원)", {
         "balance": user.Balance, "cashBalance": CashBalance(user)

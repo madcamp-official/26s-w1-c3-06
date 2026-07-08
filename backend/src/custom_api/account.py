@@ -310,9 +310,9 @@ def View():
 
             marketValue = holding.Own_Quantity * Decimal(currentPrice)
             profitLoss = (Decimal(currentPrice) - holding.Own_Avg) * holding.Own_Quantity
-            returnPct = (profitLoss / costBasis * 100).quantize(Decimal('0.1')) if costBasis else Decimal('0.0')
+            returnPct = (profitLoss / costBasis * 100).quantize(Decimal('0.01')) if costBasis else Decimal('0.00')
             if returnPct == 0:
-                returnPct = Decimal('0.0')  # quantize가 만드는 "-0.0" 표시 방지
+                returnPct = Decimal('0.00')  # quantize가 만드는 "-0.00" 표시 방지
 
             # mockHoldings
             mockHolding = {

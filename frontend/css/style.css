@@ -336,7 +336,14 @@ input::placeholder {
 }
 
 .holding-info { display: flex; align-items: center; gap: 10px; }
-.holding-logo { width: 32px; height: 32px; border-radius: 6px; background: var(--color-border); flex-shrink: 0; }
+.holding-logo {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  background-color: var(--color-border);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
 .holding-name { font-size: 13px; font-weight: 600; }
 .holding-desc { font-size: 10px; color: var(--color-text-secondary); }
 .holding-value { font-size: 13px; font-weight: 600; }

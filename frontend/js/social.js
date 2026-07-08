@@ -166,7 +166,7 @@ function renderRanking(containerId, rankingList) {
         <span class="rank-number">${r.rank}</span>
         <div class="avatar-circle"${avatarStyleAttr(r.profileImage)}></div>
         <span class="ranking-name ${r.isMe ? 'me' : ''}">${r.name}</span>
-        <span class="ranking-pct ${pctClass}">${sign}${r.pct}%</span>
+        <span class="ranking-pct ${pctClass}">${sign}${r.pct.toFixed(2)}%</span>
       </div>
     `;
   }).join("");

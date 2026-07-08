@@ -127,7 +127,7 @@ function renderHoldings(holdings) {
   listEl.innerHTML = holdings.map(h => `
     <div class="holding-row" data-stock-name="${h.name}" style="cursor:pointer;">
       <div class="holding-info">
-        <div class="holding-logo"></div>
+        <div class="holding-logo" style="background-image: url('logos/${encodeURIComponent(h.name)}.png')"></div>
         <div>
           <p class="holding-name">${h.name}</p>
           <p class="holding-desc">${h.desc}</p>
@@ -135,7 +135,7 @@ function renderHoldings(holdings) {
       </div>
       <span class="align-right holding-value">${h.value.toLocaleString()}원</span>
       <span class="align-right holding-return" style="color:${h.returnPct >= 0 ? 'var(--color-up)' : 'var(--color-down)'}">
-        ${h.returnPct >= 0 ? '+' : ''}${h.returnPct}%
+        ${h.returnPct >= 0 ? '+' : ''}${Number(h.returnPct).toFixed(2)}%
       </span>
     </div>
   `).join("");
