@@ -1,27 +1,26 @@
-"""data/news.json을 News_List / News_Related / (필요시) Stock_List에 적재하는 1회성 시드 스크립트.
-seed_quiz.py와 동일한 위치/실행 방식: `python3 seed_news.py`를 custom_api 디렉터리에서 실행.
-이미 News_List에 데이터가 있으면 아무것도 하지 않는다(재실행 안전).
+"""Seed news rows and stock-news relationships from data/news.json.
+
+Stock names in news.json are converted to stock codes through
+data/seed_prices.json before News_Related rows are inserted.
 """
-
-from sqlalchemy import *
-from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
-
 
 import json
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import account
-import stock
 import news
+import stock
 
 KST = ZoneInfo("Asia/Seoul")
+DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
 def run():
-    with open("data/news.json", encoding="utf-8") as f:
+    with open(DATA_DIR / "news.json", encoding="utf-8") as f:
         articles = json.load(f)
-    with open("data/seed_prices.json", encoding="utf-8") as f:
+    with open(DATA_DIR / "seed_prices.json", encoding="utf-8") as f:
         name_to_code = json.load(f)
 
     if account.session.query(news.NewsEntry).count() > 0:
@@ -29,23 +28,32 @@ def run():
         return
 
     stock_names = sorted(set(a["stock_name"] for a in articles))
+    missing_names = [name for name in stock_names if name not in name_to_code]
+    if missing_names:
+        raise ValueError(f"Missing stock codes in seed_prices.json: {missing_names}")
+
     for name in stock_names:
-        account.session.add(stock.StockEntry(Stock_Code=name_to_code[name], Stock_Name=name))
+        stock_code = name_to_code[name]
+        existing_stock = account.session.get(stock.StockEntry, stock_code)
+        if existing_stock is None:
+            account.session.add(stock.StockEntry(Stock_Code=stock_code, Stock_Name=name))
+        elif not existing_stock.Stock_Name:
+            existing_stock.Stock_Name = name
     account.session.commit()
 
     ord_counters = {}
     for i, a in enumerate(articles, start=1):
+        stock_code = name_to_code[a["stock_name"]]
         news_date = datetime.strptime(a["news_date"], "%Y-%m-%d").replace(tzinfo=KST)
 
         account.session.add(news.NewsEntry(
             ID=i,
             title=a["news_title"],
             body=a["news_body"],
-            publisher=a["publisher"][:10],  # Publisher 컬럼이 VARCHAR(10)이라 잘라서 저장
+            publisher=a["publisher"][:10],
             news_date=news_date,
         ))
 
-        stock_code = name_to_code[a["stock_name"]]
         ord_counters[stock_code] = ord_counters.get(stock_code, 0) + 1
         account.session.add(news.StockNewsEntry(
             Related_Ord=ord_counters[stock_code],
