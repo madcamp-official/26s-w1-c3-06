@@ -33,10 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     quantity: 1,
   };
 
-  // 그래프에 "확정"되는 점은 5분(300초) 단위로만 늘어난다. 그 사이에는 liveHead가 매초
-  // 시세를 따라 움직이며 그래프의 머리 역할만 하고, 5분 슬롯이 넘어가는 순간 그 직전
-  // liveHead 값이 그대로 확정점으로 고정된다 (초 단위 시세를 전부 찍으면 그래프가 난잡해짐).
-  let chartState = initChartState(stockData.openPrice, stockData.currentPrice);
+  // 페이지를 연 뒤 수신한 가격을 최근 10분 동안 누적해 실시간 흐름을 그린다.
+  let chartState = initChartState(stockData.currentPrice);
 
   renderStockHeader(stockData);
   renderHolding(stockData.name, buildHoldingView(holding, stockData.currentPrice));
@@ -308,12 +306,19 @@ function updateTradeAmount(price, quantity) {
   document.getElementById("tradeAmount").innerText = (price * quantity).toLocaleString() + "원";
 }
 
-const SECONDS_PER_DAY = 86400;
-const CHART_SLOT_SECONDS = 300; // 그래프에 새 점이 "확정"되는 간격 (5분)
+const CHART_WINDOW_SECONDS = 10 * 60;
+const CHART_X_TICK_COUNT = 6;
 
-function secondsSinceMidnight() {
-  const now = new Date();
-  return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+function chartNowSeconds() {
+  return Date.now() / 1000;
+}
+
+function formatChartTime(timestamp) {
+  return new Date(timestamp * 1000).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function formatWon(price) {
@@ -327,46 +332,31 @@ function updateOhlcLabels(stock) {
   document.getElementById("nowPriceLabel").innerText = formatWon(stock.currentPrice);
 }
 
-/**
- * 그래프 상태를 초기화한다. confirmedPoints는 5분 슬롯 경계마다 "확정"된 점들이고,
- * liveHead는 아직 안 끝난 현재 슬롯에서 매초 시세를 따라 움직이는 그래프의 머리다.
- * 자정부터 지금까지 지난 완료 슬롯은 실제 이력이 없으므로(하루 중간에 페이지를 열었을 수도
- * 있음) 전부 시가로 수평 채운다.
- */
-function initChartState(openPrice, currentPrice) {
-  const nowT = secondsSinceMidnight();
-  const slotIndex = Math.floor(nowT / CHART_SLOT_SECONDS);
-
-  const confirmedPoints = [{ t: 0, price: openPrice }];
-  for (let i = 1; i < slotIndex; i++) {
-    confirmedPoints.push({ t: i * CHART_SLOT_SECONDS, price: openPrice });
-  }
-
+/** 실제로 수신한 현재가 한 점으로 그래프 상태를 초기화한다. */
+function initChartState(currentPrice) {
   return {
-    confirmedPoints,
-    liveHead: { t: nowT, price: currentPrice },
-    slotIndex,
+    points: [{ t: chartNowSeconds(), price: currentPrice }],
   };
 }
 
-/** 매초 폴링마다 호출. 5분 슬롯을 넘었으면 직전 liveHead 값을 확정점으로 고정한다. */
+/** 폴링으로 받은 가격을 추가하고 최근 10분보다 오래된 점을 제거한다. */
 function advanceChartState(chartState, newPrice) {
-  const nowT = secondsSinceMidnight();
-  const newSlotIndex = Math.floor(nowT / CHART_SLOT_SECONDS);
+  const nowT = chartNowSeconds();
+  const lastPoint = chartState.points[chartState.points.length - 1];
 
-  while (chartState.slotIndex < newSlotIndex) {
-    chartState.slotIndex += 1;
-    chartState.confirmedPoints.push({
-      t: chartState.slotIndex * CHART_SLOT_SECONDS,
-      price: chartState.liveHead.price, // 슬롯이 넘어가기 직전까지의 마지막 시세로 확정
-    });
+  if (lastPoint && nowT - lastPoint.t < 0.5) {
+    lastPoint.t = nowT;
+    lastPoint.price = newPrice;
+  } else {
+    chartState.points.push({ t: nowT, price: newPrice });
   }
 
-  chartState.liveHead = { t: nowT, price: newPrice };
+  const cutoff = nowT - CHART_WINDOW_SECONDS;
+  chartState.points = chartState.points.filter(point => point.t >= cutoff);
 }
 
 function chartDrawPoints(chartState) {
-  return chartState.confirmedPoints.concat([chartState.liveHead]);
+  return chartState.points;
 }
 
 /** 실제 표시 범위에 맞춰 1, 2, 5 단위의 읽기 좋은 눈금 간격을 고른다. */
@@ -413,8 +403,8 @@ function computeYAxisRange(prices, referencePrice) {
 }
 
 /**
- * 그래프를 그린다: 가로축(시간, 6시간 간격 라벨) / 세로축(원 단위 가격, 격자+ 라벨) +
- * 가격 선(상승=빨강/하락=파랑) + 현재가 라벨(오른쪽 끝점 근처, 같은 색).
+ * 그래프를 그린다: 최근 10분 가로축 / 가격에 맞춘 세로축 / 상승·하락 가격선과 영역 +
+ * 현재가 라벨(오른쪽 끝점 근처, 같은 색).
  */
 function renderChart(chartState, stock) {
   const canvas = document.getElementById("priceChart");
@@ -435,7 +425,9 @@ function renderChart(chartState, stock) {
   const w = canvas.width - paddingLeft - paddingRight;
   const h = canvas.height - paddingTop - paddingBottom;
 
-  const toX = (t) => paddingLeft + (t / SECONDS_PER_DAY) * w;
+  const xMax = chartNowSeconds();
+  const xMin = xMax - CHART_WINDOW_SECONDS;
+  const toX = (t) => paddingLeft + ((t - xMin) / CHART_WINDOW_SECONDS) * w;
   const toY = (price) => paddingTop + h - ((price - yMin) / (yMax - yMin)) * h;
 
   // 세로축: 격자선 + 원 단위 라벨
@@ -454,17 +446,46 @@ function renderChart(chartState, stock) {
     ctx.fillText(Math.round(price).toLocaleString(), paddingLeft - 8, y);
   });
 
-  // 가로축: 6시간 간격 시각 라벨
-  ctx.textAlign = "center";
+  // 가로축: 최근 10분을 2분 간격으로 표시한다.
   ctx.textBaseline = "top";
-  for (let hour = 0; hour <= 24; hour += 6) {
-    const x = toX(hour * 3600);
-    ctx.fillText(`${String(hour).padStart(2, "0")}:00`, x, paddingTop + h + 6);
+  for (let i = 0; i < CHART_X_TICK_COUNT; i++) {
+    const ratio = i / (CHART_X_TICK_COUNT - 1);
+    const timestamp = xMin + CHART_WINDOW_SECONDS * ratio;
+    const x = paddingLeft + w * ratio;
+
+    ctx.strokeStyle = "#F3F3F6";
+    ctx.beginPath();
+    ctx.moveTo(x, paddingTop);
+    ctx.lineTo(x, paddingTop + h);
+    ctx.stroke();
+
+    ctx.fillStyle = "#9B9BA3";
+    ctx.textAlign = i === 0 ? "left" : i === CHART_X_TICK_COUNT - 1 ? "right" : "center";
+    ctx.fillText(formatChartTime(timestamp), x, paddingTop + h + 6);
   }
 
   // 가격 선
   const isUp = points[points.length - 1].price >= points[0].price;
   const color = isUp ? "#E23744" : "#1E6FEE"; // --color-up / --color-down
+  if (points.length > 1) {
+    const areaGradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + h);
+    areaGradient.addColorStop(0, isUp ? "rgba(226, 55, 68, 0.14)" : "rgba(30, 111, 238, 0.14)");
+    areaGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+    ctx.fillStyle = areaGradient;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = toX(p.t);
+      const y = toY(p.price);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.lineTo(toX(points[points.length - 1].t), paddingTop + h);
+    ctx.lineTo(toX(points[0].t), paddingTop + h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
