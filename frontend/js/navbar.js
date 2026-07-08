@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   navbarEl.innerHTML = `
     <nav class="navbar">
       <div class="navbar-left">
-        <span class="navbar-logo">모의투자</span>
+        <span class="navbar-logo">야르</span>
         ${tabsHtml}
       </div>
       <div class="navbar-right">
