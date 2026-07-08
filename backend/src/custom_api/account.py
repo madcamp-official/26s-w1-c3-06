@@ -42,6 +42,7 @@ import news
 import quiz
 import ranking
 import friends
+import notify
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
@@ -705,6 +706,55 @@ def DeleteFriends():
         return jsonify({"status": "fail", "message": "삭제할 관계를 찾지 못했습니다."}), 400
 
     return jsonify({"status": "success", "message": "친구 관계가 삭제되었습니다."}), 200
+
+@app.route('/notifications', methods=['GET'])
+def ListNotificationsView():
+    userId = request.args.get('userId')
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "알림을 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        notifications = notify.ListNotifications(userId)
+        return jsonify({
+            "status": "success",
+            "message": "알림을 성공적으로 불러왔습니다.",
+            "notifications": notifications
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "fail",
+            "message": "알림을 불러오지 못했습니다."
+        }), 400
+
+@app.route('/notifications/delete', methods=['POST'])
+def DeleteNotificationView():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    userId = data.get('userId')
+    notiNum = data.get('notiNum')
+
+    if not session.get(UserAccount, userId):
+        return jsonify({
+            "status": "fail",
+            "message": "다시 로그인해 주세요."
+        }), 401
+
+    deleted = notify.DeleteNotification(notiNum, userId)
+    if not deleted:
+        return jsonify({
+            "status": "fail",
+            "message": "삭제할 알림을 찾지 못했습니다."
+        }), 400
+
+    return jsonify({"status": "success", "message": "알림을 삭제했습니다."}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, port=5000)

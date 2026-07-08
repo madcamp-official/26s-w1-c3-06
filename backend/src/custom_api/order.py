@@ -57,7 +57,7 @@ class OrderEntry(Base):
     )
 
     # default profile is embedded in website
-    def __init__(self, Order_ID, Stock_Code, Buyer_ID="", Order_Quantity=0, Order_Position, Order_Result, Order_Date):
+    def __init__(self, Order_ID=0, Stock_Code=0, Buyer_ID="", Order_Quantity=0, Order_Position=None, Order_Result=None, Order_Date=None):
         self.Order_ID = Order_ID
         self.Stock_Code = Stock_Code
         self.ID = Buyer_ID
