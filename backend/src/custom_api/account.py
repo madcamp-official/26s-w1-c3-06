@@ -753,8 +753,9 @@ def StockNews():
 
 # test required
 @app.route('/social/ranking', methods=['GET'])
+@app.route('/api/social/ranking', methods=['GET'])
 def SocialRanking():
-    userId = request.args.get('id')
+    userId = request.args.get('id') or request.args.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -768,9 +769,8 @@ def SocialRanking():
 
         entries = []
         for u in allUsers:
-            wonDelta = ranking.EnsureTodaySnapshotAndReturn(u)
-            pct = ranking.ReturnPct(u, wonDelta)
-            entries.append({"user": u, "pct": pct})
+            profit, pct = ranking.CurrentStockReturn(u)
+            entries.append({"user": u, "profit": profit, "pct": pct})
 
         entries.sort(key=lambda e: e["pct"], reverse=True)
 
@@ -780,6 +780,7 @@ def SocialRanking():
                     "rank": i + 1,
                     "name": e["user"].Nickname,
                     "pct": e["pct"],
+                    "profit": e["profit"],
                     "isMe": e["user"].ID == userId,
                     # Profile은 bytea에 "data:image/...;base64,..." 문자열을 그대로 저장해둔 것이라
                     # utf-8로 디코드하면 <img src="">에 바로 쓸 수 있는 data URL이 된다.
@@ -808,6 +809,7 @@ def SocialRanking():
 
 # test required
 @app.route('/social/request-friends', methods=['POST'])
+@app.route('/api/social/request-friends', methods=['POST'])
 def RequestFriends():
     if request.is_json:
         data = request.get_json()
@@ -830,6 +832,7 @@ def RequestFriends():
 
 # test required
 @app.route('/social/accept-friends', methods=['POST'])
+@app.route('/api/social/accept-friends', methods=['POST'])
 def AcceptFriends():
     if request.is_json:
         data = request.get_json()
@@ -847,8 +850,9 @@ def AcceptFriends():
 
 # test required
 @app.route('/social', methods=['GET'])
+@app.route('/api/social', methods=['GET'])
 def SocialView():
-    userId = request.args.get('id')
+    userId = request.args.get('id') or request.args.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:
@@ -895,6 +899,7 @@ def SocialView():
 
 # test required
 @app.route('/social/delete-friends', methods=['POST'])
+@app.route('/api/social/delete-friends', methods=['POST'])
 def DeleteFriends():
     if request.is_json:
         data = request.get_json()

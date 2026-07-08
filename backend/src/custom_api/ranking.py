@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, sessionmaker, DeclarativeBase, Mapped, 
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from decimal import Decimal
 
 from flask import Flask, request, jsonify
 
@@ -14,6 +15,7 @@ app = Flask(__name__)
 # internal API imports
 import account
 import friends
+import stock
 
 # User_Info(계좌)를 FK로 참조하는 모델(RankingEntry, DailySnapshot)이 있어서, 같은 metadata를 쓰도록
 # account.py의 Base를 그대로 공유한다 (독자적인 Base를 쓰면 FK 문자열 "User_Info.ID"가 이 모듈의
@@ -132,6 +134,46 @@ def ReturnPct(user, stockDelta):
     if not prevSnapshot or not prevSnapshot.Total_Asset:
         return 0.0
     return round(stockDelta / prevSnapshot.Total_Asset * 100, 4)
+
+def CurrentStockReturn(user):
+    '''현재 보유 중인 주식의 평가손익과 수익률을 계산한다.
+
+    Balance/User_Ranking/Daily_Snapshot은 퀴즈 보상, 실현손익, 조회 시점에 따라
+    현재 보유 주식의 평가 수익률과 어긋날 수 있으므로 소셜 랭킹은 보유 종목의
+    평균매수가와 최신 현재가를 직접 비교한다.
+    '''
+    holdings = (
+        account.session.query(account.AccountStock)
+        .filter(account.AccountStock.ID == user.ID)
+        .populate_existing()
+        .all()
+    )
+
+    totalCost = Decimal("0")
+    totalProfit = Decimal("0")
+
+    for holding in holdings:
+        quantity = holding.Own_Quantity or 0
+        if quantity <= 0:
+            continue
+
+        avgPrice = Decimal(holding.Own_Avg or 0)
+        costBasis = avgPrice * quantity
+        if costBasis <= 0:
+            continue
+
+        currentPrice = stock.CurrentPrice(holding.Stock_Code)
+        if currentPrice is None:
+            currentPrice = avgPrice
+
+        totalCost += costBasis
+        totalProfit += (Decimal(currentPrice) - avgPrice) * quantity
+
+    if totalCost <= 0:
+        return 0, 0.0
+
+    pct = round(float(totalProfit / totalCost * Decimal("100")), 4)
+    return int(round(totalProfit)), pct
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
