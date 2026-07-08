@@ -22,6 +22,8 @@ def run():
         articles = json.load(f)
     with open(DATA_DIR / "seed_prices.json", encoding="utf-8") as f:
         name_to_code = json.load(f)
+    with open(DATA_DIR / "desc.json", encoding="utf-8") as f:
+        name_to_desc = json.load(f)
 
     if account.session.query(news.NewsEntry).count() > 0:
         print("News_List already has data, skipping seed.")
@@ -33,10 +35,17 @@ def run():
         raise ValueError(f"Missing stock codes in seed_prices.json: {missing_names}")
 
     for name in stock_names:
-        stock_code = name_to_code[name]
+        stock_code, stock_desc = name_to_code[name], name_to_desc[name]
         existing_stock = account.session.get(stock.StockEntry, stock_code)
         if existing_stock is None:
-            account.session.add(stock.StockEntry(Stock_Code=stock_code, Stock_Name=name))
+            file_path="../../../frontend/public/stock_logos/" + name + ".png"
+            with open(file_path, "rb") as f:
+                logo_bytes = f.read()
+                account.session.add(stock.StockEntry(
+                    Stock_Code=stock_code,
+                    Stock_Name=name,
+                    Stock_Desc=stock_desc,
+                    Stock_Logo=logo_bytes))
         elif not existing_stock.Stock_Name:
             existing_stock.Stock_Name = name
     account.session.commit()
