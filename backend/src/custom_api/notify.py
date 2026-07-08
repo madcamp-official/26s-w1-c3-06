@@ -13,9 +13,7 @@ app = Flask(__name__)
 import account
 import stock
 
-# create engine
-class Base(DeclarativeBase):
-    pass
+from account import Base
 
 # 이 모듈만의 별도 세션(별도 커넥션/트랜잭션)을 두면, order.py가 같은 요청 안에서 이미 flush해둔
 # (아직 커밋 전인) Stock_Order 행이 그 세션에서는 안 보여서 FK 위반이 난다 (서로 다른 트랜잭션이라

@@ -17,9 +17,7 @@ import stock
 import order
 import friends
 
-# create engine
-class Base(DeclarativeBase):
-    pass
+from account import Base
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"

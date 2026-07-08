@@ -12,10 +12,7 @@ app = Flask(__name__)
 
 # internal API imports
 import account
-
-# create engine
-class Base(DeclarativeBase):
-    pass
+from account import Base
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mockinvest"
