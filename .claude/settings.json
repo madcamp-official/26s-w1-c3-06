@@ -89,7 +89,29 @@
       "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT \"Stock_Name\", count\\(*\\) FROM \"News_Related\" GROUP BY \"Stock_Name\" ORDER BY 2 DESC LIMIT 5;')",
       "Bash(curl -s \"http://localhost:5000/stock/news?stock=삼성전자\")",
       "Bash(curl -s -G \"http://localhost:5000/stock/news\" --data-urlencode \"stock=삼성전자\")",
-      "Bash(curl -sv \"http://localhost:5000/stock/news?stock=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90\")"
+      "Bash(curl -sv \"http://localhost:5000/stock/news?stock=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90\")",
+      "Bash(node -e ' *)",
+      "Bash(python3 -m py_compile /mnt/c/Users/hrbel/Desktop/madcamp/26s-w1-c3-06/backend/src/custom_api/account.py)",
+      "Bash(pg_isready -h localhost -p 5432)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c \"\\\\d \\\\\"User_Info\\\\\"\")",
+      "Bash(curl -s -X POST http://localhost:5000/auth/login -H \"Content-Type: application/json\" -d '{\"id\":\"test\",\"pw\":\"test\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(kill 857696 1077765)",
+      "Read(//tmp/**)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'SELECT \"ID\" FROM \"User_Info\" LIMIT 3;')",
+      "Bash(curl -s \"http://localhost:5000/quiz?userId=hyeri34\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(curl -s \"http://localhost:5000/account?id=hyeri34\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(git diff *)",
+      "Bash(sed -n '1,26p' /tmp/schema_full.diff)",
+      "Bash(git apply *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python3 -m py_compile /mnt/c/Users/hrbel/Desktop/madcamp/26s-w1-c3-06/backend/src/custom_api/account.py /mnt/c/Users/hrbel/Desktop/madcamp/26s-w1-c3-06/backend/src/custom_api/ranking.py)",
+      "Bash(curl -s \"http://localhost:5000/social/ranking?userId=hyeri34\" -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -t -c 'SELECT \"Quiz_Num\",\"Quiz_Answer\" FROM \"Quiz\" ORDER BY \"Quiz_Num\" LIMIT 1;')",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d mockinvest -c 'UPDATE \"User_Info\" SET \"Last_Bailout_Date\" = NULL WHERE \"ID\" = '\"'\"'hyeri34'\"'\"';')",
+      "Bash(curl -s -X POST http://localhost:5000/quiz/submit -H \"Content-Type: application/json\" -d '{\"userId\":\"hyeri34\",\"quiz_num\":0,\"answerIndex\":0}')",
+      "Bash(curl -s \"http://localhost:5000/social/ranking?userId=hyeri34\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\([e for e in d['globalRanking'] if e['isMe']]\\)\")"
     ]
   }
 }

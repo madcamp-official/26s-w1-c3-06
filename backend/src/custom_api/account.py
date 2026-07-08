@@ -55,6 +55,9 @@ session = Session()
 # README 기획안: 계좌 생성 직후 100만원 시드 자산 지급
 SEED_BALANCE = 1_000_000
 
+# 기본소득 퀴즈 정답 보상. 랭킹 수익률(ranking.py)은 이 금액을 제외한 순수 주식 손익만 반영해야 한다.
+QUIZ_REWARD = 10_000
+
 # test required
 class UserAccount(Base):
     __tablename__ = "User_Info"
@@ -65,6 +68,9 @@ class UserAccount(Base):
     Balance: Mapped[int] = mapped_column(Integer)
     Return: Mapped[int] = mapped_column(Integer)
     Last_Bailout_Date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    # 거래(매매)와 무관하게 Balance에 더해진 현금의 누계(가입 시드 + 퀴즈 보상 등).
+    # 랭킹(ranking.py)이 총자산 증감에서 이 누계의 증감을 빼면 순수 주식 손익만 남는다.
+    Non_Stock_Cash: Mapped[int] = mapped_column(Integer)
     Nickname: Mapped[str] = mapped_column(String(12),unique=True,nullable=True)
     Profile: Mapped[bytes] = mapped_column(LargeBinary,nullable=True)
         
@@ -206,6 +212,7 @@ def Create():
         Balance=SEED_BALANCE,
         Return=0,
         Last_Bailout_Date=None,
+        Non_Stock_Cash=SEED_BALANCE,
         Nickname=nickname,
         Profile=None,
     )
@@ -413,7 +420,8 @@ def SubmitAndReward():
         already_used = user.Last_Bailout_Date == Today()
 
         if QuizCorrect and not already_used:
-            user.Balance += 10000
+            user.Balance += QUIZ_REWARD
+            user.Non_Stock_Cash += QUIZ_REWARD
 
         if QuizCorrect:
             result = jsonify({

@@ -52,15 +52,19 @@ class DailySnapshot(Base):
     Snapshot_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     ID: Mapped[str] = mapped_column(String(16), primary_key=True)
     Total_Asset: Mapped[int] = mapped_column(Integer, nullable=True)
+    # 그 시점의 User_Info.Non_Stock_Cash 스냅샷. 두 스냅샷 사이 Total_Asset 증감에서
+    # 이 값의 증감을 빼면, 그 사이 며칠이 지났든 몇 번을 받았든 상관없이 순수 주식 손익만 남는다.
+    Non_Stock_Cash: Mapped[int] = mapped_column(Integer, nullable=True)
 
     __table_args__ = (
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
-    def __init__(self, Snapshot_Date=None, ID="", Total_Asset=0):
+    def __init__(self, Snapshot_Date=None, ID="", Total_Asset=0, Non_Stock_Cash=0):
         self.Snapshot_Date = Snapshot_Date
         self.ID = ID
         self.Total_Asset = Total_Asset
+        self.Non_Stock_Cash = Non_Stock_Cash
 
     def __repr__(self):
         return f"Snapshot(Date: {self.Snapshot_Date}, ID: {self.ID}, Total_Asset: {self.Total_Asset})"
@@ -69,40 +73,64 @@ class DailySnapshot(Base):
 # Core APIs
 # ----------------------------------------------------------------------
 
-def EnsureTodaySnapshotAndReturn(user):
-    ''' 오늘자 스냅샷을 없으면 만들고, 직전 스냅샷 대비 원단위 증감을 User_Ranking에 반영한 뒤 그 증감값을 반환한다 '''
-    today = account.Midnight(datetime.now().astimezone())
-
-    todaySnapshot = session.get(DailySnapshot, (today, user.ID))
-    if not todaySnapshot:
-        todaySnapshot = DailySnapshot(Snapshot_Date=today, ID=user.ID, Total_Asset=user.Balance)
-        session.add(todaySnapshot)
-        session.commit()
-
-    prevSnapshot = (
+def PrevSnapshot(user, today):
+    ''' today보다 이전인 가장 최근 스냅샷(=어제 종가에 해당) '''
+    return (
         session.query(DailySnapshot)
         .filter(DailySnapshot.ID == user.ID, DailySnapshot.Snapshot_Date < today)
         .order_by(DailySnapshot.Snapshot_Date.desc())
         .first()
     )
-    wonDelta = (todaySnapshot.Total_Asset - prevSnapshot.Total_Asset) if prevSnapshot else 0
+
+def EnsureTodaySnapshotAndReturn(user):
+    ''' 오늘자 스냅샷(총자산 + 비거래성 현금 누계)을 현재 값으로 갱신하고, 직전 스냅샷 대비
+    총자산 증감에서 그 사이 늘어난 비거래성 현금(퀴즈 보상 등)의 증감을 뺀 "순수 주식 손익"만
+    User_Ranking에 반영한 뒤 그 값을 반환한다.
+
+    "오늘 퀴즈를 받았는가"를 날짜 비교로 추론하지 않는다 — 퀴즈 보상이 Balance에 더해질 때마다
+    Non_Stock_Cash도 함께 늘려두고(account.py), 그 누계값 자체를 비교하기 때문에 하루에 몇 번을
+    받든 스냅샷을 언제/며칠 만에 다시 찍든 항상 정확하다. '''
+    today = account.Midnight(datetime.now().astimezone())
+
+    todaySnapshot = session.get(DailySnapshot, (today, user.ID))
+    if not todaySnapshot:
+        todaySnapshot = DailySnapshot(
+            Snapshot_Date=today, ID=user.ID,
+            Total_Asset=user.Balance, Non_Stock_Cash=user.Non_Stock_Cash,
+        )
+        session.add(todaySnapshot)
+    else:
+        # 하루 중 여러 번 조회될 수 있으므로, 오늘 스냅샷은 항상 최신 상태로 갱신해서
+        # "오늘 하루" 증감이 조회 시점과 무관하게 최신 상태를 반영하게 한다.
+        todaySnapshot.Total_Asset = user.Balance
+        todaySnapshot.Non_Stock_Cash = user.Non_Stock_Cash
+    session.commit()
+
+    prevSnapshot = PrevSnapshot(user, today)
+    if not prevSnapshot:
+        stockDelta = 0
+    else:
+        rawDelta = todaySnapshot.Total_Asset - prevSnapshot.Total_Asset
+        nonStockDelta = todaySnapshot.Non_Stock_Cash - prevSnapshot.Non_Stock_Cash
+        stockDelta = rawDelta - nonStockDelta
 
     rankingEntry = session.get(RankingEntry, user.ID)
     if rankingEntry:
-        rankingEntry.Return_Daily = wonDelta
+        rankingEntry.Return_Daily = stockDelta
     else:
-        rankingEntry = RankingEntry(ID=user.ID, Return_Daily=wonDelta)
+        rankingEntry = RankingEntry(ID=user.ID, Return_Daily=stockDelta)
         session.add(rankingEntry)
     session.commit()
 
-    return wonDelta
+    return stockDelta
 
-def ReturnPct(user, wonDelta):
-    ''' 원단위 증감을 직전 총자산 대비 퍼센트(소수점 첫째자리)로 환산한다 '''
-    prevTotal = user.Balance - wonDelta
-    if not prevTotal:
+def ReturnPct(user, stockDelta):
+    ''' 순수 주식 손익(원단위)을 어제 종가 총자산 대비 퍼센트(소수점 첫째자리)로 환산한다 '''
+    today = account.Midnight(datetime.now().astimezone())
+    prevSnapshot = PrevSnapshot(user, today)
+    if not prevSnapshot or not prevSnapshot.Total_Asset:
         return 0.0
-    return round(wonDelta / prevTotal * 100, 1)
+    return round(stockDelta / prevSnapshot.Total_Asset * 100, 1)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
