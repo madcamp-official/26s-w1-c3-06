@@ -25,7 +25,6 @@ engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
-# test required
 class QuizEntry(Base):
     __tablename__ = "Quiz"
 
@@ -54,7 +53,6 @@ with open('data/quiz.json', 'r', encoding='utf-8') as f:
 # Core APIs 
 # ----------------------------------------------------------------------
 
-# test required
 def Show(quiz_num):
     quiz = session.get(QuizEntry, quiz_num)
     if not quiz:
@@ -65,7 +63,6 @@ def Show(quiz_num):
     except ValueError as e:
         return None
 
-# test required
 def Check(quiz_num, user_answer):
     quiz = session.get(QuizEntry, quiz_num)
     if not quiz: 

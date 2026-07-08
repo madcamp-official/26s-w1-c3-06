@@ -28,7 +28,6 @@ engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
 
-# test required
 class RankingEntry(Base):
     __tablename__ = "User_Ranking"
 

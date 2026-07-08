@@ -44,7 +44,7 @@ class OrderEntry(Base):
     __tablename__ = "Stock_Order"
 
     Order_ID: Mapped[int] = mapped_column(Integer, primary_key=True)
-    Stock_Name: Mapped[str]
+    Stock_Code: Mapped[int]
     ID: Mapped[str]
     Order_Quantity: Mapped[int] = mapped_column(Integer)
     Order_Position: Mapped[ord_pos] = mapped_column()
@@ -52,14 +52,14 @@ class OrderEntry(Base):
     Order_Date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
+        ForeignKeyConstraint(["Stock_Code"], ["Stock_List.Stock_Code"]),
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
     # default profile is embedded in website
-    def __init__(self, Order_ID=0, Stock_Name="", Buyer_ID="", Order_Quantity=0, Order_Position=None, Order_Result=None, Order_Date=None):
+    def __init__(self, Order_ID, Stock_Code, Buyer_ID="", Order_Quantity=0, Order_Position, Order_Result, Order_Date):
         self.Order_ID = Order_ID
-        self.Stock_Name = Stock_Name
+        self.Stock_Code = Stock_Code
         self.ID = Buyer_ID
         self.Order_Quantity = Order_Quantity 
         self.Order_Position = Order_Position
@@ -67,7 +67,7 @@ class OrderEntry(Base):
         self.Order_Date = Order_Date
 
     def __repr__(self):
-        return f"Order(Name: {self.Stock_Name})"
+        return f"Order(Code: {self.Stock_Code}, Quantity: {self.Order_Quantity}, Position: {self.Order_Position}, Date: {self.Order_Date}, Result: {self.Order_Result})"
 
 # ----------------------------------------------------------------------
 # Core APIs 

@@ -54,7 +54,6 @@ session = Session()
 # README 기획안: 계좌 생성 직후 100만원 시드 자산 지급
 SEED_BALANCE = 1_000_000
 
-# test required
 class UserAccount(Base):
     __tablename__ = "User_Info"
 
@@ -70,30 +69,29 @@ class UserAccount(Base):
     def __repr__(self):
         return f"User(ID: {self.ID}, PW: {self.PW}, Balance: {self.Balance})"
 
-# test required
 class AccountStock(Base):
     __tablename__ = "Stock_Owned"
 
-    Stock_Name: Mapped[str] = mapped_column(primary_key=True)
+    Stock_Code: Mapped[int] = mapped_column(primary_key=True)
     ID: Mapped[str]
     Own_Quantity: Mapped[int] = mapped_column(Integer)
     Own_PriceChange: Mapped[int] = mapped_column(Integer)
     Own_Avg: Mapped[Decimal] = mapped_column(Numeric(12, 4))
 
     __table_args__ = (
-        ForeignKeyConstraint(["Stock_Name"], ["Stock_List.Stock_Name"]),
+        ForeignKeyConstraint(["Stock_Code"], ["Stock_List.Stock_Code"]),
         ForeignKeyConstraint(["ID"], ["User_Info.ID"]),
     )
 
-    def __init__(self, Stock_Name="", ID="", Own_Quantity=0, Own_Avg=Decimal("0")):
-        self.Stock_Name = Stock_Name
+    def __init__(self, Stock_Code, ID, Own_Quantity=0, Own_Avg=Decimal("0")):
+        self.Stock_Code = Stock_Code
         self.ID = ID
         self.Own_Quantity = Own_Quantity
         self.Own_PriceChange = 0
         self.Own_Avg = Own_Avg
 
     def __repr__(self):
-        return f"StockOwned(Name: {self.Stock_Name}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
+        return f"StockOwned(Code: {self.Stock_Code}, Owner ID: {self.ID}, Quantity: {self.Own_Quantity}, Avg: {self.Own_Avg})"
 
 # ----------------------------------------------------------------------
 # Helper Functions
@@ -168,8 +166,7 @@ def nickname_exists():
             "message": "중복 검사에 실패했습니다."
         }), 400
 
-# Create an account and stage onto DB / Redundancy Check (wip)
-# !! test required !!
+# Create an account and stage onto DB / Redundancy Check
 @app.route('/auth/signup', methods=['POST'])
 def Create():
     if request.is_json:
@@ -224,7 +221,6 @@ def Create():
         }), 400
 
 # Receive login request and authenticate
-# test required
 @app.route('/auth/login', methods=['POST'])
 def Authenticate():
     if request.is_json:
@@ -256,7 +252,6 @@ def Authenticate():
         }), 401
 
 # Show main page and feature (almost) everything
-# test required
 @app.route('/account', methods=['GET'])
 def View():
     if request.is_json:
@@ -276,7 +271,7 @@ def View():
     try:
         stmt = (
             select(AccountStock, stock.StockEntry.Stock_Desc)
-            .join(stock.StockEntry, AccountStock.Stock_Name == stock.StockEntry.Stock_Name)
+            .join(stock.StockEntry, AccountStock.Stock_Code == stock.StockEntry.Stock_Code)
             .where(AccountStock.ID == user.ID)
         )
         user_stocks = session.execute(stmt).all()
@@ -338,7 +333,6 @@ def View():
             "message": "홈 화면을 불러오지 못했습니다."
         }), 400
         
-# test required
 @app.route('/quiz', methods=['GET'])
 def DailyBailout():
     userId = request.args.get('userId')
@@ -379,7 +373,6 @@ def DailyBailout():
             "message": "퀴즈 불러오기에 실패했습니다."
         }), 400
 
-# test required
 @app.route('/quiz/submit', methods=['POST'])
 def SubmitAndReward():
     if request.is_json:
@@ -437,7 +430,6 @@ def SubmitAndReward():
             "message": "퀴즈 채점에 실패했습니다."
         }), 400
 
-# test required
 @app.route('/settings', methods=['PATCH'])
 def Update():
     if request.is_json:
@@ -484,7 +476,6 @@ def Update():
             "message": "계정 정보 수정에 실패했습니다."
         }), 400
 
-# test required
 @app.route('/settings', methods=['POST'])
 def Delete():
     if request.is_json:
@@ -523,7 +514,6 @@ def Delete():
             "message": "계정 삭제에 실패했습니다."
         }), 400
 
-# test required
 @app.route('/stock/news', methods=['GET'])
 def StockNews():
     stockName = request.args.get('stock')
@@ -547,7 +537,7 @@ def StockNews():
             select(news.NewsEntry)
             .join(news.StockNewsEntry, news.NewsEntry.News_ID == news.StockNewsEntry.News_ID)
             .where(
-                news.StockNewsEntry.Stock_Name == stockName,
+                news.StockNewsEntry.Stock_Code == stockCode,
                 func.date(news.NewsEntry.News_Date) == latestDate
             )
             .order_by(news.NewsEntry.News_Date.desc())
@@ -572,7 +562,6 @@ def StockNews():
             "message": "관련 뉴스를 불러오지 못했습니다."
         }), 400
 
-# test required
 @app.route('/social/ranking', methods=['GET'])
 def SocialRanking():
     userId = request.args.get('userId')
@@ -624,7 +613,6 @@ def SocialRanking():
             "message": "랭킹을 불러오지 못했습니다."
         }), 400
 
-# test required
 @app.route('/social/request-friends', methods=['POST'])
 def RequestFriends():
     if request.is_json:
@@ -646,7 +634,6 @@ def RequestFriends():
         "toId": toId
     }), 200
 
-# test required
 @app.route('/social/accept-friends', methods=['POST'])
 def AcceptFriends():
     if request.is_json:
@@ -663,7 +650,6 @@ def AcceptFriends():
 
     return jsonify({"status": "success", "message": message}), 200
 
-# test required
 @app.route('/social', methods=['GET'])
 def SocialView():
     userId = request.args.get('userId')
@@ -704,7 +690,6 @@ def SocialView():
             "message": "친구 정보를 불러오지 못했습니다."
         }), 400
 
-# test required
 @app.route('/social/delete-friends', methods=['POST'])
 def DeleteFriends():
     if request.is_json:

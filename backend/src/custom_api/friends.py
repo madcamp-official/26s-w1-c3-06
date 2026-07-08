@@ -39,7 +39,6 @@ session = Session()
 # Core APIs 
 # ----------------------------------------------------------------------
 
-# test required
 class FriendEntry(Base):
     __tablename__ = "User_Friends"
 
@@ -62,7 +61,6 @@ class FriendEntry(Base):
     def __repr__(self):
         return f"Friend(SelfID: {self.FromID}, FriendID: {self.ToID}, Date: {self.Friend_Date} Status: {self.Friend_Status})"
 
-# test required
 def RequestFriend(fromId, toId):
     ''' 친구 요청 row(REQUESTED)를 만든다. 이미 친구/이미 요청됨이면 막는다.
     반환: (FriendEntry|None, message, toNickname|None) '''
@@ -94,7 +92,6 @@ def RequestFriend(fromId, toId):
     session.commit()
     return entry, toUser.Nickname + "님에게 친구 요청을 전송했습니다.", toUser.Nickname
 
-# test required
 def AcceptFriend(fromId, toId):
     ''' toId(수락하는 사람)가 fromId(요청 보낸 사람)의 REQUESTED 요청을 FRIENDS로 바꾼다 '''
     entry = (
@@ -109,7 +106,6 @@ def AcceptFriend(fromId, toId):
     session.commit()
     return True, "친구가 되었습니다."
 
-# test required
 def GetFriendIds(userId):
     ''' FRIENDS 상태인 상대방 ID 목록 (내가 FromID든 ToID든 상관없이) '''
     rows = (
@@ -122,7 +118,6 @@ def GetFriendIds(userId):
     )
     return [row.ToID if row.FromID == userId else row.FromID for row in rows]
 
-# test required
 def GetPendingRequest(userId):
     ''' 나(userId)에게 온 미처리 요청 중 가장 최근 1건. 없으면 None '''
     return (
@@ -132,7 +127,6 @@ def GetPendingRequest(userId):
         .first()
     )
 
-# test required
 def DeleteFriend(fromId, toId):
     ''' 친구(FRIENDS) 삭제와 요청(REQUESTED) 거절을 모두 처리한다. 양방향으로 매치. '''
     stmt = delete(FriendEntry).where(or_(
