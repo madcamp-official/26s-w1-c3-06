@@ -12,6 +12,7 @@ app = Flask(__name__)
 
 # internal API imports
 import account
+
 from account import Base
 
 DATABASE_URL = os.environ.get(
@@ -29,13 +30,13 @@ class QuizEntry(Base):
     Quiz_Body: Mapped[dict[str,Any]] = mapped_column(JSON, nullable=True)
     Quiz_Answer: Mapped[int] = mapped_column(Integer)
 
-    def __init__(self, Quiz_Num=0, Quiz_Body="", Quiz_Answer=0):
+    def __init__(self, Quiz_Num=0, Quiz_Body=""):
         self.Quiz_Num = Quiz_Num
         self.Quiz_Body = Quiz_Body
-        self.Quiz_Answer = Quiz_Answer
         
     def __repr__(self):
-        return f"Quiz(Num: {self.Quiz_Num}, Body: {self.Quiz_Body})"
+        return f"Quiz(Num: {Quiz_Num}, Body: {Quiz_Body})"
+
 
 # ----------------------------------------------------------------------
 # Core APIs 

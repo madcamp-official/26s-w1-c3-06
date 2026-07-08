@@ -16,22 +16,16 @@ KST = ZoneInfo("Asia/Seoul")
 def run():
     with open("data/news.json", encoding="utf-8") as f:
         articles = json.load(f)
+    with open("data/seed_prices.json", encoding="utf-8") as f:
+        name_to_code = json.load(f)
 
     if account.session.query(news.NewsEntry).count() > 0:
         print("News_List already has data, skipping seed.")
         return
 
     stock_names = sorted(set(a["stock_name"] for a in articles))
-
-    # Stock_List의 PK는 이제 Stock_Code라, 이름으로 뉴스를 다는 이 스크립트는 먼저 이름->코드를
-    # 알아야 한다. 기사에 나온 종목인데 아직 Stock_List에 없으면 새 코드를 배정해서 추가한다.
-    name_to_code = {s.Stock_Name: s.Stock_Code for s in account.session.query(stock.StockEntry).all()}
-    next_code = max(name_to_code.values(), default=0) + 1
     for name in stock_names:
-        if name not in name_to_code:
-            account.session.add(stock.StockEntry(Stock_Code=next_code, Stock_Name=name))
-            name_to_code[name] = next_code
-            next_code += 1
+        account.session.add(stock.StockEntry(Stock_Code=name_to_code[name], Stock_Name=name))
     account.session.commit()
 
     ord_counters = {}
