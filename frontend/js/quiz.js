@@ -13,7 +13,7 @@
  * @returns {Promise<{status, already_used?, quiz_num?, quiz_body?, message}>}
  */
 async function fetchQuiz(id) {
-  const res = await fetch(`http://localhost:5000/quiz?userId=${encodeURIComponent(id)}`);
+  const res = await fetch(`/api/quiz?userId=${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error("퀴즈를 불러오지 못했습니다");
   return await res.json();
 }
@@ -23,7 +23,7 @@ async function fetchQuiz(id) {
  * @returns {Promise<{status, correct?, already_used?, balance?, message}>}
  */
 async function submitQuiz({ id, quizNum, answerIndex }) {
-  const res = await fetch("http://localhost:5000/quiz/submit", {
+  const res = await fetch("/api/quiz/submit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId: id, quiz_num: quizNum, answerIndex }),

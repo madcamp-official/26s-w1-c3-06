@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   profileID.innerText = `@${id}`;
 
   try {
-    const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
+    const res = await fetch(`/api/account?id=${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
 
     const data = await res.json();
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+        `/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
       );
 
       if (!res.ok) throw new Error("nickname check failed");
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     else if (profileDeleted) body.profile = null;
 
     try {
-      const res = await fetch("http://localhost:5000/settings", {
+      const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!confirmed) return;
 
     try {
-      const res = await fetch("http://localhost:5000/settings", {
+      const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: id }),

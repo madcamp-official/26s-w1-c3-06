@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  * @returns {Promise<{status, message, mockAccount, mockHoldings, mockNews}>}
  */
 async function fetchAccount(id) {
-  const res = await fetch(`http://localhost:5000/account?id=${encodeURIComponent(id)}`);
+  const res = await fetch(`/api/account?id=${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다");
 
   const data = await res.json();

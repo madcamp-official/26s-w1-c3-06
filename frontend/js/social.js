@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/social/request-friends", {
+      const res = await fetch("/api/social/request-friends", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fromId: currentUserId, toId: id }),
@@ -39,8 +39,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadSocialData() {
   try {
     const [socialRes, rankingRes] = await Promise.all([
-      fetch(`http://localhost:5000/social?userId=${encodeURIComponent(currentUserId)}`),
-      fetch(`http://localhost:5000/social/ranking?userId=${encodeURIComponent(currentUserId)}`),
+      fetch(`/api/social?userId=${encodeURIComponent(currentUserId)}`),
+      fetch(`/api/social/ranking?userId=${encodeURIComponent(currentUserId)}`),
     ]);
 
     const socialData = await socialRes.json();
@@ -74,7 +74,7 @@ function deleteFriend(index) {
 
 async function removeFriendship(otherId, successMessage) {
   try {
-    const res = await fetch("http://localhost:5000/social/delete-friends", {
+    const res = await fetch("/api/social/delete-friends", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fromId: currentUserId, toId: otherId }),
@@ -108,7 +108,7 @@ function renderFriendRequest(request) {
 
   document.getElementById("acceptBtn").addEventListener("click", async () => {
     try {
-      const res = await fetch("http://localhost:5000/social/accept-friends", {
+      const res = await fetch("/api/social/accept-friends", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fromId: request.fromId, toId: currentUserId }),

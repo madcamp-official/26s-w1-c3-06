@@ -51,7 +51,7 @@ checkNicknameBtn.addEventListener("click", async () => {
   try {
     // TODO: 백엔드 완성되면 실제 응답 형식에 맞춰 조정
     const res = await fetch(
-      `http://localhost:5000/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
+      `/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`
     );
 
     if (!res.ok) throw new Error("nickname check failed");
@@ -83,7 +83,7 @@ checkUserIdBtn.addEventListener("click", async () => {
   try {
     // TODO: 백엔드 완성되면 실제 응답 형식에 맞춰 조정
     const res = await fetch(
-      `http://localhost:5000/auth/check-id?id=${encodeURIComponent(id)}`
+      `/api/auth/check-id?id=${encodeURIComponent(id)}`
     );
 
     if (!res.ok) throw new Error("id check failed");
@@ -138,7 +138,7 @@ form.addEventListener("submit", async (e) => {
 
   try {
     // TODO: 백엔드 회원가입 API(account_Create) 응답 형식 확정되면 맞춰서 조정
-    const res = await fetch("http://localhost:5000/auth/signup", {
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nickname, id, pw }),
