@@ -13,7 +13,7 @@
 | 이름 | GitHub | 역할 |
 | --- | --- | --- |
 |서영빈| https://github.com/izayoieosd | Backend, DB |
-|김혜리| https://github.com/ireyhye| Frontend, 데이터 수집, Wireframe |
+|김혜리| https://github.com/ireyhye| Frontend, 데이터 수집 |
 
 ---
 
@@ -130,12 +130,95 @@
 
 > 접속 가능한 링크, 실행 방법, 주요 구현 내용
 
-- **서비스 URL:**
-- **실행 방법:**
+- **서비스 URL:** [text](http://hrbelle.madcamp-kaist.org/index.html)
+### 실행 방법
+
+#### 1. 사전 준비
+
+- Python 3.10 이상
+- PostgreSQL
+- Nginx (프런트엔드와 API를 함께 실행할 때 필요)
+
+#### 2. PostgreSQL 데이터베이스 생성
 
 ```bash
-# 실행 방법 작성
+createdb -U postgres mockinvest
 ```
+
+기본 접속 정보는 `postgresql://postgres:postgres@localhost:5432/mockinvest`입니다.
+다른 계정이나 포트를 사용한다면 아래 `DATABASE_URL`을 환경에 맞게 변경합니다.
+
+#### 3. Python 환경 설정
+
+프로젝트 루트에서 다음 명령을 실행합니다.
+
+```bash
+python -m venv .venv
+```
+
+macOS/Linux:
+
+```bash
+source .venv/bin/activate
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mockinvest"
+pip install -r requirements.txt
+```
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+$env:DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/mockinvest"
+pip install -r requirements.txt
+```
+
+#### 4. 백엔드 실행 및 초기 데이터 생성
+
+첫 번째 터미널에서 Flask 서버를 실행합니다. 필요한 테이블은 서버 시작 시 자동으로 생성됩니다.
+
+```bash
+cd backend/src/custom_api
+python main.py
+```
+
+서버가 실행된 상태에서 두 번째 터미널을 열고 같은 가상환경과 `DATABASE_URL`을 설정한 후 초기 데이터를 생성합니다.
+
+```bash
+cd backend/src/custom_api
+python seed_news.py
+python seed_prices.py
+python seed_stock_params.py
+python seed_quiz.py
+```
+
+백엔드는 `http://localhost:5000`에서 실행됩니다. 시드 스크립트는 최초 실행 후 데이터가 있으면 중복 생성을 건너뜁니다.
+
+#### 5. 프런트엔드 연결
+
+프런트엔드는 `/api/...` 요청을 사용하므로 Nginx에서 `/api/`를 제거한 뒤 Flask 서버로 전달합니다.
+아래 설정의 `<PROJECT_ROOT>`를 프로젝트의 절대 경로로 변경합니다.
+
+```nginx
+server {
+    listen 8080;
+    server_name localhost;
+
+    root <PROJECT_ROOT>/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Nginx 설정을 다시 불러온 후 브라우저에서 `http://localhost:8080`에 접속합니다.
 
 ---
 
