@@ -35,7 +35,7 @@ class QuizEntry(Base):
         self.Quiz_Answer = Quiz_Answer
         
     def __repr__(self):
-        return f"Quiz(Num: {Quiz_Num}, Body: {Quiz_Body})"
+        return f"Quiz(Num: {self.Quiz_Num}, Body: {self.Quiz_Body})"
 
 # ----------------------------------------------------------------------
 # Core APIs 
