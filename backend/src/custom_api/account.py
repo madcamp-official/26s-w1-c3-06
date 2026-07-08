@@ -655,8 +655,9 @@ def PlaceOrder():
     }), 200
 
 @app.route('/history', methods=['GET'])
+@app.route('/api/history', methods=['GET'])
 def TransactionHistory():
-    userId = request.args.get('id')
+    userId = request.args.get('id') or request.args.get('userId')
     user = session.get(UserAccount, userId)
 
     if not user:

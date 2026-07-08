@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const res = await fetch(`/api/history?id=${encodeURIComponent(id)}`);
+    const res = await fetchHistory(id);
     if (!res.ok) throw new Error("거래 내역을 불러오지 못했습니다.");
 
     const data = await res.json();
@@ -20,6 +20,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderHistory([]);
   }
 });
+
+async function fetchHistory(id) {
+  const query = `id=${encodeURIComponent(id)}`;
+
+  try {
+    const apiRes = await fetch(`/api/history?${query}`);
+    if (apiRes.ok || apiRes.status !== 404) {
+      return apiRes;
+    }
+  } catch (err) {
+    console.debug("Retrying history request against local backend.", err);
+  }
+
+  return fetch(`http://localhost:5000/history?${query}`);
+}
 
 /**
  * @param {Array} history - {type, stockName, quantity, amount, order_date} 목록
