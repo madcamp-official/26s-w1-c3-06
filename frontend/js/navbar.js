@@ -72,7 +72,7 @@ async function loadNotifications() {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/notifications?id=${encodeURIComponent(userId)}`);
+    const res = await fetch(`/api/notifications?id=${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error("알림을 불러오지 못했습니다");
 
     const data = await res.json();
@@ -145,7 +145,7 @@ function renderNotifications() {
       const userId = localStorage.getItem("id");
 
       try {
-        const res = await fetch("http://localhost:5000/notifications/delete", {
+        const res = await fetch("/api/notifications/delete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, notiNum }),

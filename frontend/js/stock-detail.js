@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  */
 async function fetchStockDetail(stockName, userId) {
   const res = await fetch(
-    `/api/stock-detail?stock=${encodeURIComponent(stockName)}&id=${encodeURIComponent(userId)}`
+    `/api/stock-detail?stock=${encodeURIComponent(stockName)}&id=${encodeURIComponent(id)}`
   );
   if (!res.ok) throw new Error("종목 정보를 불러오지 못했습니다");
 
