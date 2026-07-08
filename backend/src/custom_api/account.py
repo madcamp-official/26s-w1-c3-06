@@ -270,7 +270,7 @@ def View():
 
     try:
         stmt = (
-            select(AccountStock, stock.StockEntry.Stock_Desc)
+            select(AccountStock, stock.StockEntry.Stock_Name, stock.StockEntry.Stock_Desc)
             .join(stock.StockEntry, AccountStock.Stock_Code == stock.StockEntry.Stock_Code)
             .where(AccountStock.ID == user.ID)
         )
@@ -279,14 +279,14 @@ def View():
         stock_sum = 0
         mockHoldingsList = []
 
-        for holding, desc in user_stocks:
+        for holding, name, desc in user_stocks:
             value = holding.Own_Quantity * holding.Own_Avg
             # mockAccount
             stock_sum += value
 
             # mockHoldings
             mockHolding = {
-                "name": holding.Stock_Name,
+                "name": name,
                 "desc": desc,
                 "value": int(value),
                 "returnPct": (100 * holding.Own_PriceChange / value).quantize(Decimal('0.1'))

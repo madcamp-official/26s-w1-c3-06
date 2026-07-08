@@ -79,22 +79,79 @@ class StockPriceEntry(Base):
 # Base.metadata.create_all(engine)
 
 # ----------------------------------------------------------------------
+# Helper Functions
+# ----------------------------------------------------------------------
+def LatestPriceDate():
+    ''' Stock_DailyPrice에 있는 가장 최근 주식 시세 날짜(일자와 시각). 시세가 없으면 None.'''
+    latest = session.query(func.max(StockPriceEntry.Trade_Date)).scalar()
+    return latest.date() if latest else None
+
+# ----------------------------------------------------------------------
 # Core APIs 
 # ----------------------------------------------------------------------
 
 # !! WIP !!
-# def PriceUpToDate():
-#     pass
+def PriceUpToDate():
+    pass
 
+# !! WIP !!
 @app.route('/stock-list', methods=['GET'])
 def View_List():
-    '''TODO'''
-    pass
 
+    userId = request.args.get('userId')
+    user = session.get(UserAccount, userId)
+
+    if not user:
+        return jsonify({
+            "status": "fail",
+            "message": "주식 리스트를 불러오는 데 실패했습니다. 다시 로그인해 주세요."
+        }), 401
+
+    try:
+        latestDate = LatestPriceDate()
+        if not latestDate:
+            return jsonify({
+                "status": "success",
+                "message": "시세 정보가 없습니다.",
+                "mockStocks": []
+            }), 200
+
+        stmt = (
+            select(StockPriceEntry, StockEntry)
+            .join(StockEntry, StockEntry.Stock_Code == StockPriceEntry.Stock_Code)
+            .where(
+                func.date(StockPriceEntry.Trade_Date) == latestDate
+            )
+            .order_by(StockEntry.Stock_Name.asc())
+        )
+        stocks = session.execute(stmt).scalars().all()
+
+        mockStocksList = [{
+            "name": s.Stock_Name,
+            "desc": s.Stock_Desc,
+            "price": s.Close, '''블랙숄즈에 의한 실시간 가격'''
+            "changePct": (s.Close - s.Open) / s.Open * 100 if s.Open != 0 else 0 '''실시간 가격이 반영됨'''
+        } for s in stocks]
+
+        return jsonify({
+            "status": "success",
+            "message": "주식 리스트를 성공적으로 불러왔습니다.",
+            "mockStocks": mockStocksList
+        }), 200
+    except:
+        return jsonify({
+            "status": "fail",
+            "message": "주식 리스트를 불러오지 못했습니다."
+        }), 400
+
+# !! WIP !!
 @app.route('/stock-detail', methods=['GET'])
 def View_Entry():
-    '''TODO'''
-    pass
+    stock_code = request.args.get('stock_code')
+
+    stock = session.get(StockEntry, stock_code)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
