@@ -369,32 +369,44 @@ function chartDrawPoints(chartState) {
   return chartState.confirmedPoints.concat([chartState.liveHead]);
 }
 
-/** 가격 크기(참고가)에 맞춰 눈금 간격으로 쓸 "보기 좋은" 단위를 고른다 (100원/1,000원/10,000원 ...) */
-function niceUnit(referencePrice) {
-  const steps = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
-  const target = Math.max(referencePrice, 1) / 20; // 세로축에 대략 20칸 눈금이 들어가도록
-  return steps.reduce((best, s) =>
-    Math.abs(Math.log(s) - Math.log(target)) < Math.abs(Math.log(best) - Math.log(target)) ? s : best
-  , steps[0]);
+/** 실제 변동폭에 맞춰 1, 2, 5 단위의 읽기 좋은 눈금 간격을 고른다. */
+function niceTickStep(rawStep) {
+  const safeStep = Math.max(rawStep, 1);
+  const magnitude = 10 ** Math.floor(Math.log10(safeStep));
+  const normalized = safeStep / magnitude;
+  const multiplier = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return multiplier * magnitude;
 }
 
 /**
- * 세로축 범위를 정한다. 0원부터 시작하지 않고, 오늘의 고가/저가(실시간 생성 데이터 기준)를
- * 여유 있게 감싸면서, 종목의 참고가(K)를 기준으로 보기 좋은 단위로 반올림한다.
+ * 화면에 실제로 그리는 가격을 기준으로 세로축 범위를 정한다.
+ * 작은 움직임도 보이도록 최소 0.2% 범위를 보장하고 상하에 15% 여백을 둔다.
  */
-function computeYAxisRange(low, high, referencePrice) {
-  const safeLow = Math.min(low, referencePrice);
-  const safeHigh = Math.max(high, referencePrice);
-  const rawRange = Math.max(safeHigh - safeLow, referencePrice * 0.01); // 하루 종일 안 움직여도 최소 여백 확보
-  const padding = rawRange * 0.25;
-
-  const unit = niceUnit(referencePrice);
-  let min = Math.max(0, Math.floor((safeLow - padding) / unit) * unit);
-  let max = Math.ceil((safeHigh + padding) / unit) * unit;
-  if (max - min < unit) max = min + unit;
-
+function computeYAxisRange(prices, referencePrice) {
+  const low = Math.min(...prices);
+  const high = Math.max(...prices);
+  const center = (low + high) / 2;
+  const minimumRange = Math.max(referencePrice, 1) * 0.002;
+  const paddedRange = Math.max(high - low, minimumRange) * 1.15;
   const tickCount = 5;
-  const tickStep = (max - min) / (tickCount - 1);
+  const tickStep = niceTickStep(paddedRange / (tickCount - 1));
+  let min = Math.floor((center - (tickStep * (tickCount - 1)) / 2) / tickStep) * tickStep;
+  let max = min + tickStep * (tickCount - 1);
+
+  while (low < min) {
+    min -= tickStep;
+    max -= tickStep;
+  }
+  while (high > max) {
+    min += tickStep;
+    max += tickStep;
+  }
+
+  if (min < 0) {
+    min = 0;
+    max = tickStep * (tickCount - 1);
+  }
+
   const ticks = Array.from({ length: tickCount }, (_, i) => min + tickStep * i);
 
   return { min, max, ticks };
@@ -413,9 +425,8 @@ function renderChart(chartState, stock) {
 
   const points = chartDrawPoints(chartState);
   const referencePrice = stock.k || stock.openPrice || stock.currentPrice || 1;
-  const low = Math.min(stock.todayLow ?? stock.openPrice, stock.openPrice);
-  const high = Math.max(stock.todayHigh ?? stock.openPrice, stock.openPrice);
-  const { min: yMin, max: yMax, ticks: yTicks } = computeYAxisRange(low, high, referencePrice);
+  const visiblePrices = points.map(point => point.price);
+  const { min: yMin, max: yMax, ticks: yTicks } = computeYAxisRange(visiblePrices, referencePrice);
 
   const paddingLeft = 64;
   const paddingRight = 16;
